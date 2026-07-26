@@ -1,37 +1,22 @@
 /**
  * Bootstrapper behind `curl -fsSL quirq.ai/install | sh`.
  *
- * It fetches xo-space's install.sh and runs it, and does nothing else. The
- * installer owns the checkout, the Python environment, the configuration and
- * the server; duplicating any of that here would put the same logic on two
- * release cycles, where the copy served by this site can silently fall behind
- * the copy in the repository.
- *
- * The one-liner is advertised with `| sh`, so this script stays POSIX. The
- * installer needs Bash — it uses BASH_SOURCE and `set -o pipefail` — so it is
- * handed to `bash` explicitly rather than inherited into `sh`.
+ * Clone the source once, then let the repository's Docker Compose launcher
+ * build and start Quirq directly from that checkout.
  */
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 export const INSTALL_SCRIPT =
   [
     "#!/bin/sh",
-    "# Download the xo-space installer, then run it. Everything the install",
-    "# actually does lives in that script, not in this one.",
+    "# Clone xo-space and start its Docker Compose stack.",
     "set -eu",
     "",
-    "# Serves the installer from one branch and tells the installer to clone the",
-    "# same one, so QUIRQ_SOURCE_REF=development moves the whole install together.",
-    'REF="${QUIRQ_SOURCE_REF:-main}"',
-    'INSTALL_URL="https://raw.githubusercontent.com/quirq-ai/xo-space/${REF}/install.sh"',
+    "REPO_URL='https://github.com/quirq-ai/xo-space.git'",
     "",
     "fail() {",
     "  printf '\\nquirq: %s\\n' \"$*\" >&2",
     "  exit 1",
-    "}",
-    "",
-    "require_command() {",
-    '  command -v "$1" >/dev/null 2>&1 || fail "$2"',
     "}",
     "",
     "cat <<'QUIRQ_BANNER'",
@@ -45,24 +30,30 @@ export const INSTALL_SCRIPT =
     'require_command curl "curl is required to download the Quirq installer."',
     'require_command bash "Bash is required to run the Quirq installer."',
     "",
-    "# Written to a file rather than piped straight into bash. A transfer that",
-    "# drops halfway would otherwise hand bash a truncated script and it would",
-    "# run what arrived, and this leaves the terminal on the installer's stdin.",
-    'TMP="$(mktemp "${TMPDIR:-/tmp}/quirq-install.XXXXXX")" ||',
-    '  fail "Could not create a temporary file."',
-    "trap 'rm -f \"$TMP\"' EXIT INT TERM",
+    'command -v git >/dev/null 2>&1 || fail "Git is required to download Quirq."',
+    'command -v bash >/dev/null 2>&1 || fail "Bash is required to start Quirq."',
     "",
-    "printf '\\nFetching the Quirq installer (%s)...\\n' \"$REF\"",
-    'curl -fsSL "$INSTALL_URL" -o "$TMP" ||',
-    '  fail "Could not download $INSTALL_URL"',
-    '[ -s "$TMP" ] || fail "The downloaded installer is empty."',
+    'if [ -d "$INSTALL_DIR/.git" ]; then',
+    "  printf '\\nUsing the existing Quirq checkout at %s.\\n' \"$INSTALL_DIR\"",
+    'elif [ -e "$INSTALL_DIR" ]; then',
+    '  fail "Install path exists but is not an xo-space checkout: $INSTALL_DIR"',
+    "else",
+    '  mkdir -p "$(dirname "$INSTALL_DIR")"',
+    "  printf '\\nCloning Quirq into %s...\\n' \"$INSTALL_DIR\"",
+    '  git clone "$REPO_URL" "$INSTALL_DIR"',
+    "fi",
     "",
-    "# The installer reads this too, so the branch that served it is the branch",
-    "# it goes on to clone.",
-    'export QUIRQ_SOURCE_REF="$REF"',
+    '[ -f "$INSTALL_DIR/quirq" ] || fail "The xo-space checkout has no quirq launcher."',
     "",
-    '# Not exec: the trap above still has a temporary file to remove afterwards.',
-    'bash "$TMP"',
+    "# The previous installer used a standalone container on the same port.",
+    'if [ "$(docker inspect --format \'{{ index .Config.Labels "io.quirq.managed" }}\' quirq 2>/dev/null || true)" = "true" ]; then',
+    "  printf '\\nStopping the previous Quirq container...\\n'",
+    "  docker stop quirq >/dev/null",
+    "fi",
+    "",
+    "printf '\\nStarting Quirq from the cloned repository...\\n\\n'",
+    'cd "$INSTALL_DIR"',
+    "exec bash ./quirq",
   ].join("\n") + "\n";
 
 export function GET() {
@@ -70,7 +61,7 @@ export function GET() {
     headers: {
       "Content-Type": "text/x-shellscript; charset=utf-8",
       "Content-Disposition": 'inline; filename="quirq-install.sh"',
-      "Cache-Control": "public, max-age=300, must-revalidate",
+      "Cache-Control": "no-store, max-age=0",
       "X-Content-Type-Options": "nosniff",
     },
   });
