@@ -62,6 +62,27 @@ function TopicChip({
   );
 }
 
+function Arrow({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      width="11"
+      height="11"
+      viewBox="0 0 12 12"
+      fill="none"
+      aria-hidden
+      className={className}
+    >
+      <path
+        d="M2 10L10 2M10 2H4M10 2V8"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function Pagination({
   basePath,
   page,
@@ -160,16 +181,19 @@ export function ResearchIndexView({ view }: { view: IndexView }) {
               className="h-2.5 w-2.5 rounded-[3px]"
               style={{ background: "var(--spectrum)" }}
             />
-            <span className="label">Research · XO Labs</span>
+            <span className="label">The thesis</span>
             <span className="spectrum-rule h-px w-12 opacity-70" />
           </Rise>
 
-          <h1 className="display-sm mt-5 max-w-[16ch]">
-            <Reveal delay={0.05}>Every claim,</Reveal>
+          {/* The paper's own title, broken and treated exactly as its hero
+              breaks it in app/whitepaper/beats.tsx, so the index and the paper
+              read as one argument. Revise the two together. */}
+          <h1 className="display-sm mt-5">
+            <Reveal delay={0.05}>A unit of work</Reveal>
             <Reveal delay={0.13}>
               {/* Styling only: research pages carry no live stage behind the
                   scrim, so there is no light to cut a hole for. */}
-              <span className="glass-text">on the record.</span>
+              for <span className="glass-text">intelligence</span>.
             </Reveal>
           </h1>
         </div>
@@ -188,6 +212,33 @@ export function ResearchIndexView({ view }: { view: IndexView }) {
               <Stat value={POSTS.length} label="notes" />
               <Stat value={TOPICS.length} label="topics" />
               <Stat value={totalReadingMinutes} label="minutes of reading" />
+            </div>
+          </Rise>
+
+          {/* The argument in one place, and the version of record. Bottom of
+              the column, so on a wide screen they sit on the headline's
+              baseline rather than floating mid-masthead. */}
+          <Rise delay={0.34}>
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <Link
+                href="/whitepaper"
+                className="focus-on-ink group inline-flex items-center gap-2.5 rounded-full bg-ink px-5 py-3 font-mono text-[11px] tracking-[0.14em] text-void uppercase transition-transform duration-300 hover:-translate-y-0.5"
+              >
+                Read the whitepaper
+                <Arrow className="transition-transform duration-300 group-hover:translate-x-0.5" />
+              </Link>
+
+              {/* The PDF keeps its new tab: it is a document, not a page. */}
+              <a
+                href="/whitepaper/pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-2.5 rounded-full border border-hair bg-black/40 px-5 py-3 font-mono text-[11px] tracking-[0.14em] text-ink/85 uppercase transition-colors duration-300 hover:border-ink/30 hover:text-ink"
+              >
+                The PDF version
+                <Arrow className="transition-transform duration-300 group-hover:translate-x-0.5" />
+                <span className="sr-only">(opens in a new tab)</span>
+              </a>
             </div>
           </Rise>
         </div>

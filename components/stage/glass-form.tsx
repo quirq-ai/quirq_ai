@@ -8,7 +8,21 @@ import { createRibbonGeometry } from "./ribbon-geometry";
 import { OutcomeGraph } from "./outcome-graph";
 import { KEYFRAMES, damp, getTrack, sampleKeyframes, type Keyframe } from "./choreography";
 import { LIGHT } from "@/lib/lighting";
-import { stage } from "@/lib/stage-store";
+import { stage, type StageForm } from "@/lib/stage-store";
+
+/**
+ * The /engine swap demo: the same mesh, another closed ring. Anything with
+ * sensible normals and a similar world envelope works; the material, the
+ * damping loop and the scroll never notice. A welded tube like the knot reads
+ * softer than the ribbon on purpose: no duplicated edge vertices, no crisp
+ * caustic edges. Sized inside the ribbon's envelope: the knot is tall in both
+ * axes, and the finale pose (scale 1.42) leaves only ~2.9 world units of
+ * projected half-height at the fixed camera before it crowds the closing copy.
+ */
+function buildFormGeometry(form: StageForm): THREE.BufferGeometry {
+  if (form === "knot") return new THREE.TorusKnotGeometry(1.1, 0.25, 340, 26);
+  return createRibbonGeometry();
+}
 
 /** drei's transmission material exposes its uniforms as plain properties. */
 type TransmissionMaterial = THREE.MeshPhysicalMaterial & {
@@ -35,12 +49,32 @@ export function GlassForm({ quality }: { quality: StageQuality }) {
   const target = useRef<Keyframe>({ ...KEYFRAMES[0] });
   const live = useRef<Keyframe>({ ...KEYFRAMES[0] });
   const spin = useRef(0);
+  const knot = useRef<THREE.BufferGeometry | null>(null);
 
-  useEffect(() => () => geometry.dispose(), [geometry]);
+  useEffect(
+    () => () => {
+      geometry.dispose();
+      knot.current?.dispose();
+    },
+    [geometry],
+  );
 
   useFrame((state, delta) => {
     const g = group.current;
     if (!g) return;
+
+    // The /engine swap demo. The knot is built once on first request and
+    // cached, so a toggle is a reference compare and an assignment; nothing
+    // is disposed until unmount, and the check self-heals if anything ever
+    // re-attaches the declared ribbon geometry.
+    if (mesh.current) {
+      const desired =
+        stage.form === "knot"
+          ? (knot.current ??= buildFormGeometry("knot"))
+          : geometry;
+      if (mesh.current.geometry !== desired) mesh.current.geometry = desired;
+    }
+
     // A backgrounded tab hands back one enormous delta; clamp or the form lurches.
     const dt = Math.min(delta, 0.05);
     const k = sampleKeyframes(getTrack(), stage.beat, target.current);

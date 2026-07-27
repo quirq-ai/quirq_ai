@@ -277,5 +277,19 @@
         ]
       }
     }
+  },
+  "recording": {
+    "journey": "git-workspace",
+    "startedAt": 1785159165697,
+    "events": [
+      {
+        "at": 1785159165697,
+        "kind": "start",
+        "node": "open",
+        "path": [
+          "open"
+        ]
+      }
+    ]
   }
 }

@@ -256,5 +256,19 @@
         ]
       }
     }
+  },
+  "recording": {
+    "journey": "git-history",
+    "startedAt": 1785159165037,
+    "events": [
+      {
+        "at": 1785159165037,
+        "kind": "start",
+        "node": "open",
+        "path": [
+          "open"
+        ]
+      }
+    ]
   }
 }

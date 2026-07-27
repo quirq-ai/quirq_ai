@@ -19,6 +19,11 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  * phones the closed-loop CTA gets the whole action side of the bar and the
  * drawer carries the navigation.
  *
+ * The whitepaper left the bar too. It is the argument rather than a
+ * destination, and /research now opens with it: the masthead there carries the
+ * paper's title and both ways in, the page and the typeset PDF. The footer
+ * keeps a link from every other route.
+ *
  * Beats stays in the footer: it is a dev deep-dive and it was the cheapest
  * seat to give up.
  */
@@ -27,7 +32,6 @@ const ROUTES = [
   { href: "/what-is-quirq", label: "What is quirq", from: "lg" },
   { href: "/how-it-works", label: "How it works", from: "xl" },
   { href: "/research", label: "Research", from: "xl" },
-  { href: "/whitepaper", label: "Whitepaper", from: "sm" },
 ] as const;
 
 /** Written out rather than composed: Tailwind reads class names, not strings. */
@@ -53,6 +57,7 @@ const STAGE_ROUTES = [
   "/demo",
   "/dashboard",
   "/journey",
+  "/engine",
 ];
 
 /** The width at which every route has a seat, so the drawer is redundant. */

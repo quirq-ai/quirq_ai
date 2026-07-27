@@ -35,8 +35,7 @@ export function Invite() {
           <Rise delay={0.24}>
             <p className="lede over-stage mx-auto mt-7 text-center">
               Tighten the engineering loop between an agent&apos;s action and a
-              verified outcome. One command installs the environment; every
-              run comes back with proof.
+              verified outcome.
             </p>
           </Rise>
 

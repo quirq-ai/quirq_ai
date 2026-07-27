@@ -31,7 +31,7 @@ export function Ecosystem() {
           <TextScrim />
           <p className="label over-stage">Your whole agent fleet, in view</p>
           <h2 className="over-stage mt-4 text-[clamp(28px,4vw,46px)] leading-[1.04] font-medium tracking-[-0.045em] text-ink">
-            Connect every agent.{" "}
+            Connect any machine{" "}
             <GlassText className="whitespace-nowrap">
               Observe every outcome.
             </GlassText>

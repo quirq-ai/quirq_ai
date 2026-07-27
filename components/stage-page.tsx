@@ -13,17 +13,33 @@ import { Nav } from "@/components/ui/nav";
  * runtime measures their centres, and the same KEYFRAMES track drives the
  * glass. A page may use fewer beats (the track simply stops earlier); using
  * more than the track has would flatten past the last keyframe, so don't.
+ *
+ * `lit` is the house lights switch. Unlit, the rendered layers stay off: no
+ * scene (light burst, glass ribbon), no vignette, no grain. Everything else
+ * still runs: the scroll runtime measures, beats register, the track resolves,
+ * so a page that works unlit re-lights by flipping the prop and nothing else.
+ * The dashboard runs unlit on purpose: it is an instrument, not a scene.
  */
-export function StagePage({ children }: { children: ReactNode }) {
+export function StagePage({
+  children,
+  lit = true,
+}: {
+  children: ReactNode;
+  lit?: boolean;
+}) {
   return (
     <>
       <ScrollRuntime />
 
       {/* One continuous shot: the glass form lives behind every beat and is
           re-staged by scroll rather than swapped out between sections. */}
-      <Stage />
-      <div className="vignette" aria-hidden />
-      <div className="grain" aria-hidden />
+      {lit && (
+        <>
+          <Stage />
+          <div className="vignette" aria-hidden />
+          <div className="grain" aria-hidden />
+        </>
+      )}
 
       <Nav />
 

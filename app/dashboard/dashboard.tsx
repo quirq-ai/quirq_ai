@@ -1,312 +1,96 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import {
-  formatMoney,
-  formatQuirqs,
-  portfolioMetrics,
-} from "@/lib/quirq/engine.mjs";
-import { verifyChain } from "@/lib/quirq/ledger.mjs";
-import { readSession } from "@/lib/quirq/session.mjs";
-import type { CostBreakdown, SettledUnit } from "@/lib/quirq/engine.mjs";
-import type { LedgerEntry, Verification } from "@/lib/quirq/ledger.mjs";
-import rawLedger from "@/lib/quirq/sample-ledger.json";
-import { SPECTRUM } from "@/lib/spectrum";
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
-  ActionLink,
-  Beat,
-  Marker,
-  Reveal,
-  Rise,
-  TextScrim,
-  cn,
-} from "@/components/ui/primitives";
-import { GlassPool, GlassText } from "@/components/ui/glass";
+  compactCount,
+  formatDuration,
+  isoClock,
+  readFolderState,
+  type FolderNode,
+  type FolderPayload,
+  type OpenSession,
+  type SessionAugment,
+  type SessionStats,
+  type StatsWindow,
+  type TimelineEvent,
+} from "@/lib/quirq/folder";
+import { formatAgo, formatBytes, secondsSince } from "@/lib/quirq/instance";
+import { Beat, cn } from "@/components/ui/primitives";
 import { beatsResized } from "@/lib/beat-registry";
-import {
-  InstanceConnect,
-  InstanceDetail,
-  InstanceProvider,
-} from "./instance-panel";
+import { CalendarFilter, Columns, FolderMap } from "./charts";
 
 /* ------------------------------------------------------------------ *
- * The raw material
- * ------------------------------------------------------------------ */
-
-const SAMPLE = rawLedger as unknown as LedgerEntry[];
-
-/** Which chain the whole page is reading. */
-type Source = "sample" | "session";
-
-/* Everything below is derived per source rather than at module scope: the
-   visitor's ledger arrives after mount and can change length, so nothing about
-   the sample may be baked into a constant the other source then inherits. */
-
-function kindCounts(
-  entries: readonly LedgerEntry[],
-): ReadonlyArray<readonly [string, number]> {
-  const counts = new Map<string, number>();
-  for (const entry of entries) {
-    const kind = entry.record.kind ?? "unattributed";
-    counts.set(kind, (counts.get(kind) ?? 0) + 1);
-  }
-  return [...counts].sort((a, b) => b[1] - a[1]);
-}
-
-function checkDescriptions(
-  entries: readonly LedgerEntry[],
-): ReadonlyMap<string, string> {
-  const map = new Map<string, string>();
-  for (const entry of entries) {
-    for (const check of entry.record.checks) {
-      if (check.description && !map.has(check.id)) {
-        map.set(check.id, check.description);
-      }
-    }
-  }
-  return map;
-}
-
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-/** Hand-formatted rather than Intl: this component server-renders too, and a
- *  locale or timezone difference between Node and the browser would be a
- *  hydration mismatch in a page whose whole claim is determinism. */
-function isoDay(iso: string): string {
-  const [year, month, day] = iso.slice(0, 10).split("-");
-  return `${Number(day)} ${MONTHS[Number(month) - 1]} ${year}`;
-}
-
-function windowOf(entries: readonly LedgerEntry[]): string {
-  const stamps = entries
-    .map((entry) => entry.record.settledAt)
-    .filter((stamp): stamp is string => typeof stamp === "string")
-    .sort();
-  if (stamps.length === 0) return "an unrecorded window";
-  const first = isoDay(stamps[0]);
-  const last = isoDay(stamps[stamps.length - 1]);
-  return first === last ? first : `${first} to ${last}`;
-}
-
-/* ------------------------------------------------------------------ *
- * Snapshots: typed as unknown in the engine, so narrow it honestly
- * ------------------------------------------------------------------ */
-
-type FileStat = { count: number; bytes: number };
-type Snapshots = {
-  before: FileStat;
-  after: FileStat;
-  diff: { added: string[]; modified: string[]; removed: string[] };
-  provenance: { compute: string; inference: string };
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
-
-const readStat = (value: unknown): FileStat | null =>
-  isRecord(value) &&
-  typeof value.count === "number" &&
-  typeof value.bytes === "number"
-    ? { count: value.count, bytes: value.bytes }
-    : null;
-
-const readStrings = (value: unknown): string[] =>
-  Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === "string")
-    : [];
-
-function readSnapshots(value: unknown): Snapshots | null {
-  if (!isRecord(value)) return null;
-  const before = readStat(value.before);
-  const after = readStat(value.after);
-  if (!before || !after) return null;
-
-  const diff = isRecord(value.diff) ? value.diff : {};
-  const provenance = isRecord(value.provenance) ? value.provenance : {};
-
-  return {
-    before,
-    after,
-    diff: {
-      added: readStrings(diff.added),
-      modified: readStrings(diff.modified),
-      removed: readStrings(diff.removed),
-    },
-    provenance: {
-      compute:
-        typeof provenance.compute === "string"
-          ? provenance.compute
-          : "unrecorded",
-      inference:
-        typeof provenance.inference === "string"
-          ? provenance.inference
-          : "unrecorded",
-    },
-  };
-}
-
-function provenanceLines(entries: readonly LedgerEntry[]): string[] {
-  const lines = new Set<string>();
-  for (const entry of entries) {
-    const snapshots = readSnapshots(entry.record.snapshots);
-    if (snapshots) {
-      lines.add(
-        `compute ${snapshots.provenance.compute} · inference ${snapshots.provenance.inference}`,
-      );
-    }
-  }
-  return [...lines];
-}
-
-/* ------------------------------------------------------------------ *
- * The forgery the tamper control performs
- * ------------------------------------------------------------------ */
-
-type Forgery = {
-  /** -1 when the chain is too short for the demonstration to land. */
-  index: number;
-  entry: LedgerEntry | null;
-  /** The rewritten Q. */
-  claim: number;
-};
-
-/**
- * The edit worth demonstrating: a unit that failed its checks and minted
- * nothing, rewritten to have delivered its whole budget. Found rather than
- * hardcoded, so it survives a regenerated sample and works on a visitor ledger
- * of any shape.
+ * State
  *
- * Two constraints make it honest. Never the last entry, because the orphaned
- * tail is half of what the panel shows. And never a value the record already
- * holds, because an edit that changed nothing would leave the digest valid and
- * make the control read as broken rather than the chain read as sound.
- */
-function forgery(entries: readonly LedgerEntry[]): Forgery {
-  const last = entries.length - 1;
-  if (last < 1) return { index: -1, entry: null, claim: 0 };
+ * One snapshot drives every tab. Nothing polls: the folder is read once on
+ * mount and again when the reader asks. The only recurring timer is a slow
+ * clock that keeps the "ago" labels honest between refreshes.
+ * ------------------------------------------------------------------ */
 
-  const blank = entries.findIndex((e, i) => i < last && e.record.Q === 0);
-  const under =
-    blank !== -1
-      ? blank
-      : entries.findIndex((e, i) => i < last && e.record.Q < e.record.potential);
-  const index = under === -1 ? 0 : under;
+type FolderState =
+  | { status: "loading" }
+  | { status: "ready"; payload: FolderPayload; ms: number }
+  | { status: "failed"; reason: string };
 
-  const { Q, potential } = entries[index].record;
-  return {
-    index,
-    entry: entries[index],
-    // Short of its budget: claim all of it. Already paid in full: double it.
-    claim: Q < potential ? potential : Math.max(Q * 2, 1),
-  };
-}
+const TAB_IDS = [
+  "overview",
+  "folder",
+  "presence",
+  "telemetry",
+  "timeline",
+] as const;
+
+type TabId = (typeof TAB_IDS)[number];
 
 /* ------------------------------------------------------------------ *
  * Formatting
  * ------------------------------------------------------------------ */
 
-const money = (value: number | null, digits = 2) =>
-  value === null ? "n/a" : formatMoney(value, digits);
-
-const quirqs = (value: number | null, digits = 2) =>
-  value === null ? "n/a" : formatQuirqs(value, digits);
-
-const ratio = (value: number | null, digits = 2) =>
-  value === null ? "n/a" : `${value.toFixed(digits)}×`;
-
-const percent = (value: number | null, digits = 1) =>
-  value === null ? "n/a" : `${(value * 100).toFixed(digits)}%`;
-
-const shortHash = (hash: string) => `${hash.slice(0, 12)}…${hash.slice(-8)}`;
-
 const pad = (n: number) => String(n).padStart(2, "0");
 
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
-/* ------------------------------------------------------------------ *
- * Cost lines: the all-in model, in the whitepaper's order
- * ------------------------------------------------------------------ */
+const shortId = (id: string) => (id.length > 8 ? id.slice(0, 8) : id);
 
-const COST_LINES: ReadonlyArray<{
-  key: keyof CostBreakdown;
-  label: string;
-  note: string;
-  colour: string;
-}> = [
-  {
-    key: "inference",
-    label: "Inference",
-    note: "tokens × price per million",
-    colour: SPECTRUM[0],
-  },
-  {
-    key: "compute",
-    label: "Compute",
-    note: "metered seconds at an hourly rate",
-    colour: SPECTRUM[1],
-  },
-  {
-    key: "api",
-    label: "API calls",
-    note: "calls × price per call",
-    colour: SPECTRUM[2],
-  },
-  {
-    key: "storage",
-    label: "Storage",
-    note: "gigabyte months",
-    colour: SPECTRUM[3],
-  },
-  {
-    key: "environment",
-    label: "Environment",
-    note: "fixed cost over the units it hosts",
-    colour: SPECTRUM[5],
-  },
-  {
-    key: "intervention",
-    label: "Human intervention",
-    note: "minutes at a loaded hourly rate",
-    colour: SPECTRUM[6],
-  },
-];
+/** The augment file stamps epoch milliseconds; everything else is ISO. A
+ *  zero or unfinite stamp must degrade the way formatAgo degrades, because
+ *  toISOString throws on an invalid date rather than shrugging at it. */
+const agoFromMs = (ms: number, now: number) =>
+  Number.isFinite(ms) && ms > 0
+    ? formatAgo(new Date(ms).toISOString(), now)
+    : "unrecorded";
 
 /* ------------------------------------------------------------------ *
- * Shared chrome
- *
- * Every surface here now stands in front of the live glass rather than a flat
- * CSS glow, so the panel backgrounds are near-black and the cells darker
- * still. Free-standing lines of type carry a TextScrim instead.
+ * Chrome
  * ------------------------------------------------------------------ */
 
+/** `scrolls` drops the clip: the global focus ring sits 4px outside a
+ *  focusable scroll region, and an overflow-hidden ancestor would shave it. */
 function Panel({
   title,
   aside,
+  scrolls,
   children,
   className,
 }: {
   title: string;
   aside?: ReactNode;
+  scrolls?: boolean;
   children: ReactNode;
   className?: string;
 }) {
   return (
     <section
       className={cn(
-        "min-w-0 overflow-hidden rounded-2xl border border-hair bg-black/70 backdrop-blur-xl shadow-[0_40px_120px_rgba(0,0,0,0.6)]",
+        "min-w-0 rounded-2xl border border-hair bg-black/70",
+        scrolls ? "overflow-visible" : "overflow-hidden",
         className,
       )}
     >
@@ -330,925 +114,8 @@ function Caption({ children }: { children: ReactNode }) {
 const PILL =
   "rounded-full px-4 py-2 font-mono text-[10.5px] tracking-[0.14em] uppercase transition-colors";
 
-/* ------------------------------------------------------------------ *
- * The dashboard
- * ------------------------------------------------------------------ */
-
-type ChainState =
-  | { status: "pending" }
-  | { status: "done"; result: Verification; ms: number }
-  | { status: "error"; message: string };
-
-/**
- * Five beats on the shared keyframe track, and every one of them is driven by
- * the same piece of state, which is why the whole page is one component rather
- * than five siblings:
- *
- *   0 centred · what you are looking at, and the headline figures
- *   1 glass stage-right, copy left · which ledger this is, and what it is not
- *   2 glass stage-left, copy right · connecting to a live instance
- *   3 glass recedes upstage · the tables, at full width
- *   4 centred and fully lit · the chain, recomputed in front of you
- *
- * The last two are several viewports tall. That is supported now: the scroll
- * runtime observes each registered section, and every deliberate height change
- * below also calls beatsResized() rather than waiting on the observer.
- */
-export function Dashboard() {
-  const uid = useId();
-  const [source, setSource] = useState<Source>("sample");
-  const [session, setSession] = useState<LedgerEntry[]>([]);
-  const [kind, setKind] = useState<string>("all");
-  const [tampered, setTampered] = useState(false);
-  const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set());
-  const [chain, setChain] = useState<ChainState>({ status: "pending" });
-
-  // localStorage does not exist during SSR, so reading the visitor's ledger
-  // while rendering would make the server HTML and the first client paint
-  // disagree. It is read once after mount instead, and the switch honestly
-  // reads "0" until then.
-  useEffect(() => {
-    setSession(readSession());
-  }, []);
-
-  const base = source === "sample" ? SAMPLE : session;
-
-  const forge = useMemo(() => forgery(base), [base]);
-
-  // Copy on write rather than mutate: the imported JSON module object is
-  // shared for the lifetime of the tab, so an in-place edit could never be
-  // undone by the reset button.
-  const entries = useMemo<LedgerEntry[]>(
-    () =>
-      tampered && forge.entry
-        ? base.map((entry, i) =>
-            i === forge.index
-              ? { ...entry, record: { ...entry.record, Q: forge.claim } }
-              : entry,
-          )
-        : base,
-    [base, tampered, forge],
-  );
-
-  // Verification is a browser computation, not a build artifact: the point of
-  // a hash chain is that the reader recomputes it instead of trusting a flag
-  // the server sent. It also cannot run during SSR, since the pending state
-  // is what makes the recomputation visible.
-  useEffect(() => {
-    let live = true;
-    setChain({ status: "pending" });
-    const started = performance.now();
-
-    verifyChain(entries)
-      .then((result) => {
-        if (live) {
-          setChain({ status: "done", result, ms: performance.now() - started });
-        }
-      })
-      .catch((error: unknown) => {
-        if (live) {
-          setChain({
-            status: "error",
-            message: error instanceof Error ? error.message : String(error),
-          });
-        }
-      });
-
-    return () => {
-      live = false;
-    };
-  }, [entries]);
-
-  // The tampered record feeds the metrics too. That is the argument: totals
-  // are forgeable, which is exactly why the chain is recomputed beside them.
-  const records = useMemo(() => entries.map((entry) => entry.record), [entries]);
-
-  const kinds = useMemo(() => kindCounts(base), [base]);
-  const descriptions = useMemo(() => checkDescriptions(base), [base]);
-  const provenance = useMemo(() => provenanceLines(base), [base]);
-  const windowLabel = useMemo(() => windowOf(base), [base]);
-
-  // A kind selected against one ledger usually does not exist in the other, and
-  // a filter that silently matches nothing looks like a broken page. Fall back
-  // rather than reset, so switching back restores the selection.
-  const activeKind = kinds.some(([name]) => name === kind) ? kind : "all";
-
-  const units = useMemo(
-    () =>
-      activeKind === "all"
-        ? records
-        : records.filter((r) => (r.kind ?? "unattributed") === activeKind),
-    [records, activeKind],
-  );
-
-  const metrics = useMemo(() => portfolioMetrics(units), [units]);
-
-  const composition = useMemo(() => {
-    const totals: CostBreakdown = {
-      inference: 0,
-      compute: 0,
-      api: 0,
-      storage: 0,
-      environment: 0,
-      intervention: 0,
-    };
-    for (const unit of units) {
-      for (const line of COST_LINES) {
-        totals[line.key] += unit.costBreakdown[line.key];
-      }
-    }
-    const total = COST_LINES.reduce((sum, line) => sum + totals[line.key], 0);
-    return { totals, total };
-  }, [units]);
-
-  // Every one of these changes a beat's height: a different ledger, a
-  // different slice, a row opening, a forged entry, the verification landing.
-  // The runtime measures section centres, so a stale height desyncs the glass
-  // from the copy it is lit for. Told directly rather than left to the
-  // ResizeObserver, whose delivery a throttled tab is free to defer.
-  useEffect(() => {
-    beatsResized();
-  }, [source, session, activeKind, tampered, open, chain]);
-
-  const toggle = (id: string) =>
-    setOpen((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-
-  const pick = (next: Source) => {
-    setSource(next);
-    // A forgery belongs to the chain it was made against; carrying the flag
-    // across would tamper with the other ledger the moment it loaded.
-    setTampered(false);
-  };
-
-  const legalCount = kinds.find(([k]) => k === "legal")?.[1] ?? 0;
-  const supportCount = kinds.find(([k]) => k === "support")?.[1] ?? 0;
-
-  const empty = base.length === 0;
-
-  return (
-    <InstanceProvider>
-      {/* ---------------- 0 · centred: what this is ---------------- */}
-
-      <Beat index={0} id="dashboard-ledger">
-        <div className="over-stage relative flex flex-col items-center text-center">
-          <GlassPool scrimClassName="mx-auto max-w-3xl">
-            <Marker>Dashboard · a working ledger</Marker>
-
-            <h1 className="display mt-7 max-w-[17ch]">
-              <Reveal delay={0.05}>Nothing here</Reveal>
-              <Reveal delay={0.13}>
-                <GlassText className="whitespace-nowrap">
-                  is a screenshot.
-                </GlassText>
-              </Reveal>
-            </h1>
-
-            <Rise delay={0.24}>
-              <p className="lede mx-auto mt-7 text-center">
-                Every figure below is recomputed in this tab from the raw
-                records, and the hash chain is re-verified link by link rather
-                than taken on trust.
-              </p>
-            </Rise>
-          </GlassPool>
-        </div>
-
-        {empty ? (
-          <EmptyLedger />
-        ) : (
-          <Rise className="mt-12">
-            <div className="overflow-hidden rounded-2xl border border-hair bg-black/40 backdrop-blur-xl shadow-[0_40px_120px_rgba(0,0,0,0.6)]">
-              <div className="grid grid-cols-2 gap-px bg-white/6 md:grid-cols-3 xl:grid-cols-6">
-                <Tile
-                  label="Minted quirqs"
-                  value={quirqs(metrics.minted)}
-                  note={`${metrics.count} ${plural(metrics.count, "unit", "units")} settled in this slice`}
-                />
-                <Tile
-                  label="All-in cost"
-                  value={money(metrics.cost)}
-                  note="inference · compute · api · storage · environment · human"
-                />
-                <Tile
-                  label="QER"
-                  value={ratio(metrics.qer)}
-                  note="quirqs minted per all-in dollar"
-                />
-                <Tile
-                  label="Cost per quirq"
-                  value={money(metrics.costPerQuirq, 4)}
-                  note="what one quirq of verified work cost"
-                />
-                <Tile
-                  label="Intervention rate"
-                  value={percent(metrics.interventionRate)}
-                  note={`${metrics.interventions} of ${metrics.count} ${plural(metrics.count, "unit", "units")} scored under tau`}
-                />
-                <Tile
-                  label="Realisation"
-                  value={percent(metrics.realisation)}
-                  note={`${quirqs(metrics.minted)} minted of ${quirqs(metrics.potential)} budgeted`}
-                />
-              </div>
-            </div>
-          </Rise>
-        )}
-      </Beat>
-
-      {/* ---------------- 1 · glass stage-right: which ledger ---------------- */}
-
-      <Beat index={1} id="dashboard-source">
-        <div className="relative max-w-2xl md:max-w-[60%]">
-          <TextScrim />
-
-          <Marker>01 · what this data is</Marker>
-
-          <h2 className="display-sm over-stage mt-7">
-            <Reveal delay={0.05}>Two ledgers,</Reveal>
-            <Reveal delay={0.13}>both staged worlds.</Reveal>
-          </h2>
-
-          <Rise delay={0.26}>
-            <p className="lede over-stage mt-7">
-              Thirty four settled units from one run of the quirq CLI against a
-              real scratch workspace, or your own ledger if you have minted into
-              it.
-            </p>
-          </Rise>
-
-          <Rise delay={0.32} className="mt-9">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-              <span id={`${uid}-source`} className="label text-[9.5px]">
-                Ledger
-              </span>
-              <div
-                role="group"
-                aria-labelledby={`${uid}-source`}
-                className="flex flex-wrap items-center gap-2"
-              >
-                <FilterButton
-                  label={`Sample workspace · ${SAMPLE.length}`}
-                  active={source === "sample"}
-                  onPress={() => pick("sample")}
-                />
-                <FilterButton
-                  label={`Your ledger · ${session.length}`}
-                  active={source === "session"}
-                  onPress={() => pick("session")}
-                />
-              </div>
-            </div>
-          </Rise>
-
-          {!empty && (
-            <>
-              <Provenance
-                source={source}
-                count={base.length}
-                kinds={kinds}
-                provenance={provenance}
-                windowLabel={windowLabel}
-              />
-
-              <Rise className="mt-8">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-                  <span id={`${uid}-kind`} className="label text-[9.5px]">
-                    Kind
-                  </span>
-                  <div
-                    role="group"
-                    aria-labelledby={`${uid}-kind`}
-                    className="flex flex-wrap items-center gap-2"
-                  >
-                    <FilterButton
-                      label={`All · ${base.length}`}
-                      active={activeKind === "all"}
-                      onPress={() => setKind("all")}
-                    />
-                    {kinds.map(([name, count]) => (
-                      <FilterButton
-                        key={name}
-                        label={`${name} · ${count}`}
-                        active={activeKind === name}
-                        onPress={() => setKind(name)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </Rise>
-
-              <Rise className="mt-6">
-                <p className="over-stage font-mono text-[10.5px] leading-relaxed text-faint">
-                  Each of the six figures on the last screen is one call to{" "}
-                  <span className="text-dim">portfolioMetrics()</span> over the{" "}
-                  {metrics.count}{" "}
-                  {plural(metrics.count, "record", "records")} this filter
-                  selects. None of them is stored or precomputed
-                  {source === "sample" ? (
-                    <>
-                      : change the kind and all six are recomputed. QER reads
-                      high here because of the work mix, not because of
-                      performance: this workspace settled {legalCount} contract
-                      reviews budgeted in the hundreds against {supportCount}{" "}
-                      support tickets budgeted in the tens, so it is not
-                      comparable with the support-heavy quarter worked in the
-                      whitepaper. Compare mixes before comparing ratios.
-                    </>
-                  ) : (
-                    <>
-                      ; the same function ran over your records in this tab. A
-                      ledger this short is a working meter rather than a
-                      measurement: a ratio needs a window and a work mix behind
-                      it before it means anything, so read these as arithmetic
-                      on your own entries and nothing more.
-                    </>
-                  )}
-                </p>
-              </Rise>
-            </>
-          )}
-        </div>
-      </Beat>
-
-      {/* ---------------- 2 · glass stage-left: the live instance ---------------- */}
-
-      <Beat index={2} id="dashboard-instance">
-        <div className="relative max-w-2xl md:ml-auto md:max-w-[60%]">
-          <TextScrim />
-
-          <Marker>02 · the environment</Marker>
-
-          <h2 className="display-sm over-stage mt-7">
-            <Reveal delay={0.05}>Connecting is</Reveal>
-            <Reveal delay={0.13}>an action you take.</Reveal>
-          </h2>
-
-          <div className="mt-9">
-            <InstanceConnect />
-          </div>
-        </div>
-      </Beat>
-
-      {/* ---------------- 3 · glass recedes: everything, at full width ------------ */}
-
-      <Beat index={3} id="dashboard-detail">
-        <div className="relative max-w-2xl">
-          <TextScrim />
-
-          <Marker>03 · the whole slice</Marker>
-
-          <h2 className="display-sm over-stage mt-7">
-            <Reveal delay={0.05}>Row by row,</Reveal>
-            <Reveal delay={0.13}>line by line.</Reveal>
-          </h2>
-
-          <Rise delay={0.26}>
-            <p className="lede over-stage mt-7">
-              The glass is furthest upstage here because the numbers should own
-              the frame. Everything below is at full width and in ledger order.
-            </p>
-          </Rise>
-
-          {empty && (
-            <Rise delay={0.32} className="mt-6">
-              <p className="over-stage font-mono text-[10.5px] leading-relaxed text-faint">
-                Nothing to lay out yet. Mint one unit and the cost composition,
-                the failing-check ranking and the whole unit table appear here.
-              </p>
-            </Rise>
-          )}
-        </div>
-
-        {/* The instance detail continues straight out of beat 2, before any
-            figure about settled work, so the two never blur together. */}
-        <div className="mt-12">
-          <InstanceDetail />
-        </div>
-
-        {!empty && (
-          <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-12">
-            {/* ---------------- cost composition ---------------- */}
-
-            <Rise>
-              <Panel
-                title="Cost composition"
-                aside={
-                  <span className="numeric font-mono text-[11px] text-dim tabular-nums">
-                    {money(composition.total)} all-in
-                  </span>
-                }
-              >
-                <div className="px-5 pt-6 sm:px-6">
-                  <div
-                    aria-hidden
-                    className="flex h-9 w-full overflow-hidden rounded-[4px] bg-white/5"
-                  >
-                    {COST_LINES.map((line) => {
-                      const amount = composition.totals[line.key];
-                      const share =
-                        composition.total > 0 ? amount / composition.total : 0;
-                      return (
-                        <span
-                          key={line.key}
-                          className="h-full transition-[width] duration-500 ease-out motion-reduce:transition-none"
-                          style={{
-                            width: `${(share * 100).toFixed(3)}%`,
-                            background: line.colour,
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="px-5 pt-6 pb-2 sm:px-6">
-                  <table className="w-full border-collapse text-left">
-                    <caption className="sr-only">
-                      All-in cost broken into the six lines of the quirq cost
-                      model, summed across the {metrics.count} units in this
-                      slice.
-                    </caption>
-                    <thead>
-                      <tr className="border-b border-hair-soft">
-                        <th
-                          scope="col"
-                          className="pb-2.5 font-mono text-[9.5px] font-medium tracking-[0.14em] text-faint uppercase"
-                        >
-                          Line
-                        </th>
-                        <th
-                          scope="col"
-                          className="pb-2.5 text-right font-mono text-[9.5px] font-medium tracking-[0.14em] text-faint uppercase"
-                        >
-                          Amount
-                        </th>
-                        <th
-                          scope="col"
-                          className="pb-2.5 text-right font-mono text-[9.5px] font-medium tracking-[0.14em] text-faint uppercase"
-                        >
-                          Share
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {COST_LINES.map((line) => {
-                        const amount = composition.totals[line.key];
-                        const share =
-                          composition.total > 0 ? amount / composition.total : 0;
-                        return (
-                          <tr
-                            key={line.key}
-                            className="border-b border-hair-soft last:border-b-0"
-                          >
-                            <th
-                              scope="row"
-                              className="py-3 pr-4 text-left font-normal"
-                            >
-                              <span className="flex items-center gap-3">
-                                <span
-                                  aria-hidden
-                                  className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
-                                  style={{ background: line.colour }}
-                                />
-                                <span className="text-[13.5px] text-ink/85">
-                                  {line.label}
-                                </span>
-                                <span className="hidden font-mono text-[10px] text-faint sm:inline">
-                                  {line.note}
-                                </span>
-                              </span>
-                            </th>
-                            <td className="numeric py-3 text-right font-mono text-[12.5px] text-ink/80 tabular-nums">
-                              {money(amount, 4)}
-                            </td>
-                            <td className="numeric py-3 text-right font-mono text-[12.5px] text-dim tabular-nums">
-                              {percent(share, 2)}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-
-                <Caption>
-                  A token bill can show one of these lines. Inference is{" "}
-                  <span className="text-ink">
-                    {percent(
-                      composition.total > 0
-                        ? composition.totals.inference / composition.total
-                        : null,
-                      2,
-                    )}
-                  </span>{" "}
-                  of what this slice actually cost. Human intervention is{" "}
-                  <span className="text-ink">
-                    {percent(
-                      composition.total > 0
-                        ? composition.totals.intervention / composition.total
-                        : null,
-                      2,
-                    )}
-                  </span>
-                  , and it only appears once something meters the delivery side:
-                  those minutes are spent precisely on the{" "}
-                  {metrics.interventions} units that scored under tau.
-                </Caption>
-              </Panel>
-            </Rise>
-
-            {/* ---------------- failing checks ---------------- */}
-
-            <Rise>
-              <Panel
-                title="Where completion leaked"
-                aside={
-                  <span className="numeric font-mono text-[11px] text-dim tabular-nums">
-                    {metrics.interventions} of {metrics.count}{" "}
-                    {plural(metrics.count, "unit", "units")} under tau
-                  </span>
-                }
-              >
-                {metrics.failingChecks.length === 0 ? (
-                  <p className="px-5 py-8 text-[13.5px] text-dim sm:px-6">
-                    No unit in this slice scored under tau, so no check failed.
-                  </p>
-                ) : (
-                  <ol className="px-5 py-2 sm:px-6">
-                    {metrics.failingChecks.map((check, i) => {
-                      const share =
-                        metrics.interventions > 0
-                          ? check.count / metrics.interventions
-                          : 0;
-                      return (
-                        <li
-                          key={check.id}
-                          className="grid grid-cols-[auto_1fr_auto] items-center gap-x-4 border-b border-hair-soft py-4 last:border-b-0 sm:gap-x-6"
-                        >
-                          <span className="font-mono text-[11px] text-faint">
-                            {pad(i + 1)}
-                          </span>
-                          <span className="min-w-0">
-                            <span className="block truncate font-mono text-[12.5px] text-ink">
-                              {check.id}
-                            </span>
-                            <span className="mt-1 block truncate text-[12.5px] text-dim">
-                              {descriptions.get(check.id) ??
-                                "no description recorded"}
-                            </span>
-                            <span
-                              aria-hidden
-                              className="mt-2.5 block h-1 w-full overflow-hidden rounded-full bg-white/6"
-                            >
-                              <span
-                                className="block h-full rounded-full transition-[width] duration-500 ease-out motion-reduce:transition-none"
-                                style={{
-                                  width: `${(share * 100).toFixed(2)}%`,
-                                  background: "var(--spectrum)",
-                                }}
-                              />
-                            </span>
-                          </span>
-                          <span className="numeric text-right font-mono text-[11px] text-dim tabular-nums">
-                            {check.count} {plural(check.count, "unit", "units")}
-                            <span className="mt-1 block text-faint">
-                              {check.weight.toFixed(2)} weight lost
-                            </span>
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                )}
-
-                <Caption>
-                  The intervention rate arrives with its diagnosis attached:
-                  failures localise to named checks, so the ranking above is the
-                  answer to which single check to harden first. Nothing here is
-                  a judgement about the agent. It is the definition of done
-                  saying which clause it could not satisfy.
-                </Caption>
-              </Panel>
-            </Rise>
-
-            {/* ---------------- the unit table ---------------- */}
-
-            <section className="min-w-0">
-              <div className="relative">
-                <TextScrim />
-                <div className="relative flex flex-wrap items-baseline justify-between gap-3">
-                  <h2 className="label">Units · the whole slice</h2>
-                  <span className="numeric font-mono text-[11px] text-dim tabular-nums">
-                    {units.length} {plural(units.length, "row", "rows")} ·
-                    ledger order
-                  </span>
-                </div>
-
-                <p className="over-stage relative mt-3 max-w-[78ch] font-mono text-[10.5px] leading-relaxed text-faint">
-                  Expand a row for the checks that produced V, the evidence
-                  string each one recorded, and the before and after file counts
-                  the workspace captured. Rows that minted nothing are marked in
-                  red: those are atomic units that came in under tau, where
-                  partial completion is worth nothing by declaration. Their cost
-                  per quirq reads n/a because the calculus leaves it undefined
-                  at Q = 0 rather than calling it infinite.
-                </p>
-              </div>
-
-              {/* Not wrapped in Rise: whileInView needs a quarter of the element
-                  on screen at once, which a long table can never satisfy, so a
-                  wrapped table would simply stay invisible. */}
-              <div
-                tabIndex={0}
-                role="region"
-                aria-label="Settled units"
-                className="mt-5 overflow-x-auto rounded-2xl border border-hair bg-black/70 backdrop-blur-xl"
-              >
-                <table className="w-full min-w-[940px] border-collapse text-left">
-                  <caption className="sr-only">
-                    Every settled unit in the current slice: verified
-                    completion, budgeted value, minted quirqs, and all-in cost.
-                    Each row expands to its individual checks and captured
-                    snapshots.
-                  </caption>
-                  <thead>
-                    <tr className="border-b border-hair bg-white/[0.03]">
-                      <Th className="w-[36%]">Unit</Th>
-                      <Th>Kind</Th>
-                      <Th>Settlement</Th>
-                      <Th align="right">Verified V</Th>
-                      <Th align="right">Budget B</Th>
-                      <Th align="right">Minted Q</Th>
-                      <Th align="right">All-in cost</Th>
-                      <Th align="right">Cost per Q</Th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {/* Keyed by row rather than by unit id: minting the same
-                        demo task twice writes two records under one id, and
-                        two React keys or two aria-controls targets with the
-                        same value is a broken table. The open set still keys
-                        on the id, so duplicates disclose together as before. */}
-                    {units.map((unit, i) => (
-                      <UnitRow
-                        key={`${i}-${unit.id}`}
-                        unit={unit}
-                        index={i}
-                        detailId={`${uid}-${i}-${unit.id}`}
-                        expanded={open.has(unit.id)}
-                        onToggle={() => toggle(unit.id)}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          </div>
-        )}
-      </Beat>
-
-      {/* ---------------- 4 · centred and fully lit: the chain ---------------- */}
-
-      <Beat index={4} id="dashboard-chain">
-        <div className="over-stage relative flex flex-col items-center text-center">
-          <GlassPool scrimClassName="mx-auto max-w-3xl">
-            <Marker>04 · the chain</Marker>
-
-            <h2 className="display mt-7 max-w-[18ch]">
-              <Reveal delay={0.05}>Totals are forgeable.</Reveal>
-              <Reveal delay={0.13}>
-                <GlassText className="whitespace-nowrap">
-                  The chain is not.
-                </GlassText>
-              </Reveal>
-            </h2>
-
-            <Rise delay={0.24}>
-              <p className="lede mx-auto mt-7 text-center">
-                Rewrite one number and the totals move with it. The digests do
-                not: they are recomputed here, from genesis, every time.
-              </p>
-            </Rise>
-          </GlassPool>
-        </div>
-
-        {!empty && (
-          <Rise className="mt-12">
-            <ChainPanel
-              chain={chain}
-              entries={entries}
-              tampered={tampered}
-              onTamper={() => setTampered(true)}
-              onReset={() => setTampered(false)}
-              forge={forge}
-            />
-          </Rise>
-        )}
-
-        <Rise className="relative mt-14 flex flex-col items-center text-center">
-          <TextScrim className="mx-auto max-w-2xl" />
-          <p className="label relative">Produce one of these from your own agents</p>
-          <p className="over-stage relative mt-4 font-mono text-[13px] text-ink">
-            curl -fsSL quirq.ai/install | sh
-          </p>
-          <p className="over-stage relative mt-3 max-w-[62ch] font-mono text-[10.5px] leading-relaxed text-faint">
-            The CLI writes the same JSONL hash chain this page just verified.
-            Any ledger it produces reads here identically, because the dashboard
-            only ever runs the engine over records.
-          </p>
-          <div className="relative mt-8 flex flex-wrap items-center justify-center gap-3">
-            <ActionLink href="/whitepaper" tone="ghost">
-              Read the whitepaper
-            </ActionLink>
-            <ActionLink href="/research/the-quirq-calculus" tone="ghost">
-              The full calculus
-            </ActionLink>
-          </div>
-        </Rise>
-      </Beat>
-    </InstanceProvider>
-  );
-}
-
-/* ------------------------------------------------------------------ *
- * Pieces
- * ------------------------------------------------------------------ */
-
-function EmptyLedger() {
-  return (
-    <Rise className="mx-auto mt-12 max-w-2xl">
-      <div className="overflow-hidden rounded-2xl border border-hair bg-black/70 px-5 py-9 backdrop-blur-xl sm:px-6">
-        <p className="label text-[9.5px]">Your ledger · nothing yet</p>
-        <p className="mt-4 max-w-[56ch] text-[14.5px] leading-[1.65] text-ink/85">
-          Nothing has been minted in this browser. The demo settles one unit
-          against a simulated workspace and appends it to a chain in this
-          tab&rsquo;s storage. Once it has, every panel on this page reads your
-          entries the way it reads the sample.
-        </p>
-        <p className="mt-3 max-w-[62ch] font-mono text-[10.5px] leading-relaxed text-faint">
-          Local only. Nothing about your ledger is sent anywhere, and clearing
-          site data removes it.
-        </p>
-        <div className="mt-8">
-          <ActionLink href="/demo">Mint one</ActionLink>
-        </div>
-      </div>
-    </Rise>
-  );
-}
-
-function ProvenanceCell({
-  label,
-  mono,
-  children,
-}: {
-  label: string;
-  mono?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="bg-black/80 px-5 py-6 sm:px-6">
-      <p className="label text-[9.5px]">{label}</p>
-      {mono !== undefined && (
-        <p className="mt-3 font-mono text-[11px] leading-[1.7] text-dim">
-          {mono}
-        </p>
-      )}
-      <p className="mt-3 text-[13.5px] leading-[1.65] text-ink/80">{children}</p>
-    </div>
-  );
-}
-
-/**
- * Both sources are staged worlds, but they are staged differently, and one
- * caption for both would be the exact blur the whitepaper spends a chapter
- * refusing. Say which is which.
- *
- * Stacked rather than three across: this band now sits in beat 1's 60% column,
- * where three columns of prose would be three columns of one word each.
- */
-function Provenance({
-  source,
-  count,
-  kinds,
-  provenance,
-  windowLabel,
-}: {
-  source: Source;
-  count: number;
-  kinds: ReadonlyArray<readonly [string, number]>;
-  provenance: string[];
-  windowLabel: string;
-}) {
-  const sample = source === "sample";
-
-  return (
-    <Rise className="mt-8">
-      <div className="overflow-hidden rounded-2xl border border-hair">
-        <div className="grid gap-px bg-white/6">
-          <ProvenanceCell label="What this is">
-            {sample ? (
-              <>
-                A scripted agent working a scratch workspace: files really
-                written, really hashed before and after, checks really evaluated
-                against the after-state. The whitepaper calls this mock mode. It
-                validates the machinery. It cannot validate any claim about how
-                real agents perform.
-              </>
-            ) : (
-              <>
-                What you minted at{" "}
-                <a
-                  href="/demo"
-                  className="text-dim underline underline-offset-4"
-                >
-                  the demo
-                </a>
-                , in this browser. Staged there: three files and the worker that
-                edits them, because there is no repo and no model behind it.
-                Real: the SHA-256 hashing, the definition of done evaluated
-                against the captured after-state, the scoring, the mint, and
-                this chain. Same engine the CLI runs.
-              </>
-            )}
-          </ProvenanceCell>
-
-          <ProvenanceCell
-            label="Provenance"
-            mono={
-              provenance.length > 0
-                ? provenance.join(" / ")
-                : "no provenance recorded"
-            }
-          >
-            {sample ? (
-              <>
-                Compute seconds are metered. Inference token counts are declared
-                by the runner, not observed, so every record carries its own
-                provenance and says so.
-              </>
-            ) : (
-              <>
-                The sample was produced by the CLI against a scratch workspace
-                on a machine. These records were produced by a simulated
-                workspace inside this tab, so read their cost lines as
-                illustration: no tokens were spent and no seconds were metered.
-                The hashing and the chain are not illustration.
-              </>
-            )}
-          </ProvenanceCell>
-
-          <ProvenanceCell label="Window" mono={windowLabel}>
-            {sample ? (
-              <>
-                {count} units settled across{" "}
-                {kinds.map(([name, n]) => `${n} ${name}`).join(" · ")}. One
-                workspace, three owners, one chain.
-              </>
-            ) : (
-              <>
-                {count} {plural(count, "unit", "units")} settled in this
-                browser, held in localStorage and sent nowhere. One reader, one
-                chain, verified below from genesis.
-              </>
-            )}
-          </ProvenanceCell>
-        </div>
-      </div>
-    </Rise>
-  );
-}
-
-function FilterButton({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onPress}
-      className={cn(
-        PILL,
-        active
-          ? "focus-on-ink bg-ink text-void"
-          : "border border-hair bg-black/40 text-dim backdrop-blur-md hover:border-ink/30 hover:text-ink",
-      )}
-    >
-      {label}
-    </button>
-  );
-}
+const GHOST_PILL =
+  "border border-hair text-dim hover:border-ink/30 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-hair disabled:hover:text-dim";
 
 function Tile({
   label,
@@ -1257,257 +124,20 @@ function Tile({
 }: {
   label: string;
   value: string;
-  note: string;
+  note?: string;
 }) {
   return (
     <div className="bg-black/80 px-5 py-6 text-left">
       <p className="label text-[9.5px]">{label}</p>
-      <p className="numeric mt-3.5 font-mark text-[clamp(23px,2.7vw,34px)] font-semibold text-ink tabular-nums">
+      <p className="numeric mt-3.5 font-mark text-[clamp(21px,2.4vw,30px)] font-semibold text-ink tabular-nums">
         {value}
       </p>
-      <p className="mt-2.5 font-mono text-[10px] leading-relaxed text-faint">
-        {note}
-      </p>
-    </div>
-  );
-}
-
-function Th({
-  children,
-  align = "left",
-  className,
-}: {
-  children: ReactNode;
-  align?: "left" | "right";
-  className?: string;
-}) {
-  return (
-    <th
-      scope="col"
-      className={cn(
-        "px-4 py-3 font-mono text-[9.5px] font-medium tracking-[0.14em] text-faint uppercase whitespace-nowrap",
-        align === "right" ? "text-right" : "text-left",
-        className,
+      {note && (
+        <p className="mt-2.5 font-mono text-[10px] leading-relaxed text-faint">
+          {note}
+        </p>
       )}
-    >
-      {children}
-    </th>
-  );
-}
-
-const CELL = "px-4 font-mono text-[12px] tabular-nums whitespace-nowrap";
-
-function UnitRow({
-  unit,
-  index,
-  detailId,
-  expanded,
-  onToggle,
-}: {
-  unit: SettledUnit;
-  index: number;
-  detailId: string;
-  expanded: boolean;
-  onToggle: () => void;
-}) {
-  const blank = unit.Q === 0;
-  const snapshots = readSnapshots(unit.snapshots);
-
-  return (
-    <>
-      <tr
-        className={cn(
-          "h-[54px] border-b border-hair-soft",
-          blank ? "bg-spec-red/[0.06]" : "hover:bg-white/[0.02]",
-        )}
-      >
-        <td className="px-4">
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-expanded={expanded}
-            aria-controls={detailId}
-            className="flex w-full items-center gap-3 text-left"
-          >
-            <svg
-              width="9"
-              height="9"
-              viewBox="0 0 12 12"
-              fill="none"
-              aria-hidden
-              className={cn(
-                "shrink-0 transition-transform duration-200 motion-reduce:transition-none",
-                blank ? "text-spec-red" : "text-faint",
-                expanded && "rotate-90",
-              )}
-            >
-              <path
-                d="M4 2L8.5 6L4 10"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span className="font-mono text-[11px] text-faint">
-              {pad(index)}
-            </span>
-            <span className="min-w-0 truncate text-[13.5px] text-ink/90">
-              {unit.title}
-            </span>
-          </button>
-        </td>
-        <td className={cn(CELL, "text-dim")}>{unit.kind ?? "unattributed"}</td>
-        <td className={cn(CELL, "text-dim")}>{unit.settlement}</td>
-        <td
-          className={cn(
-            CELL,
-            "numeric text-right",
-            blank ? "text-spec-red" : "text-ink/85",
-          )}
-        >
-          {percent(unit.V, 0)}
-        </td>
-        <td className={cn(CELL, "numeric text-right text-dim")}>
-          {quirqs(unit.potential)}
-        </td>
-        <td
-          className={cn(
-            CELL,
-            "numeric text-right",
-            blank ? "text-spec-red" : "text-ink",
-          )}
-        >
-          {quirqs(unit.Q)}
-        </td>
-        <td className={cn(CELL, "numeric text-right text-ink/70")}>
-          {money(unit.cost)}
-        </td>
-        <td
-          className={cn(
-            CELL,
-            "numeric text-right",
-            blank ? "text-spec-red" : "text-ink/70",
-          )}
-        >
-          {money(unit.costPerQuirq, 4)}
-        </td>
-      </tr>
-
-      {/* Rendered always and hidden with the attribute rather than unmounted:
-          aria-controls must point at an element that exists even while the
-          disclosure is closed. */}
-      <tr id={detailId} hidden={!expanded} className="border-b border-hair-soft">
-        <td colSpan={8} className="bg-black/75 px-4 py-6 sm:px-6">
-          <div className="grid gap-8 lg:grid-cols-2">
-            <div>
-              <p className="label text-[9.5px]">
-                Definition of done · {unit.checks.length} checks
-              </p>
-              <ul className="mt-4 space-y-3.5">
-                {unit.checks.map((check) => (
-                  <li key={check.id} className="flex gap-3">
-                    {/* Case is the second channel after colour: a failed check
-                        should be findable by scanning, not only by hue. */}
-                    <span
-                      className={cn(
-                        "mt-px w-11 shrink-0 font-mono text-[10px] tracking-[0.1em]",
-                        check.passed ? "text-spec-green" : "text-spec-red",
-                      )}
-                    >
-                      {check.passed ? "pass" : "FAIL"}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block font-mono text-[12px] text-ink">
-                        {check.id}{" "}
-                        <span className="text-faint">
-                          w {check.weight.toFixed(2)}
-                        </span>
-                      </span>
-                      {check.description && (
-                        <span className="mt-1 block text-[12.5px] text-dim">
-                          {check.description}
-                        </span>
-                      )}
-                      {check.evidence && (
-                        <span
-                          className={cn(
-                            "mt-1.5 block font-mono text-[10.5px] leading-relaxed break-words",
-                            check.passed ? "text-faint" : "text-spec-red",
-                          )}
-                        >
-                          {check.evidence}
-                        </span>
-                      )}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              <p className="numeric mt-5 border-t border-hair-soft pt-4 font-mono text-[10.5px] leading-relaxed text-dim tabular-nums">
-                {unit.passedWeight.toFixed(2)} of {unit.weightSum.toFixed(2)}{" "}
-                weight passed, so V = {unit.V.toFixed(2)}. Settlement is{" "}
-                {unit.settlement} at tau {unit.tau.toFixed(2)}, which mints{" "}
-                {quirqs(unit.Q)} of a {quirqs(unit.potential)} budget.
-              </p>
-            </div>
-
-            <div>
-              <p className="label text-[9.5px]">Captured state</p>
-              {snapshots ? (
-                <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3">
-                  <Field
-                    term="Before"
-                    value={`${snapshots.before.count} files · ${snapshots.before.bytes} bytes`}
-                  />
-                  <Field
-                    term="After"
-                    value={`${snapshots.after.count} files · ${snapshots.after.bytes} bytes`}
-                  />
-                  <Field
-                    term="Added"
-                    value={snapshots.diff.added.join(", ") || "none"}
-                  />
-                  <Field
-                    term="Modified"
-                    value={snapshots.diff.modified.join(", ") || "none"}
-                    tone={snapshots.diff.modified.length > 0 ? "warn" : undefined}
-                  />
-                  <Field
-                    term="Removed"
-                    value={snapshots.diff.removed.join(", ") || "none"}
-                  />
-                  <Field
-                    term="Provenance"
-                    value={`compute ${snapshots.provenance.compute} · inference ${snapshots.provenance.inference}`}
-                  />
-                </dl>
-              ) : (
-                <p className="mt-4 font-mono text-[11px] text-faint">
-                  This record carries no snapshots.
-                </p>
-              )}
-
-              <p className="label mt-6 text-[9.5px]">Cost</p>
-              <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3">
-                {COST_LINES.map((line) => (
-                  <Field
-                    key={line.key}
-                    term={line.label}
-                    value={money(unit.costBreakdown[line.key], 4)}
-                  />
-                ))}
-              </dl>
-
-              <p className="mt-5 font-mono text-[10.5px] leading-relaxed text-faint">
-                {unit.id} · owner {unit.owner}
-                {unit.settledAt && ` · settled ${isoDay(unit.settledAt)}`}
-              </p>
-            </div>
-          </div>
-        </td>
-      </tr>
-    </>
+    </div>
   );
 }
 
@@ -1537,259 +167,1419 @@ function Field({
   );
 }
 
+function Th({
+  children,
+  align = "left",
+  className,
+}: {
+  children: ReactNode;
+  align?: "left" | "right";
+  className?: string;
+}) {
+  return (
+    <th
+      scope="col"
+      className={cn(
+        "px-4 py-3 font-mono text-[9.5px] font-medium tracking-[0.14em] text-faint uppercase whitespace-nowrap",
+        align === "right" ? "text-right" : "text-left",
+        className,
+      )}
+    >
+      {children}
+    </th>
+  );
+}
+
+const CELL = "px-4 font-mono text-[12px] tabular-nums whitespace-nowrap";
+
+/** A thin monochrome share bar. Counts here are consumption, and consumption
+ *  stays monochrome by the site's own figure rule: colour is value. */
+function ShareBar({ share }: { share: number }) {
+  return (
+    <span
+      aria-hidden
+      className="mt-2 block h-1 w-full overflow-hidden rounded-full bg-white/6"
+    >
+      <span
+        className="block h-full rounded-full bg-white/30"
+        style={{ width: `${(Math.min(Math.max(share, 0), 1) * 100).toFixed(2)}%` }}
+      />
+    </span>
+  );
+}
+
 /* ------------------------------------------------------------------ *
- * The chain panel
+ * Tabs
+ *
+ * The APG tabs pattern with automatic activation: the tablist is one tab
+ * stop, arrows move and select, and every panel stays mounted under a
+ * `hidden` attribute so aria-controls always points at a real element.
  * ------------------------------------------------------------------ */
 
-function ChainPanel({
-  chain,
-  entries,
-  tampered,
-  onTamper,
-  onReset,
-  forge,
-}: {
-  chain: ChainState;
-  entries: LedgerEntry[];
-  tampered: boolean;
-  onTamper: () => void;
-  onReset: () => void;
-  forge: Forgery;
-}) {
-  const reasonId = useId();
-  const result = chain.status === "done" ? chain.result : null;
-  const broken = result !== null && !result.valid;
-  const breakAt = result?.firstBreak ?? null;
-  const brokenEntry = breakAt === null ? null : entries[breakAt];
-  const brokenResult = breakAt === null ? null : result?.results[breakAt] ?? null;
-  const orphaned =
-    result === null || breakAt === null ? 0 : result.length - breakAt - 1;
+type TabSpec = { id: TabId; label: string; count?: number };
 
-  // A one-entry chain still shows a digest mismatch, but there is no tail for
-  // the break to orphan, which is the half of the demonstration that matters.
-  const target = forge.entry;
+function TabBar({
+  tabs,
+  active,
+  onSelect,
+}: {
+  tabs: TabSpec[];
+  active: TabId;
+  onSelect: (id: TabId) => void;
+}) {
+  const refs = useRef<Array<HTMLButtonElement | null>>([]);
+
+  const onKeyDown = (event: React.KeyboardEvent) => {
+    const current = tabs.findIndex((t) => t.id === active);
+    let next = -1;
+    if (event.key === "ArrowRight") next = (current + 1) % tabs.length;
+    else if (event.key === "ArrowLeft")
+      next = (current - 1 + tabs.length) % tabs.length;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = tabs.length - 1;
+    if (next === -1) return;
+    event.preventDefault();
+    onSelect(tabs[next].id);
+    refs.current[next]?.focus();
+  };
 
   return (
-    <Panel
-      title="Hash chain · recomputed in this browser"
-      aside={
-        <span
-          className={cn(
-            "flex items-center gap-2 rounded-full px-2.5 py-1 font-mono text-[9.5px] tracking-[0.08em] uppercase",
-            chain.status === "pending" && "bg-white/8 text-dim",
-            chain.status === "error" && "bg-spec-orange/10 text-spec-orange",
-            result?.valid && "bg-spec-green/10 text-spec-green",
-            broken && "bg-spec-red/10 text-spec-red",
-          )}
-        >
-          {result?.valid ? (
-            <span className="pulse-dot" />
-          ) : (
-            <span
-              aria-hidden
-              className={cn(
-                "h-[7px] w-[7px] shrink-0 rounded-full",
-                broken
-                  ? "bg-spec-red"
-                  : chain.status === "error"
-                    ? "bg-spec-orange"
-                    : "bg-dim",
-              )}
-            />
-          )}
-          {chain.status === "pending" && "verifying"}
-          {chain.status === "error" && "unavailable"}
-          {result?.valid && "verified"}
-          {broken && "broken"}
-        </span>
-      }
+    <div
+      role="tablist"
+      aria-label="Dashboard sections"
+      onKeyDown={onKeyDown}
+      className="flex overflow-x-auto border-b border-hair-soft"
     >
-      <div className="grid grid-cols-2 gap-px bg-white/6 md:grid-cols-4">
-        <ChainStat label="Entries" value={String(entries.length)} />
-        <ChainStat
-          label="Head hash"
-          value={result ? shortHash(result.head) : "…"}
-        />
-        <ChainStat
-          label="Recomputed in"
-          value={
-            chain.status === "done" ? `${Math.max(chain.ms, 0).toFixed(1)} ms` : "…"
-          }
-        />
-        <ChainStat
-          label="First break"
-          value={
-            result === null
-              ? "…"
-              : breakAt === null
-                ? "none"
-                : `entry ${pad(breakAt)}`
-          }
-          tone={breakAt === null ? undefined : "bad"}
-        />
-      </div>
-
-      <div className="px-5 pt-6 sm:px-6">
-        <div aria-hidden className="flex h-7 w-full gap-px">
-          {entries.map((entry, i) => {
-            const verdict = result?.results[i];
-            return (
+      {tabs.map((tab, i) => {
+        const selected = tab.id === active;
+        return (
+          <button
+            key={tab.id}
+            ref={(el) => {
+              refs.current[i] = el;
+            }}
+            type="button"
+            role="tab"
+            id={`tab-${tab.id}`}
+            aria-selected={selected}
+            aria-controls={`panel-${tab.id}`}
+            tabIndex={selected ? 0 : -1}
+            onClick={() => onSelect(tab.id)}
+            className={cn(
+              "-mb-px shrink-0 border-b-2 px-4 py-2.5 font-mono text-[10.5px] tracking-[0.14em] uppercase transition-colors",
+              selected
+                ? "border-ink text-ink"
+                : "border-transparent text-dim hover:text-ink",
+            )}
+          >
+            {tab.label}
+            {typeof tab.count === "number" && (
               <span
-                key={entry.seq}
                 className={cn(
-                  "h-full flex-1 rounded-[1px]",
-                  verdict === undefined
-                    ? "bg-white/10"
-                    : verdict.ok
-                      ? "bg-spec-green/70"
-                      : "bg-spec-red/80",
+                  "numeric ml-2 tabular-nums",
+                  selected ? "text-dim" : "text-faint",
                 )}
-              />
-            );
-          })}
-        </div>
-
-        <p className="mt-4 max-w-[80ch] text-[13.5px] leading-[1.65] text-ink/80">
-          {chain.status === "pending" &&
-            `Recomputing ${entries.length} ${plural(entries.length, "link", "links")} from genesis.`}
-          {chain.status === "error" &&
-            `The chain could not be verified here: ${chain.message}. Web Crypto needs a secure context, so this panel is inert over plain http.`}
-          {result?.valid &&
-            `All ${result.length} ${plural(result.length, "link", "links")} recompute to the hashes stored beside them. Nothing in this history has been edited since it was written, and you did not have to take our word for that: the digests were computed in this tab from the records on this page.`}
-          {broken && brokenEntry && (
-            <>
-              Entry {pad(breakAt ?? 0)} no longer hashes to its stored value.
-              Because every link commits to the one before it, the {orphaned}{" "}
-              {plural(orphaned, "entry", "entries")} after it{" "}
-              {plural(orphaned, "is", "are")} orphaned too. This is what
-              tamper-evidence means: the forgery is not hidden, it is loud.
-            </>
-          )}
-        </p>
-
-        {broken && brokenEntry && brokenResult && target && (
-          <dl className="mt-6 grid gap-x-8 gap-y-4 border-t border-hair-soft pt-5 sm:grid-cols-2">
-            <Field
-              term="Broken entry"
-              value={`${brokenEntry.record.id} · ${brokenEntry.record.title}`}
-            />
-            <Field
-              term="Edit"
-              value={`record.Q ${quirqs(target.record.Q)} rewritten to ${quirqs(brokenEntry.record.Q)}`}
-              tone="warn"
-            />
-            <Field term="Stored hash" value={shortHash(brokenResult.hash)} />
-            <Field
-              term="Recomputed hash"
-              value={shortHash(brokenResult.recomputed)}
-              tone="warn"
-            />
-            <Field
-              term="Verdicts"
-              value={`seq ${brokenResult.seqOk ? "ok" : "wrong"} · link ${
-                brokenResult.linkOk ? "ok" : "orphaned"
-              } · digest ${brokenResult.hashOk ? "ok" : "mismatch"}`}
-            />
-            <Field
-              term="Orphaned tail"
-              value={`entries ${pad((breakAt ?? 0) + 1)} to ${pad(result.length - 1)}`}
-            />
-          </dl>
-        )}
-
-        <div className="mt-7 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={onTamper}
-            disabled={tampered || target === null}
-            aria-describedby={target === null ? reasonId : undefined}
-            className={cn(
-              PILL,
-              "border border-hair text-dim hover:border-spec-red/50 hover:text-spec-red disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-hair disabled:hover:text-dim",
+              >
+                {compactCount(tab.count)}
+              </span>
             )}
-          >
-            {target === null
-              ? "Tamper with an entry"
-              : `Tamper with entry ${pad(forge.index)}`}
           </button>
-          <button
-            type="button"
-            onClick={onReset}
-            disabled={!tampered}
-            className={cn(
-              PILL,
-              "border border-hair text-dim hover:border-ink/30 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-hair disabled:hover:text-dim",
-            )}
-          >
-            Reset the ledger
-          </button>
-          {target === null && (
-            <p
-              id={reasonId}
-              className="font-mono text-[10.5px] leading-relaxed text-faint"
-            >
-              Needs two entries: one link to break, and a tail for the break to
-              orphan.
+        );
+      })}
+    </div>
+  );
+}
+
+function TabPanel({
+  id,
+  active,
+  children,
+}: {
+  id: TabId;
+  active: TabId;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      role="tabpanel"
+      id={`panel-${id}`}
+      aria-labelledby={`tab-${id}`}
+      hidden={active !== id}
+      className="mt-6"
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * The dashboard
+ *
+ * One compact beat holding a header, a horizontal tablist, and five panels:
+ * overview (tiles and charts), folder, presence, telemetry, timeline. The
+ * beat still registers (that is the logic the unlit stage keeps), and the
+ * active tab is mirrored into the URL hash so a view can be shared.
+ * ------------------------------------------------------------------ */
+
+export function Dashboard() {
+  const [folder, setFolder] = useState<FolderState>({ status: "loading" });
+  const [tab, setTab] = useState<TabId>("overview");
+  const [now, setNow] = useState(() => Date.now());
+  const probeToken = useRef(0);
+
+  const load = useCallback(async () => {
+    const token = ++probeToken.current;
+    setFolder({ status: "loading" });
+    const read = await readFolderState();
+    if (token !== probeToken.current) return;
+    setNow(Date.now());
+    setFolder(
+      read.ok
+        ? { status: "ready", payload: read.payload, ms: read.ms }
+        : { status: "failed", reason: read.reason },
+    );
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  // Restore the tab from the hash after mount (the page prerenders
+  // statically, so the server cannot know the fragment), and follow later
+  // hash-only navigations: those never remount the component. selectTab uses
+  // replaceState, which fires no hashchange, so selection cannot loop here.
+  useEffect(() => {
+    const apply = () => {
+      const fromHash = window.location.hash.slice(1);
+      if ((TAB_IDS as readonly string[]).includes(fromHash)) {
+        setTab(fromHash as TabId);
+      } else if (fromHash === "") {
+        setTab("overview");
+      }
+    };
+    apply();
+    window.addEventListener("hashchange", apply);
+    return () => window.removeEventListener("hashchange", apply);
+  }, []);
+
+  const selectTab = useCallback((id: TabId) => {
+    setTab(id);
+    window.history.replaceState(
+      null,
+      "",
+      id === "overview"
+        ? window.location.pathname + window.location.search
+        : `#${id}`,
+    );
+  }, []);
+
+  // Ten seconds is enough to keep "12s ago" from lying while never becoming
+  // a poll: the labels age, the data does not.
+  useEffect(() => {
+    if (folder.status !== "ready") return;
+    const timer = window.setInterval(() => setNow(Date.now()), 10_000);
+    return () => window.clearInterval(timer);
+  }, [folder.status]);
+
+  // Data or tab changes move the section's height; the scroll runtime maps
+  // section centres, so it is told directly rather than left to a
+  // ResizeObserver a throttled tab may defer.
+  useEffect(() => {
+    beatsResized();
+  }, [folder, tab]);
+
+  const payload = folder.status === "ready" ? folder.payload : null;
+  const present = payload?.root.present ?? false;
+
+  const rolling7 = payload?.stats?.rolling["7d"] ?? null;
+  // The wider window when the file has one, and an honest label when it does
+  // not: a 7 day figure under a "30d" heading would be a quiet lie.
+  const rolling30 = payload?.stats?.rolling["30d"] ?? null;
+  const windowStats = rolling30 ?? rolling7;
+  const windowLabel = rolling30 ? "30d" : "7d";
+
+  const openSessions = payload?.activity.workspace?.open_sessions ?? [];
+
+  const maxFileBytes = useMemo(
+    () =>
+      payload
+        ? Math.max(
+            1,
+            ...payload.tree
+              .filter((node) => node.kind === "file")
+              .map((node) => node.bytes),
+          )
+        : 1,
+    [payload],
+  );
+
+  const days = useMemo(
+    () =>
+      Object.entries(payload?.stats?.by_day ?? {}).sort(([a], [b]) =>
+        a.localeCompare(b),
+      ),
+    [payload],
+  );
+
+  const sessionRows = useMemo(() => {
+    if (!payload) return [];
+    const ids = new Set([
+      ...Object.keys(payload.stats?.by_session ?? {}),
+      ...Object.keys(payload.sessions_augment?.sessions ?? {}),
+    ]);
+    const rows = [...ids].map((id) => ({
+      id,
+      stats: payload.stats?.by_session[id] ?? null,
+      augment: payload.sessions_augment?.sessions[id] ?? null,
+    }));
+    const lastOf = (row: (typeof rows)[number]) =>
+      row.augment?.lastActivity ?? 0;
+    return rows.sort((a, b) => lastOf(b) - lastOf(a));
+  }, [payload]);
+
+  // The timeline filters: one calendar day, any set of event types. Both
+  // live here rather than in the tab so the overview's day chart can drill
+  // straight into a filtered timeline.
+  const [timelineDay, setTimelineDay] = useState<string | null>(null);
+  const [timelineTypes, setTimelineTypes] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+
+  const toggleTimelineType = useCallback((type: string) => {
+    setTimelineTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(type)) next.delete(type);
+      else next.add(type);
+      return next;
+    });
+  }, []);
+
+  const clearTimelineFilters = useCallback(() => {
+    setTimelineDay(null);
+    setTimelineTypes(new Set());
+  }, []);
+
+  const timelineFiltered = timelineDay !== null || timelineTypes.size > 0;
+
+  /** Events per UTC day, over the served slice, for the calendar shading. */
+  const eventDayCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const event of payload?.timeline?.events ?? []) {
+      const day = event.ts.slice(0, 10);
+      counts[day] = (counts[day] ?? 0) + 1;
+    }
+    return counts;
+  }, [payload]);
+
+  const timelineMatches = useMemo(() => {
+    let events = [...(payload?.timeline?.events ?? [])].reverse();
+    if (timelineDay) {
+      events = events.filter((e) => e.ts.slice(0, 10) === timelineDay);
+    }
+    if (timelineTypes.size > 0) {
+      events = events.filter((e) => timelineTypes.has(e.type));
+    }
+    return events;
+  }, [payload, timelineDay, timelineTypes]);
+
+  const timelineRows = useMemo(
+    () => timelineMatches.slice(0, 60),
+    [timelineMatches],
+  );
+
+  const outputByDay = useMemo(
+    () =>
+      days.map(([day, stat]) => ({
+        label: day.slice(5),
+        value: stat.tokens?.output ?? 0,
+      })),
+    [days],
+  );
+
+  // The served slice of the timeline, folded onto a 24 hour clock. Labels
+  // every third hour: 24 labelled columns collide at this width.
+  const eventsByHour = useMemo(() => {
+    const buckets = Array.from({ length: 24 }, (_, hour) => ({
+      label: pad(hour),
+      value: 0,
+      showLabel: hour % 3 === 0,
+    }));
+    for (const event of payload?.timeline?.events ?? []) {
+      const hour = Number(event.ts.slice(11, 13));
+      if (Number.isInteger(hour) && hour >= 0 && hour < 24) {
+        buckets[hour].value += 1;
+      }
+    }
+    return buckets;
+  }, [payload]);
+
+  const servedEvents = payload?.timeline?.events.length ?? 0;
+
+  const tabs: TabSpec[] = [
+    { id: "overview", label: "Overview" },
+    { id: "folder", label: "Folder", count: payload?.totals.files },
+    { id: "presence", label: "Presence", count: openSessions.length },
+    { id: "telemetry", label: "Telemetry", count: sessionRows.length },
+    { id: "timeline", label: "Timeline", count: payload?.timeline?.total },
+  ];
+
+  return (
+    <Beat index={0} id="dashboard" compact>
+      {/* ---------------- header ---------------- */}
+
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+        <div className="min-w-0">
+          <h1 className="label">Dashboard</h1>
+          <p className="mt-2 font-mark text-[24px] font-semibold text-ink">
+            .quirq
+          </p>
+          {payload && present && (
+            <p className="mt-1 font-mono text-[10.5px] break-all text-faint">
+              {payload.root.path}
             </p>
           )}
         </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          <span
+            role="status"
+            className="font-mono text-[10.5px] leading-relaxed text-faint"
+          >
+            {folder.status === "loading" && "Reading…"}
+            {folder.status === "failed" && `Could not read: ${folder.reason}`}
+            {folder.status === "ready" &&
+              (present
+                ? `read in ${Math.max(folder.ms, 0).toFixed(0)} ms · ${isoClock(payload!.generated_at)} UTC`
+                : "no folder")}
+          </span>
+          <button
+            type="button"
+            onClick={() => void load()}
+            disabled={folder.status === "loading"}
+            className={cn(PILL, GHOST_PILL)}
+          >
+            Refresh
+          </button>
+        </div>
       </div>
 
-      <Caption>
-        {target === null ? (
-          <>
-            Nothing above is stored as a verdict. The {entries.length}{" "}
-            {plural(entries.length, "link", "links")} here{" "}
-            {plural(entries.length, "was", "were")} recomputed from genesis in
-            this tab. Settle a second unit and the tamper control turns on:
-            rewriting one number then breaks that entry&rsquo;s digest and
-            orphans everything chained after it.
-          </>
-        ) : (
-          <>
-            The button rewrites one number in memory: {target.record.id}{" "}
-            {target.record.Q === 0 ? (
-              <>
-                scored {percent(target.record.V, 0)} against an atomic
-                settlement, so it minted nothing. Tampering makes it claim its
-                full {quirqs(target.record.potential)} budget
-              </>
-            ) : (
-              <>
-                minted {quirqs(target.record.Q)}. Tampering makes it claim{" "}
-                {quirqs(forge.claim)}
-              </>
+      {payload && !present && <MissingFolder path={payload.root.path} />}
+
+      {/* ---------------- tabs ---------------- */}
+
+      {payload && present && (
+        <>
+          <div className="mt-8">
+            <TabBar tabs={tabs} active={tab} onSelect={selectTab} />
+          </div>
+
+          {/* ---------------- overview ---------------- */}
+
+          <TabPanel id="overview" active={tab}>
+            <div className="overflow-hidden rounded-2xl border border-hair bg-black/40">
+              <div className="grid grid-cols-2 gap-px bg-white/6 md:grid-cols-3 xl:grid-cols-6">
+                <Tile
+                  label="On disk"
+                  value={formatBytes(payload.totals.bytes)}
+                  note={`${payload.totals.files} files · ${payload.totals.directories} folders`}
+                />
+                <Tile
+                  label="Open sessions"
+                  value={String(openSessions.length)}
+                  note={
+                    openSessions.length > 0
+                      ? [...new Set(openSessions.map((s) => s.agent))].join(
+                          " · ",
+                        )
+                      : undefined
+                  }
+                />
+                <Tile
+                  label="Tokens · 7d"
+                  value={
+                    rolling7
+                      ? compactCount(
+                          rolling7.tokens.input + rolling7.tokens.output,
+                        )
+                      : "n/a"
+                  }
+                  note={
+                    rolling7
+                      ? `${compactCount(rolling7.tokens.input)} in · ${compactCount(rolling7.tokens.output)} out`
+                      : undefined
+                  }
+                />
+                <Tile
+                  label="Active · 7d"
+                  value={rolling7 ? `${rolling7.active_minutes}m` : "n/a"}
+                  note={
+                    rolling7
+                      ? `${rolling7.sessions} ${plural(rolling7.sessions, "session", "sessions")}`
+                      : undefined
+                  }
+                />
+                <Tile
+                  label="Files edited · 7d"
+                  value={rolling7 ? String(rolling7.files_edited) : "n/a"}
+                />
+                <Tile
+                  label="Timeline"
+                  value={String(payload.timeline?.total ?? 0)}
+                  note={
+                    payload.timeline &&
+                    Object.keys(payload.timeline.by_type).length > 0
+                      ? Object.entries(payload.timeline.by_type)
+                          .map(([type, count]) => `${count} ${type}`)
+                          .join(" · ")
+                      : undefined
+                  }
+                />
+              </div>
+            </div>
+
+            {(outputByDay.length > 0 || servedEvents > 0) && (
+              <div className="mt-6 grid gap-6 lg:grid-cols-2">
+                {outputByDay.length > 0 && (
+                  <Panel
+                    title="Output tokens · by day"
+                    aside={
+                      <span className="font-mono text-[10px] text-faint">
+                        click a day to open it in the timeline
+                      </span>
+                    }
+                  >
+                    <div className="px-5 py-5 sm:px-6">
+                      <Columns
+                        points={outputByDay}
+                        ariaLabel="Output tokens by day"
+                        unit="output tokens"
+                        showValues
+                        selectedIndex={days.findIndex(
+                          ([day]) => day === timelineDay,
+                        )}
+                        onSelect={(i) => {
+                          const day = days[i]?.[0];
+                          if (!day) return;
+                          if (day === timelineDay) {
+                            setTimelineDay(null);
+                          } else {
+                            setTimelineDay(day);
+                            selectTab("timeline");
+                          }
+                        }}
+                      />
+                    </div>
+                  </Panel>
+                )}
+                {servedEvents > 0 && (
+                  <Panel
+                    title="Timeline events · by hour · UTC"
+                    aside={
+                      <span className="numeric font-mono text-[11px] text-dim tabular-nums">
+                        last {servedEvents}{" "}
+                        {plural(servedEvents, "event", "events")}
+                      </span>
+                    }
+                  >
+                    <div className="px-5 py-5 sm:px-6">
+                      <Columns
+                        points={eventsByHour}
+                        ariaLabel="Timeline events by hour, UTC"
+                        unit="events"
+                      />
+                    </div>
+                  </Panel>
+                )}
+              </div>
             )}
-            , and the metrics above move with it, because totals are forgeable.
-            The chain is what is not. It covers all {entries.length} entries
-            whatever the filter says.
-          </>
-        )}
-      </Caption>
+          </TabPanel>
+
+          {/* ---------------- folder ---------------- */}
+
+          <TabPanel id="folder" active={tab}>
+            <TreePanel
+              tree={payload.tree}
+              totals={payload.totals}
+              maxFileBytes={maxFileBytes}
+              locks={payload.locks}
+              offsets={payload.offsets}
+              now={now}
+            />
+          </TabPanel>
+
+          {/* ---------------- presence ---------------- */}
+
+          <TabPanel id="presence" active={tab}>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <PresencePanel
+                workspace={payload.activity.workspace}
+                projects={payload.activity.projects}
+                now={now}
+              />
+              <ConfigPanel payload={payload} now={now} />
+              {payload.xo && (
+                <div className="lg:col-span-2">
+                  <CapabilitiesPanel xo={payload.xo} />
+                </div>
+              )}
+            </div>
+          </TabPanel>
+
+          {/* ---------------- telemetry ---------------- */}
+
+          <TabPanel id="telemetry" active={tab}>
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
+              {days.length > 0 && <DaysPanel days={days} />}
+
+              {windowStats && (
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <ByModelPanel window={windowStats} label={windowLabel} />
+                  <ByToolPanel window={windowStats} label={windowLabel} />
+                </div>
+              )}
+
+              {sessionRows.length > 0 && (
+                <SessionsTable rows={sessionRows} now={now} />
+              )}
+
+              {days.length === 0 && sessionRows.length === 0 && (
+                <p className="font-mono text-[10.5px] leading-relaxed text-faint">
+                  stats.json is present and empty.
+                </p>
+              )}
+            </div>
+          </TabPanel>
+
+          {/* ---------------- timeline ---------------- */}
+
+          <TabPanel id="timeline" active={tab}>
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
+              {payload.timeline && payload.timeline.total > 0 && (
+                <div className="grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
+                  <Panel
+                    title="Calendar"
+                    aside={
+                      timelineDay && (
+                        <button
+                          type="button"
+                          onClick={() => setTimelineDay(null)}
+                          className="font-mono text-[10px] tracking-[0.1em] text-dim uppercase transition-colors hover:text-ink"
+                        >
+                          {timelineDay} ✕
+                        </button>
+                      )
+                    }
+                  >
+                    <div className="px-5 py-5 sm:px-6">
+                      <CalendarFilter
+                        counts={eventDayCounts}
+                        selected={timelineDay}
+                        onSelect={setTimelineDay}
+                      />
+                    </div>
+                    <Caption>
+                      shading is events per day · over the last{" "}
+                      {payload.timeline.events.length} events
+                    </Caption>
+                  </Panel>
+                  <ByTypePanel
+                    by_type={payload.timeline.by_type}
+                    selected={timelineTypes}
+                    onToggle={toggleTimelineType}
+                  />
+                </div>
+              )}
+              {payload.timeline && payload.timeline.total > 0 ? (
+                <TimelinePanel
+                  timeline={payload.timeline}
+                  rows={timelineRows}
+                  matched={timelineMatches.length}
+                  filtered={timelineFiltered}
+                  onClear={clearTimelineFilters}
+                  now={now}
+                />
+              ) : (
+                <p className="font-mono text-[10.5px] leading-relaxed text-faint">
+                  timeline.jsonl has no events.
+                </p>
+              )}
+            </div>
+          </TabPanel>
+        </>
+      )}
+    </Beat>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * The missing-folder state
+ * ------------------------------------------------------------------ */
+
+function MissingFolder({ path }: { path: string }) {
+  return (
+    <div className="mt-8 max-w-2xl overflow-hidden rounded-2xl border border-hair bg-black/70 px-5 py-9 sm:px-6">
+      <p className="label text-[9.5px]">No folder to read</p>
+      {path && (
+        <p className="mt-4 font-mono text-[11px] leading-relaxed break-all text-dim">
+          {path}
+        </p>
+      )}
+      <p className="mt-3 max-w-[62ch] font-mono text-[10.5px] leading-relaxed text-faint">
+        QUIRQ_DIR selects another workspace&rsquo;s .quirq.
+      </p>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * Folder · the tree
+ * ------------------------------------------------------------------ */
+
+function TreePanel({
+  tree,
+  totals,
+  maxFileBytes,
+  locks,
+  offsets,
+  now,
+}: {
+  tree: FolderNode[];
+  totals: { files: number; directories: number; bytes: number };
+  maxFileBytes: number;
+  locks: string[];
+  offsets: FolderPayload["offsets"];
+  now: number;
+}) {
+  // Selecting a segment in the map answers with the exact row in the list.
+  const [selectedPath, setSelectedPath] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedPath) return;
+    document
+      .getElementById(`fnode-${selectedPath}`)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [selectedPath]);
+
+  return (
+    <Panel
+      title=".quirq"
+      aside={
+        <span className="numeric font-mono text-[11px] text-dim tabular-nums">
+          {formatBytes(totals.bytes)} · {totals.files}{" "}
+          {plural(totals.files, "file", "files")}
+        </span>
+      }
+    >
+      <div className="border-b border-hair-soft px-5 py-5 sm:px-6">
+        <FolderMap
+          tree={tree}
+          totalBytes={totals.bytes}
+          selected={selectedPath}
+          onSelect={setSelectedPath}
+          footer={
+            selectedPath && (
+              <button
+                type="button"
+                onClick={() => setSelectedPath(null)}
+                className="truncate font-mono text-[9.5px] tracking-[0.08em] text-dim uppercase transition-colors hover:text-ink"
+              >
+                {selectedPath} ✕
+              </button>
+            )
+          }
+        />
+      </div>
+
+      <ul className="px-5 py-2 sm:px-6">
+        {tree.map((node) => (
+          <li
+            key={node.path}
+            id={`fnode-${node.path}`}
+            className={cn(
+              "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 border-b border-hair-soft py-2.5 last:border-b-0 sm:gap-x-6",
+              selectedPath === node.path && "bg-white/[0.05]",
+            )}
+          >
+            <span
+              className="min-w-0"
+              style={{ paddingLeft: `${node.depth * 18}px` }}
+            >
+              <span className="flex min-w-0 items-baseline gap-3">
+                <span
+                  className={cn(
+                    "truncate font-mono text-[12.5px]",
+                    node.kind === "directory" ? "text-ink" : "text-ink/85",
+                  )}
+                >
+                  {node.name}
+                  {node.kind === "directory" && "/"}
+                </span>
+                {node.sensitive && (
+                  <span className="shrink-0 rounded-full border border-spec-yellow/40 px-2 py-0.5 font-mono text-[9px] tracking-[0.1em] text-spec-yellow uppercase">
+                    masked
+                  </span>
+                )}
+              </span>
+              {node.kind === "file" && node.bytes > 0 && (
+                <ShareBar share={node.bytes / maxFileBytes} />
+              )}
+            </span>
+            <span className="numeric text-right font-mono text-[11px] text-dim tabular-nums">
+              {node.kind === "directory"
+                ? `${node.entries} ${plural(node.entries, "entry", "entries")} · ${formatBytes(node.bytes)}`
+                : formatBytes(node.bytes)}
+              <span className="mt-1 block text-faint">
+                {formatAgo(node.modified_at, now)}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      {(locks.length > 0 || offsets) && (
+        <Caption>
+          {locks.length > 0 &&
+            `${locks.length} ${plural(locks.length, "lock", "locks")} · ${locks.join(", ")}`}
+          {locks.length > 0 && offsets && " · "}
+          {offsets &&
+            `${offsets.tracked} ${plural(offsets.tracked, "log", "logs")} tailed · ${offsets.folders.length} ${plural(offsets.folders.length, "folder", "folders")} · ${formatBytes(offsets.consumed_bytes)} consumed`}
+        </Caption>
+      )}
     </Panel>
   );
 }
 
-function ChainStat({
-  label,
-  value,
-  tone,
+/* ------------------------------------------------------------------ *
+ * Presence and configuration
+ * ------------------------------------------------------------------ */
+
+function SessionLine({
+  session,
+  now,
 }: {
+  session: OpenSession;
+  now: number;
+}) {
+  const beat = secondsSince(session.last_activity_at, now);
+  const fresh = beat !== null && beat < 120;
+
+  return (
+    <li className="flex items-start gap-3 border-b border-hair-soft py-4 last:border-b-0">
+      {fresh ? (
+        <span className="pulse-dot mt-1.5 shrink-0" />
+      ) : (
+        <span
+          aria-hidden
+          className="mt-1.5 h-[7px] w-[7px] shrink-0 rounded-full bg-dim"
+        />
+      )}
+      <span className="min-w-0">
+        <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span className="font-mono text-[12.5px] text-ink">
+            {shortId(session.session_id)}
+          </span>
+          <span className="font-mono text-[10.5px] text-dim">
+            {session.agent} · {session.runtime}
+          </span>
+          {session.project_id && (
+            <span className="rounded-full border border-hair px-2 py-0.5 font-mono text-[9px] tracking-[0.1em] text-dim uppercase">
+              {session.project_id}
+            </span>
+          )}
+        </span>
+        <span className="mt-1 block font-mono text-[10.5px] leading-relaxed text-faint">
+          opened {formatAgo(session.opened_at, now)} · last beat{" "}
+          {formatAgo(session.last_activity_at, now)}
+          {!fresh && " · gone quiet"}
+        </span>
+      </span>
+    </li>
+  );
+}
+
+function PresencePanel({
+  workspace,
+  projects,
+  now,
+}: {
+  workspace: FolderPayload["activity"]["workspace"];
+  projects: FolderPayload["activity"]["projects"];
+  now: number;
+}) {
+  const open = workspace?.open_sessions ?? [];
+
+  return (
+    <Panel
+      title="Open sessions"
+      aside={
+        workspace && (
+          <span className="numeric font-mono text-[11px] text-dim tabular-nums">
+            snapshot {formatAgo(workspace.updated_at, now)}
+          </span>
+        )
+      }
+    >
+      {open.length > 0 ? (
+        <ul className="px-5 py-1 sm:px-6">
+          {open.map((session) => (
+            <SessionLine
+              key={session.session_id}
+              session={session}
+              now={now}
+            />
+          ))}
+        </ul>
+      ) : (
+        <p className="px-5 py-6 font-mono text-[11px] text-dim sm:px-6">
+          0 open
+          {workspace &&
+            ` · last heartbeat ${formatAgo(workspace.updated_at, now)}`}
+        </p>
+      )}
+
+      {projects.length > 0 && (
+        <div className="border-t border-hair-soft px-5 py-4 sm:px-6">
+          <p className="label text-[9.5px]">Per project</p>
+          <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3">
+            {projects.map(({ project_id, snapshot }) => (
+              <Field
+                key={project_id}
+                term={project_id}
+                value={`${snapshot.open_sessions.length} open · ${formatAgo(snapshot.updated_at, now)}`}
+              />
+            ))}
+          </dl>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+function ConfigPanel({
+  payload,
+  now,
+}: {
+  payload: FolderPayload;
+  now: number;
+}) {
+  const env = payload.runtime_env ?? {};
+
+  return (
+    <Panel title="Watcher configuration">
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-4 px-5 py-5 sm:px-6">
+        {Object.entries(env).map(([key, value]) => (
+          <Field key={key} term={key} value={value} />
+        ))}
+        {Object.keys(env).length === 0 && (
+          <Field term="runtime.env" value="not present" />
+        )}
+        {payload.state && (
+          <Field
+            term="Onboarding"
+            value={
+              payload.state.onboarding_completed
+                ? `completed ${payload.state.onboarding_completed_at ? formatAgo(payload.state.onboarding_completed_at, now) : ""}`
+                : "not completed"
+            }
+          />
+        )}
+        {payload.workspace && (
+          <>
+            <Field
+              term="Projects root"
+              value={payload.workspace.projects_root}
+            />
+            <Field
+              term="Projects"
+              value={
+                payload.workspace.projects.length > 0
+                  ? payload.workspace.projects.join(", ")
+                  : "none discovered"
+              }
+            />
+          </>
+        )}
+      </dl>
+    </Panel>
+  );
+}
+
+function CapabilitiesPanel({ xo }: { xo: NonNullable<FolderPayload["xo"]> }) {
+  return (
+    <Panel
+      title="Capabilities · xo.json"
+      aside={
+        xo.agent && (
+          <span className="font-mono text-[11px] text-dim">
+            agent {xo.agent}
+          </span>
+        )
+      }
+    >
+      <div className="px-5 py-5 sm:px-6">
+        {xo.default_model && (
+          <p className="font-mono text-[10.5px] leading-relaxed text-faint">
+            default model{" "}
+            <span className="text-dim">{xo.default_model}</span>
+            {xo.models.length > 0 &&
+              ` · ${xo.models.map((m) => `${m.id} ${m.status}`).join(" · ")}`}
+          </p>
+        )}
+        <ul
+          className={cn(
+            "flex flex-wrap gap-2",
+            xo.default_model ? "mt-4" : undefined,
+          )}
+        >
+          {xo.toggles.map((toggle) => (
+            <li
+              key={toggle.path}
+              className={cn(
+                "rounded-full border px-2.5 py-1 font-mono text-[9.5px] tracking-[0.06em]",
+                toggle.enabled
+                  ? "border-ink/25 text-ink/85"
+                  : "border-hair text-faint line-through decoration-ink/40",
+              )}
+            >
+              {toggle.path}
+              {/* The strike is a visual channel; state still has to be text. */}
+              <span className="sr-only">
+                {toggle.enabled ? " on" : " off"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </Panel>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * Telemetry
+ * ------------------------------------------------------------------ */
+
+function DaysPanel({
+  days,
+}: {
+  days: Array<[string, NonNullable<FolderPayload["stats"]>["by_day"][string]]>;
+}) {
+  const maxOut = Math.max(1, ...days.map(([, d]) => d.tokens?.output ?? 0));
+
+  return (
+    <Panel title="Day by day" scrolls>
+      <div
+        tabIndex={0}
+        role="region"
+        aria-label="Daily telemetry"
+        className="overflow-x-auto"
+      >
+        <table className="w-full min-w-[760px] border-collapse text-left">
+          <caption className="sr-only">
+            Per-day telemetry from stats.json: messages, tool calls, tokens in
+            and out, cache traffic and response latency.
+          </caption>
+          <thead>
+            <tr className="border-b border-hair bg-white/[0.03]">
+              <Th className="w-[26%]">Day</Th>
+              <Th align="right">Messages</Th>
+              <Th align="right">Tool calls</Th>
+              <Th align="right">In</Th>
+              <Th align="right">Out</Th>
+              <Th align="right">Cache r/w</Th>
+              <Th align="right">Latency avg · max</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {days.map(([day, stat]) => {
+              const latency = stat.latency;
+              const avg =
+                latency && latency.count > 0
+                  ? latency.sum_ms / latency.count
+                  : null;
+              return (
+                <tr key={day} className="border-b border-hair-soft last:border-b-0">
+                  <th scope="row" className="px-4 py-3 text-left font-normal">
+                    <span className="font-mono text-[12px] text-ink/90">
+                      {day}
+                    </span>
+                    <ShareBar share={(stat.tokens?.output ?? 0) / maxOut} />
+                  </th>
+                  <td className={cn(CELL, "numeric text-right text-ink/80")}>
+                    {stat.messages?.total ?? 0}
+                  </td>
+                  <td className={cn(CELL, "numeric text-right text-ink/80")}>
+                    {stat.messages?.toolCalls ?? 0}
+                  </td>
+                  <td className={cn(CELL, "numeric text-right text-ink/80")}>
+                    {compactCount(stat.tokens?.input ?? 0)}
+                  </td>
+                  <td className={cn(CELL, "numeric text-right text-ink")}>
+                    {compactCount(stat.tokens?.output ?? 0)}
+                  </td>
+                  <td className={cn(CELL, "numeric text-right text-dim")}>
+                    {compactCount(stat.tokens?.cache_read ?? 0)} ·{" "}
+                    {compactCount(stat.tokens?.cache_write ?? 0)}
+                  </td>
+                  <td className={cn(CELL, "numeric text-right text-dim")}>
+                    {avg === null
+                      ? "n/a"
+                      : `${(avg / 1000).toFixed(1)}s · ${((stat.latency?.max_ms ?? 0) / 1000).toFixed(1)}s`}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </Panel>
+  );
+}
+
+function ByModelPanel({
+  window,
+  label,
+}: {
+  window: StatsWindow;
   label: string;
-  value: string;
-  tone?: "bad";
+}) {
+  const rows = Object.entries(window.by_model).sort(
+    (a, b) => b[1].output - a[1].output,
+  );
+  const max = Math.max(1, ...rows.map(([, t]) => t.output));
+
+  return (
+    <Panel title={`By model · ${label}`}>
+      {rows.length === 0 ? (
+        <p className="px-5 py-6 font-mono text-[11px] text-dim sm:px-6">
+          no tokens in this window
+        </p>
+      ) : (
+        <ol className="px-5 py-2 sm:px-6">
+          {rows.map(([model, tokens], i) => (
+            <li
+              key={model}
+              className="grid grid-cols-[auto_1fr_auto] items-center gap-x-4 border-b border-hair-soft py-4 last:border-b-0 sm:gap-x-6"
+            >
+              <span className="font-mono text-[11px] text-faint">
+                {pad(i + 1)}
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate font-mono text-[12.5px] text-ink">
+                  {model}
+                </span>
+                <ShareBar share={tokens.output / max} />
+              </span>
+              <span className="numeric text-right font-mono text-[11px] text-dim tabular-nums">
+                {compactCount(tokens.output)} out
+                <span className="mt-1 block text-faint">
+                  {compactCount(tokens.input)} in
+                </span>
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </Panel>
+  );
+}
+
+function ByToolPanel({
+  window,
+  label,
+}: {
+  window: StatsWindow;
+  label: string;
+}) {
+  const rows = Object.entries(window.by_tool).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(1, ...rows.map(([, count]) => count));
+
+  return (
+    <Panel title={`By tool · ${label}`}>
+      {rows.length === 0 ? (
+        <p className="px-5 py-6 font-mono text-[11px] text-dim sm:px-6">
+          no tool calls in this window
+        </p>
+      ) : (
+        <ol className="px-5 py-2 sm:px-6">
+          {rows.map(([tool, count], i) => (
+            <li
+              key={tool}
+              className="grid grid-cols-[auto_1fr_auto] items-center gap-x-4 border-b border-hair-soft py-4 last:border-b-0 sm:gap-x-6"
+            >
+              <span className="font-mono text-[11px] text-faint">
+                {pad(i + 1)}
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate font-mono text-[12.5px] text-ink">
+                  {tool}
+                </span>
+                <ShareBar share={count / max} />
+              </span>
+              <span className="numeric text-right font-mono text-[11px] text-dim tabular-nums">
+                {count} {plural(count, "call", "calls")}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </Panel>
+  );
+}
+
+function SessionsTable({
+  rows,
+  now,
+}: {
+  rows: Array<{
+    id: string;
+    stats: SessionStats | null;
+    augment: SessionAugment | null;
+  }>;
+  now: number;
 }) {
   return (
-    <div className="bg-black/80 px-5 py-5">
-      <p className="label text-[9.5px]">{label}</p>
-      <p
-        className={cn(
-          "numeric mt-2.5 font-mono text-[13px] break-all tabular-nums",
-          tone === "bad" ? "text-spec-red" : "text-ink",
-        )}
+    <section className="min-w-0">
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <h2 className="label">Sessions</h2>
+        <span className="numeric font-mono text-[11px] text-dim tabular-nums">
+          {rows.length} {plural(rows.length, "row", "rows")}
+        </span>
+      </div>
+
+      <div
+        tabIndex={0}
+        role="region"
+        aria-label="Sessions"
+        className="mt-4 overflow-x-auto rounded-2xl border border-hair bg-black/70"
       >
-        {value}
-      </p>
-    </div>
+        <table className="w-full min-w-[880px] border-collapse text-left">
+          <caption className="sr-only">
+            Every session the watcher has recorded, with message counts, tool
+            calls, token totals, duration and last activity.
+          </caption>
+          <thead>
+            <tr className="border-b border-hair bg-white/[0.03]">
+              <Th className="w-[30%]">Session</Th>
+              <Th>Model</Th>
+              <Th align="right">Msgs</Th>
+              <Th align="right">Tools</Th>
+              <Th align="right">In</Th>
+              <Th align="right">Out</Th>
+              <Th align="right">Duration</Th>
+              <Th align="right">Last activity</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const models = Object.keys(row.stats?.by_model ?? {});
+              const files = row.stats?.files ?? [];
+              return (
+                <tr
+                  key={row.id}
+                  className="border-b border-hair-soft last:border-b-0 hover:bg-white/[0.02]"
+                >
+                  <th scope="row" className="px-4 py-3 text-left font-normal">
+                    <span className="block font-mono text-[12px] text-ink">
+                      {shortId(row.id)}
+                    </span>
+                    {files.length > 0 && (
+                      <span className="mt-1 block max-w-[34ch] truncate font-mono text-[10px] text-faint">
+                        {files.join(", ")}
+                      </span>
+                    )}
+                  </th>
+                  <td className={cn(CELL, "text-dim")}>
+                    {models.length > 0 ? models.join(", ") : "n/a"}
+                  </td>
+                  <td className={cn(CELL, "numeric text-right text-ink/80")}>
+                    {row.augment?.messageCount ?? "n/a"}
+                  </td>
+                  <td className={cn(CELL, "numeric text-right text-ink/80")}>
+                    {row.augment?.toolCallCount ?? "n/a"}
+                  </td>
+                  <td className={cn(CELL, "numeric text-right text-ink/80")}>
+                    {row.stats ? compactCount(row.stats.tokens.input) : "n/a"}
+                  </td>
+                  <td className={cn(CELL, "numeric text-right text-ink")}>
+                    {row.stats ? compactCount(row.stats.tokens.output) : "n/a"}
+                  </td>
+                  <td className={cn(CELL, "numeric text-right text-dim")}>
+                    {row.stats ? formatDuration(row.stats.duration_ms) : "n/a"}
+                  </td>
+                  <td className={cn(CELL, "numeric text-right text-dim")}>
+                    {row.augment
+                      ? agoFromMs(row.augment.lastActivity, now)
+                      : "n/a"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * Timeline
+ * ------------------------------------------------------------------ */
+
+function ByTypePanel({
+  by_type,
+  selected,
+  onToggle,
+}: {
+  by_type: Record<string, number>;
+  selected: ReadonlySet<string>;
+  onToggle: (type: string) => void;
+}) {
+  const rows = Object.entries(by_type).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(1, ...rows.map(([, count]) => count));
+
+  return (
+    <Panel
+      title="By type"
+      aside={
+        <span className="font-mono text-[10px] text-faint">
+          click to filter the feed
+        </span>
+      }
+    >
+      <ol className="px-5 py-2 sm:px-6">
+        {rows.map(([type, count], i) => {
+          const pressed = selected.has(type);
+          return (
+            <li
+              key={type}
+              className="border-b border-hair-soft last:border-b-0"
+            >
+              <button
+                type="button"
+                aria-pressed={pressed}
+                onClick={() => onToggle(type)}
+                className={cn(
+                  "grid w-full cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-x-4 py-4 text-left transition-colors sm:gap-x-6",
+                  pressed ? "" : "hover:bg-white/[0.02]",
+                )}
+              >
+                <span className="font-mono text-[11px] text-faint">
+                  {pad(i + 1)}
+                </span>
+                <span className="min-w-0">
+                  <span
+                    className={cn(
+                      "block truncate font-mono text-[12.5px]",
+                      pressed ? "text-ink" : "text-ink/80",
+                    )}
+                  >
+                    {type}
+                    {pressed && (
+                      <span aria-hidden className="ml-2 text-dim">
+                        ✕
+                      </span>
+                    )}
+                  </span>
+                  <span
+                    aria-hidden
+                    className="mt-2 block h-1 w-full overflow-hidden rounded-full bg-white/6"
+                  >
+                    <span
+                      className={cn(
+                        "block h-full rounded-full transition-colors",
+                        pressed ? "bg-white/60" : "bg-white/30",
+                      )}
+                      style={{ width: `${((count / max) * 100).toFixed(2)}%` }}
+                    />
+                  </span>
+                </span>
+                <span className="numeric text-right font-mono text-[11px] text-dim tabular-nums">
+                  {count} {plural(count, "event", "events")}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+    </Panel>
+  );
+}
+
+function TimelinePanel({
+  timeline,
+  rows,
+  matched,
+  filtered,
+  onClear,
+  now,
+}: {
+  timeline: NonNullable<FolderPayload["timeline"]>;
+  rows: TimelineEvent[];
+  matched: number;
+  filtered: boolean;
+  onClear: () => void;
+  now: number;
+}) {
+  return (
+    <Panel
+      title="Events"
+      aside={
+        <span className="flex items-center gap-3">
+          <span className="numeric font-mono text-[11px] text-dim tabular-nums">
+            {filtered
+              ? `${matched} of ${timeline.total} match`
+              : `${timeline.total} ${plural(timeline.total, "event", "events")}`}
+          </span>
+          {filtered && (
+            <button
+              type="button"
+              onClick={onClear}
+              className="font-mono text-[10px] tracking-[0.1em] text-dim uppercase transition-colors hover:text-ink"
+            >
+              clear filters
+            </button>
+          )}
+        </span>
+      }
+    >
+      {rows.length === 0 ? (
+        <p className="px-5 py-6 font-mono text-[11px] text-dim sm:px-6">
+          no events match the filters
+        </p>
+      ) : (
+        <ol className="px-5 py-1 sm:px-6">
+          {rows.map((event, i) => (
+            <li
+              key={`${event.ts}-${i}`}
+              className="grid grid-cols-[auto_auto_minmax(0,1fr)_auto] items-baseline gap-x-4 border-b border-hair-soft py-2.5 last:border-b-0 sm:gap-x-6"
+            >
+              <span className="numeric font-mono text-[11px] text-faint tabular-nums">
+                {isoClock(event.ts)}
+              </span>
+              <span
+                className={cn(
+                  "font-mono text-[10px] tracking-[0.08em] uppercase",
+                  event.type === "file.edited" ? "text-ink/80" : "text-dim",
+                )}
+              >
+                {event.type}
+              </span>
+              <span className="min-w-0 truncate font-mono text-[11px] text-dim">
+                {event.path ?? shortId(event.session_id)}
+                {event.project_id && (
+                  <span className="text-faint"> · {event.project_id}</span>
+                )}
+              </span>
+              <span className="numeric text-right font-mono text-[10px] text-faint tabular-nums">
+                {formatAgo(event.ts, now)}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+      <Caption>
+        newest first · showing {rows.length} of {matched}{" "}
+        {filtered ? "matched" : "served"}
+      </Caption>
+    </Panel>
   );
 }

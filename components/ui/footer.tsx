@@ -10,6 +10,9 @@ const LINKS = [
   // The nav has no room for Beats at any breakpoint, so this is its only
   // route in. It is a dev deep-dive, which is why it lost the seat.
   { href: "/beats", label: "Beats", newTab: false },
+  // The engine walkthrough is a dev deep-dive like Beats, so the footer is
+  // its only route in.
+  { href: "/engine", label: "Engine", newTab: false },
   // Same reasoning: the journey loader is a tool, and the footer is where the
   // tools live.
   { href: "/journey/load", label: "Loader", newTab: false },

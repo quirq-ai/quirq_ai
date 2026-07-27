@@ -6,30 +6,22 @@ import { Dashboard } from "./dashboard";
 export const metadata: Metadata = {
   title: "Dashboard",
   description:
-    "A working quirq ledger: 34 settled units from one real CLI run, every metric recomputed in your browser from the raw records, and the hash chain re-verified link by link.",
+    "The workspace's .quirq folder, read straight off the disk: live presence, usage telemetry, the append-only timeline, and every file in place.",
 };
 
 /**
- * The first stage page whose beats are driven by state rather than by copy.
- * The five sections live inside <Dashboard/> because one ledger selection, one
- * filter and one verification feed all of them; splitting them into siblings
- * would mean lifting that state into this server component, which cannot hold
- * it.
+ * The stage page that runs unlit: the beat registers and the scroll runtime
+ * measures as everywhere else, but the scene layers stay off because this
+ * page is an instrument, not a story. The header, tablist and five tab
+ * panels live inside <Dashboard/> because one snapshot of the .quirq folder
+ * feeds all of them; splitting them into siblings would mean lifting that
+ * state into this server component, which cannot hold it.
  */
 export default function DashboardPage() {
   return (
-    <StagePage>
+    <StagePage lit={false}>
       <Dashboard />
-
-      {/* The form is at its largest under the last beat, so the footer needs
-          a base to sit on rather than floating over the glass. */}
-      <div className="relative">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-64 bg-linear-to-t from-black via-black/85 to-transparent"
-        />
-        <SiteFooter />
-      </div>
+      <SiteFooter />
     </StagePage>
   );
 }

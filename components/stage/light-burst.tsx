@@ -29,10 +29,12 @@ const FRAGMENT = /* glsl */ `
   uniform float uTime;
   uniform float uIntensity;
   uniform float uAspect;
+  uniform float uHue;
 
-  /* Cosine palette across the spectrum: same seven hues, continuous. */
+  /* Cosine palette across the spectrum: same seven hues, continuous. uHue
+     turns the whole wheel; at 0.0 the palette is untouched. */
   vec3 spectrum(float t) {
-    return 0.5 + 0.5 * cos(6.28318 * (t + vec3(0.0, -0.333, -0.667)));
+    return 0.5 + 0.5 * cos(6.28318 * (t + uHue + vec3(0.0, -0.333, -0.667)));
   }
 
   void main() {
@@ -74,6 +76,9 @@ export function LightBurst() {
   const material = useRef<THREE.ShaderMaterial>(null);
   const live = useRef(KEYFRAMES[0].burst * LIGHT.burstGain);
   const liveX = useRef(0);
+  const liveY = useRef(0);
+  const liveSize = useRef(1);
+  const liveHue = useRef(0);
   const frame = useRef({ ...KEYFRAMES[0] });
 
   const uniforms = useMemo(
@@ -81,6 +86,7 @@ export function LightBurst() {
       uTime: { value: 0 },
       uIntensity: { value: KEYFRAMES[0].burst * LIGHT.burstGain },
       uAspect: { value: 1.6 },
+      uHue: { value: 0 },
     }),
     [],
   );
@@ -92,17 +98,38 @@ export function LightBurst() {
     const k = sampleKeyframes(getTrack(), stage.beat, frame.current);
     const lambda = stage.reduced ? 400 : 3.2;
 
-    live.current = damp(live.current, k.burst * LIGHT.burstGain, lambda, dt);
+    // The /engine light desk multiplies and offsets the choreographed values;
+    // at the store defaults (1, 1, 0, 0, 0) every line below is a no-op.
+    live.current = damp(
+      live.current,
+      k.burst * LIGHT.burstGain * stage.lightGain,
+      lambda,
+      dt,
+    );
     m.uniforms.uIntensity.value = live.current;
     m.uniforms.uTime.value = stage.reduced ? 8 : state.clock.elapsedTime;
     m.uniforms.uAspect.value = state.size.width / Math.max(state.size.height, 1);
+
+    liveHue.current = damp(liveHue.current, stage.lightHue, lambda, dt);
+    m.uniforms.uHue.value = liveHue.current;
 
     // Track the form, so the bloom stays behind the glass instead of sitting
     // under whichever column the copy is in.
     const aspect = state.size.width / Math.max(state.size.height, 1);
     const spread = THREE.MathUtils.clamp((aspect - 0.72) / 0.78, 0, 1);
-    liveX.current = damp(liveX.current, k.x * spread * PARALLAX, lambda, dt);
-    if (plane.current) plane.current.position.x = liveX.current;
+    liveX.current = damp(
+      liveX.current,
+      k.x * spread * PARALLAX + stage.lightX,
+      lambda,
+      dt,
+    );
+    liveY.current = damp(liveY.current, stage.lightY, lambda, dt);
+    liveSize.current = damp(liveSize.current, stage.lightSize, lambda, dt);
+    if (plane.current) {
+      plane.current.position.x = liveX.current;
+      plane.current.position.y = liveY.current;
+      plane.current.scale.set(liveSize.current, liveSize.current, 1);
+    }
   });
 
   return (

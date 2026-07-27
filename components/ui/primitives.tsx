@@ -14,17 +14,24 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  * A full-height movement of the page. `data-beat` is what the scroll runtime
  * measures to drive the 3D, so the index here and the keyframe index there are
  * the same thing.
+ *
+ * `compact` is the data-density variant for pages that run unlit: the section
+ * still registers with the same id and index, so the scroll logic and any
+ * future re-lit track are wired identically, but it flows at content height
+ * instead of staging one viewport per beat.
  */
 export function Beat({
   index,
   id,
   children,
   className,
+  compact,
 }: {
   index: number;
   id: string;
   children: ReactNode;
   className?: string;
+  compact?: boolean;
 }) {
   const el = useRef<HTMLElement>(null);
   // Phase 2: the section announces itself to the registry; the runtime
@@ -41,7 +48,10 @@ export function Beat({
       id={id}
       data-beat={index}
       className={cn(
-        "relative flex min-h-svh w-full items-center overflow-hidden pt-24 pb-20",
+        "relative w-full overflow-hidden",
+        compact
+          ? "py-10 first-of-type:pt-28"
+          : "flex min-h-svh items-center pt-24 pb-20",
         className,
       )}
     >
