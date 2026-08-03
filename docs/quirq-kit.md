@@ -17,7 +17,7 @@ product runtime.
 | `lib/quirq/*.d.ts` | types | Hand-written declarations for the site |
 | `lib/quirq/sample-ledger.json` | data | 34 entries from a real run, read by `/dashboard` |
 | `scripts/build-sample-ledger.mjs` | node only | Regenerates that ledger |
-| `app/install/route.ts` | build time | Serves the installer with the sources embedded |
+| `app/install/route.ts` | build time | Serves a shim that fetches and runs xo-space's `install.sh` |
 
 ### Why `.mjs` and not TypeScript
 
