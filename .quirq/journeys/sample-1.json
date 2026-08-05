@@ -37,11 +37,19 @@
   },
   "recording": {
     "journey": "sample-1",
-    "startedAt": 1784963941841,
+    "startedAt": 1785191669488,
     "events": [
       {
-        "at": 1784963941841,
+        "at": 1785191669488,
         "kind": "start",
+        "node": "root",
+        "path": [
+          "root"
+        ]
+      },
+      {
+        "at": 1785191671523,
+        "kind": "loop",
         "node": "root",
         "path": [
           "root"

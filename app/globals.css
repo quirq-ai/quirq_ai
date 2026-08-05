@@ -46,6 +46,7 @@ html {
   background: #000;
   color-scheme: dark;
   -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
 }
 
 body {
@@ -55,6 +56,7 @@ body {
   font-weight: 380;
   letter-spacing: 0.004em;
   overscroll-behavior-y: none;
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }

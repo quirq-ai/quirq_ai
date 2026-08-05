@@ -89,8 +89,8 @@ export function GlassForm({ quality }: { quality: StageQuality }) {
     const reduced = stage.reduced;
     // Reduced motion: snap rather than glide, and drop the parallax entirely.
     const lambda = reduced ? 400 : 3.2;
-    const px = reduced ? 0 : stage.pointerX;
-    const py = reduced ? 0 : stage.pointerY;
+    const px = reduced ? 0 : stage.pointerX * stage.pointerGain;
+    const py = reduced ? 0 : stage.pointerY * stage.pointerGain;
 
     l.x = damp(l.x, k.x * spread + px * 0.3, lambda, dt);
     l.y = damp(l.y, k.y + py * 0.2, lambda, dt);

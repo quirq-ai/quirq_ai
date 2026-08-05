@@ -26,16 +26,16 @@ export function Invite() {
         <div className="relative mx-auto w-full max-w-[1180px] px-5 text-center sm:px-8 lg:px-11">
           <GlassPool scrimClassName="mx-auto max-w-3xl">
           <h2 className="display over-stage mx-auto max-w-[16ch]">
-            <Reveal delay={0.05}>Close the loop</Reveal>
+            <Reveal delay={0.05}>Connect the workspace.</Reveal>
             <Reveal delay={0.13}>
-              <GlassText>on every run.</GlassText>
+              <GlassText>Pick up with context.</GlassText>
             </Reveal>
           </h2>
 
           <Rise delay={0.24}>
             <p className="lede over-stage mx-auto mt-7 text-center">
-              Tighten the engineering loop between an agent&apos;s action and a
-              verified outcome.
+              Install Quirq, open Space, and choose the next run from real
+              project history instead of starting from a blank prompt.
             </p>
           </Rise>
 
@@ -61,8 +61,8 @@ export function Invite() {
               <span className="text-[13px] text-faint">· by XO Labs</span>
             </div>
             <p className="mt-3 font-mono text-[10px] tracking-[0.14em] text-faint uppercase">
-              Tokens meter consumption.{" "}
-              <span className="glass-text">Quirqs meter delivery.</span>
+              See what changed.{" "}
+              <span className="glass-text">Know where to act next.</span>
             </p>
           </div>
 

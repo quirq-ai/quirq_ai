@@ -1,0 +1,133 @@
+{
+  "slug": "my-test",
+  "name": "My test",
+  "rules": {
+    "start": "b1",
+    "maxDepth": 3,
+    "allowRewind": true,
+    "allowReplay": true
+  },
+  "nodes": {
+    "b1": {
+      "short": "your headline,",
+      "pose": {
+        "base": "centre",
+        "tweaks": {
+          "x": -4,
+          "y": 0,
+          "z": -0.55,
+          "scale": 1,
+          "spin": 0.095,
+          "tiltX": 1.5,
+          "tiltZ": -0.12,
+          "chroma": 0.5,
+          "thickness": 1.5,
+          "distortion": 0.15,
+          "aniso": 0.22,
+          "rough": 0.05,
+          "ior": 1.62,
+          "burst": 0.56
+        }
+      },
+      "beat": {
+        "layout": "right",
+        "title": [
+          "Your headline,",
+          "made of light."
+        ],
+        "glass": 1,
+        "lede": "Write the opening here. The glass stands centre stage behind it, breathing."
+      },
+      "prompt": "Keep walking?",
+      "choices": [
+        {
+          "label": "Say the hard thing plainly.",
+          "to": "b2"
+        }
+      ]
+    },
+    "b2": {
+      "short": "your first point",
+      "pose": {
+        "base": "centre",
+        "tweaks": {
+          "x": 2.5,
+          "y": -0.15,
+          "z": -0.7,
+          "scale": 1,
+          "spin": 0.045,
+          "tiltX": 0.86,
+          "tiltZ": 0.3,
+          "chroma": 0.015,
+          "thickness": 0.5,
+          "distortion": 0.7,
+          "aniso": 0.6,
+          "rough": 0.26,
+          "ior": 1.32,
+          "burst": 0.19
+        }
+      },
+      "beat": {
+        "layout": "left",
+        "marker": "01 · your first point",
+        "title": [
+          "Say the hard",
+          "thing plainly."
+        ],
+        "lede": "The drained pose reads as cost and consequence. Swap it for any preset on the right."
+      },
+      "prompt": "Keep walking?",
+      "choices": [
+        {
+          "label": "A new movement.",
+          "to": "b3"
+        }
+      ]
+    },
+    "b3": {
+      "short": "new beat",
+      "pose": {
+        "base": "centre",
+        "tweaks": {
+          "x": -2.35,
+          "y": 0.15,
+          "z": 0.5,
+          "scale": 1.12,
+          "spin": 0.16,
+          "tiltX": 0.2,
+          "tiltZ": -0.42,
+          "chroma": 0.95,
+          "thickness": 2.3,
+          "distortion": 0.1,
+          "aniso": 0.14,
+          "rough": 0.02,
+          "ior": 1.72,
+          "burst": 0.66
+        }
+      },
+      "beat": {
+        "layout": "center",
+        "marker": "02 · new beat",
+        "title": [
+          "A new",
+          "movement."
+        ],
+        "glass": 1
+      }
+    }
+  },
+  "recording": {
+    "journey": "my-test",
+    "startedAt": 1785187002516,
+    "events": [
+      {
+        "at": 1785187002516,
+        "kind": "start",
+        "node": "b1",
+        "path": [
+          "b1"
+        ]
+      }
+    ]
+  }
+}

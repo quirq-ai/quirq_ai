@@ -25,11 +25,13 @@ export function Hero() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.45, duration: 1 }}
           >
-            One command · closed-loop engineering
+            One command · every agent workspace in view
           </motion.p>
 
           <h1 className="mt-6 flex flex-col items-center">
-            <span className="sr-only">quirq: work at light speed.</span>
+            <span className="sr-only">
+              quirq: find context, fix waste, and keep work moving.
+            </span>
 
             {/* The wordmark resolves out of the light rather than sliding in:
                 each letter arrives from blur, like the beam coming into focus. */}
@@ -94,8 +96,10 @@ export function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.72, duration: 1.1, ease: EASE }}
             >
-              Work at{" "}
-              <GlassText className="whitespace-nowrap">light speed</GlassText>.
+              Find context. Fix waste.{" "}
+              <GlassText className="whitespace-nowrap">
+                Keep work moving.
+              </GlassText>
             </motion.span>
           </h1>
 

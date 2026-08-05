@@ -29,16 +29,17 @@ export function Ecosystem() {
       <div className="mx-auto w-full max-w-[1180px] px-5 sm:px-8 lg:px-11">
         <Rise className="relative mx-auto flex max-w-[760px] flex-col items-center text-center">
           <TextScrim />
-          <p className="label over-stage">Your whole agent fleet, in view</p>
+          <p className="label over-stage">Keep the tools you already use</p>
           <h2 className="over-stage mt-4 text-[clamp(28px,4vw,46px)] leading-[1.04] font-medium tracking-[-0.045em] text-ink">
-            Connect any machine{" "}
+            Connect every machine.{" "}
             <GlassText className="whitespace-nowrap">
-              Observe every outcome.
+              Stop rebuilding context.
             </GlassText>
           </h2>
           <p className="over-stage mt-5 max-w-[640px] text-[13px] leading-6 text-dim sm:text-[14px]">
-            Across laptops, workstations, and cloud machines, quirq gathers the
-            work already happening into one clear, shared view.
+            Install Quirq wherever your agents run. When you switch tools or
+            machines, Space keeps the work, usage, and project trail together
+            so the next run starts with the right context.
           </p>
         </Rise>
 
@@ -79,9 +80,9 @@ export function Ecosystem() {
         >
           <GlassPool>
             <p className="over-stage px-5 text-center font-mono text-[9px] leading-5 tracking-[0.12em] text-faint uppercase sm:text-[10.5px] sm:tracking-[0.14em]">
-              One command · every device · every agent ·{" "}
+              One command per machine · every agent ·{" "}
               <GlassText className="whitespace-nowrap">
-                one shared view
+                one place to resume
               </GlassText>
             </p>
           </GlassPool>

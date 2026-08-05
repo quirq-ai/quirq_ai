@@ -259,11 +259,27 @@
   },
   "recording": {
     "journey": "git-history",
-    "startedAt": 1785159165037,
+    "startedAt": 1785191656215,
     "events": [
       {
-        "at": 1785159165037,
+        "at": 1785191656215,
         "kind": "start",
+        "node": "open",
+        "path": [
+          "open"
+        ]
+      },
+      {
+        "at": 1785191659299,
+        "kind": "loop",
+        "node": "open",
+        "path": [
+          "open"
+        ]
+      },
+      {
+        "at": 1785191666204,
+        "kind": "loop",
         "node": "open",
         "path": [
           "open"

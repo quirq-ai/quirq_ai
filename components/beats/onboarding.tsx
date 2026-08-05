@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { GlassPool, GlassText } from "@/components/ui/glass";
 import { INSTALL_COMMAND } from "@/components/ui/install-command";
@@ -136,10 +135,10 @@ function InstallStep({
   return (
     <div className="mx-auto flex min-h-[300px] max-w-2xl flex-col items-center justify-center text-center sm:min-h-[330px]">
       <p className="font-mono text-[9px] tracking-[0.2em] text-spec-blue uppercase">
-        Step 01 · install the meter
+        Step 01 · install Quirq
       </p>
       <h3 className="mt-4 text-[clamp(24px,4vw,36px)] leading-tight font-semibold tracking-[-0.025em] text-ink">
-        One command. No setup maze.
+        Run one command. Keep your setup.
       </h3>
       <p className="mt-3 max-w-[48ch] text-[13.5px] leading-relaxed text-dim sm:text-[14.5px]">
         Run this in your terminal. It installs the quirq CLI under{" "}
@@ -229,9 +228,8 @@ function ConnectStep({
           Connect your local workspace.
         </h3>
         <p className="mx-auto mt-3 max-w-[50ch] text-[13.5px] leading-relaxed text-dim sm:text-[14.5px]">
-          The CLI and workspace are separate: this checks for a running XO
-          Space instance and reads one snapshot. Nothing is probed until you
-          press Connect.
+          Enter the loopback address for your running XO Space instance. Quirq
+          reads one local snapshot only after you press Connect.
         </p>
       </div>
 
@@ -324,6 +322,7 @@ function SuccessStep({
 }) {
   const { payload } = connection;
   const rootReady = payload.root.exists && payload.root.readable;
+  const spaceDashboardHref = `${connection.endpoint.replace(/\/+$/, "")}/space/#/dashboard`;
 
   return (
     <div className="mx-auto flex min-h-[300px] max-w-2xl flex-col items-center justify-center text-center sm:min-h-[330px]">
@@ -388,13 +387,16 @@ function SuccessStep({
       </dl>
 
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-        <Link
-          href="/dashboard#dashboard-instance"
+        <a
+          href={spaceDashboardHref}
+          target="_blank"
+          rel="noopener noreferrer"
           className="focus-on-ink group inline-flex items-center gap-2.5 rounded-full bg-ink px-6 py-3.5 font-mono text-[10.5px] tracking-[0.14em] text-void uppercase transition-opacity hover:opacity-85"
         >
-          Open your dashboard
+          Open Space dashboard
+          <span className="sr-only"> (opens in a new tab)</span>
           <Arrow className="transition-transform duration-300 group-hover:translate-x-0.5" />
-        </Link>
+        </a>
         <button
           type="button"
           onClick={onReset}
@@ -499,20 +501,22 @@ export function Onboarding() {
         <div className="relative flex flex-col items-center text-center">
           <GlassPool scrimClassName="mx-auto max-w-3xl">
             <Rise>
-              <p className="label over-stage">Onboarding · three quick steps</p>
+              <p className="label over-stage">
+                Connect your workspace · three steps
+              </p>
             </Rise>
 
             <h2 id="onboarding-title" className="display-sm over-stage mt-7">
-              <Reveal delay={0.05}>Get started</Reveal>
+              <Reveal delay={0.05}>Install. Connect.</Reveal>
               <Reveal delay={0.13}>
-                <GlassText>in seconds.</GlassText>
+                <GlassText>Open your dashboard.</GlassText>
               </Reveal>
             </h2>
 
             <Rise delay={0.2}>
               <p className="lede over-stage mx-auto mt-6 max-w-[48ch]">
-                Install the meter, connect a local workspace, and carry the
-                verified handshake straight into your dashboard.
+                Run the command, point Quirq at your local Space instance, and
+                land on your own workspace data—not a product demo.
               </p>
             </Rise>
           </GlassPool>

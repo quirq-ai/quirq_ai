@@ -33,6 +33,8 @@ export const stage = {
   /** Pointer position in clip space, −1 → 1. */
   pointerX: 0,
   pointerY: 0,
+  /** Per-page control for how strongly the form follows the pointer. */
+  pointerGain: 1,
   /** True when the visitor asked for less motion. */
   reduced: false,
   /** Homepage collection beat opts the persistent ribbon into outcome vertices. */

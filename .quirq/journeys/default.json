@@ -298,23 +298,14 @@
   },
   "recording": {
     "journey": "default",
-    "startedAt": 1785182672565,
+    "startedAt": 1785191644689,
     "events": [
       {
-        "at": 1785182672565,
+        "at": 1785191644689,
         "kind": "start",
         "node": "root",
         "path": [
           "root"
-        ]
-      },
-      {
-        "at": 1785182675882,
-        "kind": "replay",
-        "node": "bill",
-        "path": [
-          "root",
-          "bill"
         ]
       }
     ]

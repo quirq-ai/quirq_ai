@@ -36,11 +36,11 @@ let TRACK: readonly Keyframe[] = LEAVES.map((leaf) => leaf.keyframe);
 export const KEYFRAMES: readonly Keyframe[] = TRACK;
 
 /**
- * Editor override: a tool (the /editor page) can stand its own leaves in
- * front of the resolved tree. While set, getTrack()/getResolvedLeaves()
- * serve the override, so the live glass restages instantly and the runtime's
- * id binding follows the override's ids. Cleared on editor unmount; pages
- * never set this, so the golden baselines are unaffected.
+ * Transient override: an editor, journey, or page-level motion profile can
+ * stand its own leaves in front of the resolved tree. While set,
+ * getTrack()/getResolvedLeaves() serve the override, so the live glass
+ * restages instantly and the runtime's id binding follows the override's ids.
+ * Owners must clear their override on unmount.
  */
 let OVERRIDE: {
   leaves: readonly ResolvedLeaf[];
