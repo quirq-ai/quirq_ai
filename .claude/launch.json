@@ -3,7 +3,10 @@
   "configurations": [
     {
       "name": "quirq-web",
-      "url": "http://localhost:3000"
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev"],
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }
