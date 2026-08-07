@@ -20,6 +20,24 @@ const nextConfig: NextConfig = {
         destination: "/whitepaper/pdf",
         permanent: true,
       },
+
+      // The research shelves were renamed (foundations, accounting, evidence,
+      // experiments) to (speed-trials, from-the-desk, proving-grounds). Each
+      // old archive points at the shelf that took most of its notes, so a
+      // link into the old taxonomy lands on the notes it was pointing at
+      // rather than on a 404. Same reasoning as the PDF above.
+      ...(
+        [
+          ["foundations", "from-the-desk"],
+          ["accounting", "from-the-desk"],
+          ["evidence", "proving-grounds"],
+          ["experiments", "speed-trials"],
+        ] as const
+      ).map(([from, to]) => ({
+        source: `/research/topic/${from}`,
+        destination: `/research/topic/${to}`,
+        permanent: true,
+      })),
     ];
   },
 };

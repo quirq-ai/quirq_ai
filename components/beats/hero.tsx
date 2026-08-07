@@ -2,10 +2,10 @@
 
 import { motion, useReducedMotion } from "motion/react";
 import { Beat } from "@/components/ui/primitives";
-import { GlassHole, GlassPool, GlassText } from "@/components/ui/glass";
+import { GlassPool, GlassText } from "@/components/ui/glass";
 import { LoopCta } from "@/components/ui/loop-cta";
+import { QuirqLogo } from "@/components/ui/quirq-logo";
 
-const LETTERS = ["q", "u", "i", "r", "q"];
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 export function Hero() {
@@ -33,61 +33,19 @@ export function Hero() {
               quirq: find context, fix waste, and keep work moving.
             </span>
 
-            {/* The wordmark resolves out of the light rather than sliding in:
-                each letter arrives from blur, like the beam coming into focus. */}
-            <span
+            <motion.span
               aria-hidden
-              className="flex font-mark text-[clamp(72px,15.5vw,204px)] leading-[0.86] font-semibold tracking-[-0.03em]"
+              className="block w-[clamp(290px,51vw,690px)]"
+              initial={{ opacity: 0, y: "18%", filter: "blur(20px)" }}
+              animate={{ opacity: 1, y: "0%", filter: "blur(0px)" }}
+              transition={
+                reduced
+                  ? { duration: 0 }
+                  : { delay: 0.2, duration: 1.25, ease: EASE }
+              }
             >
-              {LETTERS.map((letter, i) => (
-                <motion.span
-                  key={i}
-                  className="inline-block"
-                  // initial/animate must be identical on server and client:
-                  // useReducedMotion() is null during SSR, so branching them
-                  // bakes full-motion inline styles into HTML that a
-                  // reduced-motion client would never clear. Only the
-                  // transition (never serialized) may branch.
-                  initial={{ opacity: 0, y: "30%", filter: "blur(20px)" }}
-                  animate={{ opacity: 1, y: "0%", filter: "blur(0px)" }}
-                  transition={
-                    reduced
-                      ? { duration: 0 }
-                      : { delay: 0.2 + i * 0.075, duration: 1.25, ease: EASE }
-                  }
-                >
-                  {letter === "i" ? (
-                    /* The i's dot is an aperture: the glyph's own tittle is
-                       clipped away and a fully transparent hole takes its
-                       place. Offsets calibrated against rasterized Poppins
-                       600 ink: the tittle is a 0.165em circle whose centre
-                       sits 0.07em below this box's top (baseline at 0.779em,
-                       dot ink 0.79 to 0.625em above it), and the stem starts
-                       at 0.219em; the clip line falls mid-gap at 0.19em. */
-                    <span className="relative inline-block">
-                      <span
-                        className="inline-block"
-                        style={{ clipPath: "inset(0.19em 0 0 0)" }}
-                      >
-                        i
-                      </span>
-                      <GlassHole
-                        className="backdrop-brightness-110 backdrop-saturate-110"
-                        style={{
-                          width: "0.165em",
-                          height: "0.165em",
-                          left: "50%",
-                          top: "-0.01em",
-                          transform: "translateX(-50%)",
-                        }}
-                      />
-                    </span>
-                  ) : (
-                    letter
-                  )}
-                </motion.span>
-              ))}
-            </span>
+              <QuirqLogo alt="" className="h-auto w-full" />
+            </motion.span>
 
             <motion.span
               aria-hidden

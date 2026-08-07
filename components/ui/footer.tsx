@@ -1,49 +1,68 @@
-import { Mark } from "./primitives";
+import type { ReactNode } from "react";
+import { QuirqLogo } from "./quirq-logo";
+import { SocialLinks } from "./social-links";
 
-const LINKS = [
+type FooterLink = {
+  href: string;
+  label: string;
+  newTab?: boolean;
+};
+
+/**
+ * The footer rail.
+ *
+ * Deliberately short. The developer deep-dives that used to live here (the
+ * journey studio and its loader, the dashboard, beats, the engine walkthrough)
+ * came off: they are build documentation rather than places a reader of this
+ * site is looking for, and /docs indexes them under Engine reference, which is
+ * now their route in.
+ */
+const LINKS: readonly FooterLink[] = [
   { href: "/demo", label: "Demo", newTab: false },
-  { href: "/journey", label: "Journey", newTab: false },
-  // The dashboard is not in the nav (its breakpoints are spent), so the
-  // footer is where it stays reachable from every page.
-  { href: "/dashboard", label: "Dashboard", newTab: false },
+  { href: "/docs", label: "Docs", newTab: false },
   { href: "/whitepaper", label: "Whitepaper", newTab: false },
-  // The nav has no room for Beats at any breakpoint, so this is its only
-  // route in. It is a dev deep-dive, which is why it lost the seat.
-  { href: "/beats", label: "Beats", newTab: false },
-  // The engine walkthrough is a dev deep-dive like Beats, so the footer is
-  // its only route in.
-  { href: "/engine", label: "Engine", newTab: false },
-  // Same reasoning: the journey loader is a tool, and the footer is where the
-  // tools live.
-  { href: "/journey/load", label: "Loader", newTab: false },
   { href: "/llm.txt", label: "llm.txt", newTab: true },
   { href: "https://xo.builders", label: "xo.builders", newTab: true },
   { href: "mailto:suraj@xo.builders", label: "Contact", newTab: false },
 ];
 
 /**
- * The compact footer for inner pages. The home page keeps its own footer
- * inside the invite beat, where it needs a gradient base to sit on over the
- * glass; this one lives on plain black and needs none of that.
+ * The compact footer shell shared by the research surface and the home page.
+ * Its content slots keep route-specific labels out of the visual component.
  */
-export function SiteFooter() {
+export function SiteFooter({
+  links = LINKS,
+  brandSuffix = "· by XO Labs",
+  note = (
+    <>
+      Tokens meter consumption.{" "}
+      <span className="glass-text">Quirqs meter delivery.</span>
+    </>
+  ),
+  trailing = <SocialLinks />,
+}: {
+  links?: readonly FooterLink[];
+  brandSuffix?: ReactNode;
+  note?: ReactNode;
+  trailing?: ReactNode;
+} = {}) {
   return (
     <footer className="relative mt-24">
       <div className="mx-auto flex w-full max-w-[1180px] flex-wrap items-end justify-between gap-7 px-5 pb-9 sm:px-8 lg:px-11">
         <div>
           <div className="flex items-center gap-2.5">
-            <Mark className="h-[18px] w-auto text-ink" />
-            <span className="font-mark text-[17px] font-semibold">quirq</span>
-            <span className="text-[13px] text-faint">· by XO Labs</span>
+            <QuirqLogo className="h-[22px] w-auto" />
+            {brandSuffix == null ? null : (
+              <span className="text-[13px] text-faint">{brandSuffix}</span>
+            )}
           </div>
           <p className="mt-3 font-mono text-[10px] tracking-[0.14em] text-faint uppercase">
-            Tokens meter consumption.{" "}
-            <span className="glass-text">Quirqs meter delivery.</span>
+            {note}
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-5 sm:gap-7">
-          {LINKS.map((link) => (
+        <div className="flex flex-wrap items-center gap-5 sm:gap-7">
+          {links.map((link) => (
             <a
               key={link.label}
               href={link.href}
@@ -54,6 +73,7 @@ export function SiteFooter() {
               {link.label}
             </a>
           ))}
+          {trailing}
         </div>
       </div>
       <div className="spectrum-rule h-px w-full opacity-50" />

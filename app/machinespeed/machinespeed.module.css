@@ -1,0 +1,649 @@
+/*
+ * MACHINE SPEED, ported from quirq-package/site/machinespeed.html.
+ *
+ * The route keeps the palette and layout it was authored with, but it wears
+ * quirq's chrome: the site nav sits above it and SiteFooter closes it, so the
+ * page reads as part of the site rather than a separate property. That is why
+ * the values below are literal rather than references to app/globals.css, and
+ * why the underline rule is scoped to .prose instead of the whole page: the
+ * shared footer's links must keep the site's own treatment.
+ *
+ * Three deliberate departures from the source file:
+ *   - the fonts bind to the families the app already loads, instead of leaving
+ *     the page on whatever the system happens to have;
+ *   - the hero image is a file under public/assets/machinespeed rather than a
+ *     76 kB base64 string inlined into the stylesheet;
+ *   - the authored footer is replaced by the site footer.
+ *
+ * Custom properties are --ms-* so they cannot collide with the site's tokens
+ * on a page that is still inside the root layout.
+ */
+
+.page {
+  --ms-bg: #10120f;
+  --ms-ink: #e9eae6;
+  --ms-ink-dim: #a8aba3;
+  --ms-ink-faint: #6b6e67;
+  --ms-line: rgba(233, 234, 230, 0.12);
+  --ms-green: #b4e34a;
+  --ms-blue: #57b6ff;
+  --ms-mono: var(--font-jetbrains), "SF Mono", ui-monospace, "IBM Plex Mono",
+    Menlo, Consolas, monospace;
+  --ms-sans: var(--font-inter), "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* Tracks .shell in components/ui/nav.module.css: the nav is fixed, so the
+     hero has to clear it rather than start underneath it. Revise together. */
+  --ms-nav: 74px;
+
+  min-height: 100svh;
+  background: var(--ms-bg);
+  color: var(--ms-ink);
+  font-family: var(--ms-sans);
+  font-size: 17px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page ::selection {
+  background: var(--ms-green);
+  color: #10120f;
+}
+
+.page :is(h1, h2, p, ol, ul, li, figure) {
+  margin: 0;
+  padding: 0;
+}
+
+.col {
+  max-width: 660px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Scoped to the body copy: the shared footer below brings its own link
+   treatment and must not inherit this one. */
+.prose a {
+  color: var(--ms-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--ms-ink-faint);
+  text-underline-offset: 4px;
+  transition: text-decoration-color 0.15s;
+}
+.prose a:hover {
+  text-decoration-color: var(--ms-ink);
+}
+
+/* The mark: three skewed bars. */
+.bars {
+  display: inline-flex;
+  gap: 4px;
+}
+.bars i {
+  display: block;
+  width: 7px;
+  height: 22px;
+  background: var(--ms-ink);
+  transform: skewX(-24deg);
+  border-radius: 1.5px;
+}
+
+/* ---------- split hero ---------- */
+.heroSplit {
+  display: grid;
+  grid-template-columns: 1fr clamp(320px, 40vw, 600px);
+  gap: clamp(24px, 4vw, 64px);
+  /* Border-box, so the nav clearance comes out of the viewport height and the
+     hero still measures exactly one screen. */
+  padding: calc(var(--ms-nav) + 20px) 20px 20px;
+  min-height: 100svh;
+  max-width: 1680px;
+  margin: 0 auto;
+}
+.heroLeft {
+  display: flex;
+  flex-direction: column;
+  padding: 36px 8px 36px clamp(16px, 4vw, 64px);
+}
+.heroMid {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  padding: 48px 0;
+}
+.heroMid h1 {
+  font-size: clamp(32px, 3.6vw, 52px);
+  line-height: 1.18;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  max-width: 15em;
+  position: relative;
+  z-index: 2;
+}
+.heroMid h1 em {
+  font-style: italic;
+  background: linear-gradient(95deg, #ffb46b 0%, #ff5e8a 45%, #57d9ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* The faded phrases stacked above and below the headline. */
+.stack {
+  font-size: clamp(18px, 2vw, 27px);
+  line-height: 1.7;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  pointer-events: none;
+}
+.stack div {
+  white-space: nowrap;
+}
+.stackUp {
+  text-align: right;
+  width: 58%;
+  max-width: none;
+  align-self: flex-start;
+  margin-left: 0;
+  margin-bottom: 20px;
+}
+.stackDown {
+  text-align: left;
+  margin-top: 20px;
+  margin-left: 58%;
+}
+.o1 {
+  color: rgba(233, 234, 230, 0.06);
+}
+.o2 {
+  color: rgba(233, 234, 230, 0.1);
+}
+.o3 {
+  color: rgba(233, 234, 230, 0.16);
+}
+.o4 {
+  color: rgba(233, 234, 230, 0.24);
+}
+.stack .it {
+  font-style: italic;
+}
+
+.heroBottom {
+  max-width: 560px;
+}
+.heroBottom .lead {
+  color: var(--ms-ink);
+  font-size: 19px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.heroBottom p {
+  color: var(--ms-ink-dim);
+  font-size: 15.5px;
+  line-height: 1.7;
+}
+
+.heroImg {
+  border-radius: 22px;
+  background: #000 url("/assets/machinespeed/hero.jpg") center / cover no-repeat;
+  min-height: 540px;
+}
+
+/* The two breakpoints where .shell changes height in nav.module.css. */
+@media (min-width: 700px) and (max-width: 1439px) {
+  .page {
+    --ms-nav: clamp(60px, 5.139vw, 74px);
+  }
+}
+@media (max-width: 699px) {
+  .page {
+    --ms-nav: 70px;
+  }
+}
+
+@media (max-width: 860px) {
+  .heroSplit {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+  .heroImg {
+    min-height: 420px;
+    order: 2;
+  }
+  .heroMid {
+    padding: 80px 0 56px;
+  }
+  .stackUp,
+  .stackDown {
+    margin-left: 0;
+    text-align: left;
+    max-width: none;
+    width: auto;
+  }
+}
+
+/* ---------- prose ---------- */
+.prose {
+  padding-top: 44px;
+}
+.prose p {
+  margin-bottom: 26px;
+  color: var(--ms-ink-dim);
+}
+.prose p strong {
+  color: var(--ms-ink);
+  font-weight: 600;
+}
+.prose p.lead {
+  color: var(--ms-ink);
+  font-size: 19px;
+}
+
+.prose h2 {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ms-ink);
+  margin: 72px 0 24px;
+}
+
+/* ---------- numbered list ---------- */
+.plan {
+  list-style: none;
+  counter-reset: n;
+  margin: 0 0 26px;
+}
+.plan li {
+  counter-increment: n;
+  position: relative;
+  padding: 20px 0 20px 56px;
+  border-top: 1px solid var(--ms-line);
+  color: var(--ms-ink-dim);
+}
+.plan li:last-child {
+  border-bottom: 1px solid var(--ms-line);
+}
+.plan li::before {
+  content: counter(n);
+  position: absolute;
+  left: 0;
+  top: 22px;
+  font-family: var(--ms-mono);
+  font-size: 13px;
+  color: var(--ms-ink-faint);
+}
+.plan li b {
+  display: block;
+  color: var(--ms-ink);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+/* ---------- blueprint canvas ---------- */
+.canvasWrap {
+  width: min(920px, calc(100vw - 32px));
+  margin: 34px auto;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.canvas {
+  border: 1px solid var(--ms-line);
+  border-radius: 12px;
+  background: #0b0d0a;
+  overflow: hidden;
+}
+.cvBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--ms-line);
+  background: rgba(255, 255, 255, 0.02);
+}
+.cvTitle {
+  font-family: var(--ms-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ms-ink-dim);
+}
+.cvTitle b {
+  color: var(--ms-ink);
+  font-weight: 600;
+}
+.cvRight {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.cvBrand {
+  font-family: var(--ms-mono);
+  font-size: 12px;
+  color: var(--ms-ink-faint);
+  letter-spacing: 0.04em;
+}
+.cvDeploy {
+  font-family: var(--ms-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: #0a1018;
+  background: var(--ms-blue);
+  border-radius: 3px;
+  padding: 3px 8px;
+  font-weight: 600;
+}
+.cvScroll {
+  overflow-x: auto;
+}
+.cvStage {
+  position: relative;
+  width: 880px;
+  height: 400px;
+  background-image: radial-gradient(
+    rgba(233, 234, 230, 0.07) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+}
+.cvStage svg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.node {
+  position: absolute;
+  width: 190px;
+  border: 1px solid var(--ms-line);
+  border-radius: 9px;
+  background: #13160f;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  font-size: 11px;
+}
+.nHd {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 11px;
+  border-bottom: 1px solid var(--ms-line);
+  font-family: var(--ms-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ms-ink-faint);
+}
+.nDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  transform: skewX(-10deg);
+}
+.nBd {
+  padding: 9px 11px;
+}
+.nT {
+  font-weight: 600;
+  color: var(--ms-ink);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.nS {
+  color: var(--ms-ink-faint);
+  font-size: 10px;
+  line-height: 1.5;
+  margin-top: 3px;
+}
+.nFt {
+  border-top: 1px solid var(--ms-line);
+  padding: 7px 11px;
+  font-family: var(--ms-mono);
+  font-size: 9.5px;
+  color: var(--ms-ink-faint);
+  letter-spacing: 0.03em;
+}
+.nFt b {
+  color: var(--ms-blue);
+  font-weight: 600;
+}
+.hl {
+  border-color: rgba(87, 182, 255, 0.45);
+}
+.flowNote {
+  font-family: var(--ms-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ms-ink-faint);
+  margin-top: 16px;
+  text-align: center;
+}
+.flowNote b {
+  color: var(--ms-blue);
+  font-weight: 600;
+}
+
+/* ---------- mono block ---------- */
+.term {
+  font-family: var(--ms-mono);
+  font-size: 13.5px;
+  line-height: 2;
+  color: var(--ms-ink-dim);
+  border: 1px solid var(--ms-line);
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin: 26px 0 34px;
+  background: rgba(0, 0, 0, 0.25);
+  overflow-x: auto;
+  white-space: pre;
+}
+.c {
+  color: var(--ms-ink-faint);
+}
+.g {
+  color: var(--ms-blue);
+}
+.w {
+  color: var(--ms-ink);
+}
+
+/* ---------- inline calculator ---------- */
+.calc {
+  margin: 88px 0 0;
+  border: 1px solid var(--ms-line);
+  border-radius: 18px;
+  padding: 38px 34px 32px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.035),
+    rgba(255, 255, 255, 0.008)
+  );
+}
+.k {
+  font-family: var(--ms-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ms-ink-faint);
+  margin-bottom: 14px;
+}
+.calc h2 {
+  margin: 0 0 10px;
+  font-size: clamp(23px, 3vw, 31px);
+}
+.calc .lede {
+  color: var(--ms-ink-dim);
+  font-size: 15.5px;
+  line-height: 1.7;
+  margin-bottom: 30px;
+  max-width: 52ch;
+}
+.calcGrid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 34px;
+  align-items: start;
+}
+.field {
+  margin-bottom: 24px;
+}
+.calc label {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.calc input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(233, 234, 230, 0.18);
+  outline: none;
+  min-width: 0;
+}
+.calc input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--ms-blue);
+  cursor: pointer;
+  border: 3px solid var(--ms-bg);
+  box-shadow: 0 0 0 1px rgba(233, 234, 230, 0.25);
+}
+.calc input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--ms-blue);
+  cursor: pointer;
+  border: 3px solid var(--ms-bg);
+  box-shadow: 0 0 0 1px rgba(233, 234, 230, 0.25);
+}
+.val {
+  min-width: 92px;
+  text-align: right;
+  font-size: 18px;
+  font-weight: 600;
+  font-family: var(--ms-mono);
+  font-variant-numeric: tabular-nums;
+}
+.val span {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ms-ink-faint);
+  font-family: var(--ms-sans);
+}
+.out {
+  border: 1px solid var(--ms-line);
+  border-radius: 14px;
+  padding: 26px 24px;
+  background: rgba(0, 0, 0, 0.22);
+}
+.big {
+  font-size: clamp(40px, 6vw, 52px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.big small {
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--ms-ink-dim);
+  margin-left: 8px;
+}
+.bar {
+  height: 8px;
+  background: rgba(233, 234, 230, 0.12);
+  border-radius: 4px;
+  margin: 20px 0 10px;
+  overflow: hidden;
+}
+.fill {
+  height: 100%;
+  background: var(--ms-blue);
+  border-radius: 4px;
+  width: 0;
+  transition: width 0.18s ease;
+}
+.hit {
+  background: var(--ms-green);
+}
+.note {
+  font-size: 13px;
+  color: var(--ms-ink-dim);
+  line-height: 1.6;
+}
+.pair {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+.stat {
+  flex: 1;
+  border: 1px solid var(--ms-line);
+  border-radius: 12px;
+  padding: 16px 16px 14px;
+}
+.kk {
+  font-size: 12px;
+  color: var(--ms-ink-faint);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.vv {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.more {
+  margin-top: 22px;
+  font-size: 13.5px;
+}
+
+@media (max-width: 760px) {
+  .calcGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- attribution ---------- */
+/* What survives of the authored footer: the sub-brand line. SiteFooter closes
+   the page below it and brings the site's own marks and links. */
+.attribution {
+  margin-top: 88px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-top: 1px solid var(--ms-line);
+  padding-top: 30px;
+}
+.attribution .bars i {
+  width: 5px;
+  height: 15px;
+}
+.footCopy {
+  font-family: var(--ms-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ms-ink-faint);
+}
+.footCopy b {
+  color: var(--ms-green);
+  text-transform: lowercase;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fill {
+    transition: none;
+  }
+}

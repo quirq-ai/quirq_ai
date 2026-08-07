@@ -241,6 +241,98 @@ html.lenis body {
   );
 }
 
+/* ============================== rendered plates ============================== */
+/* Every rendered still in the deck was exported onto an opaque rgb(9,9,9) card
+   rather than onto transparency. `mix-blend-screen` is meant to make that card
+   vanish against a black page and very nearly does, because screen(9, 0) is 9:
+   what survives is a faint but perfectly straight rectangle at every edge of
+   the asset, and a straight edge in the middle of a black page reads as a bug
+   even when nobody can name it. Feathering the alpha to zero before the blend
+   is what actually removes the box.
+
+   Each ramp is measured from where that asset's artwork actually begins, so
+   the fade only ever eats plate. hero-art's form starts 13.2% in from the left
+   and 6.1% down; definition-glow's starts 12.7% down and ends 84.1%;
+   feature-burst's starts 6.5% down. Re-measure before changing a number. */
+.plate-hero {
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0, #000 11%),
+    linear-gradient(to bottom, transparent 0, #000 5%, #000 97%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent 0, #000 11%),
+    linear-gradient(to bottom, transparent 0, #000 5%, #000 97%, transparent 100%);
+  mask-composite: intersect;
+}
+
+/* A full-width band: only the horizontal edges are ever on screen. */
+.plate-band {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 12%,
+    #000 85%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 12%,
+    #000 85%,
+    transparent 100%
+  );
+}
+
+/* The burst already fades out downward under its own overlay gradient, so only
+   the top edge needs dissolving. */
+.plate-top {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 7%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 7%);
+}
+
+/* A section-height backdrop. This plate is genuinely near-black in its corners,
+   but its artwork runs to all four edges, so what needs dissolving is the
+   artwork meeting the section boundary rather than the card. */
+.plate-veil {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 14%,
+    #000 86%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 14%,
+    #000 86%,
+    transparent 100%
+  );
+}
+
+/* ============================== hero drift ============================== */
+/* The home hero's rendered still is the page's only continuous motion, and
+   that exclusivity is the point: nothing else below it loops. CSS rather than
+   motion because it costs no JavaScript, it survives with JavaScript off, and
+   the noscript transform reset silences it without needing a branch. The
+   entrance and the pointer parallax live on separate ancestors; three
+   transforms on one element would overwrite each other. */
+@keyframes hero-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-0.35deg) scale(0.995);
+  }
+  50% {
+    transform: translate3d(0, -13px, 0) rotate(0.45deg) scale(1.012);
+  }
+}
+
+.hero-drift {
+  transform-origin: 50% 48%;
+  will-change: transform;
+  animation: hero-drift 11s ease-in-out infinite;
+}
+
 /* ============================== live pulse ============================== */
 .pulse-dot {
   position: relative;
@@ -275,5 +367,11 @@ html.lenis body {
   .grain,
   .pulse-dot::after {
     animation: none;
+  }
+
+  .hero-drift {
+    animation: none;
+    transform: none;
+    will-change: auto;
   }
 }

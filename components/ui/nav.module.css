@@ -1,0 +1,342 @@
+.shell {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 50;
+  height: 74px;
+  background: rgba(9, 9, 9, 0.9);
+  color: #fff;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  backdrop-filter: blur(12px);
+}
+
+.nav {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  padding: 22px 28px 0;
+}
+
+.brand {
+  display: block;
+  width: 92px;
+  grid-column: 1;
+  align-self: start;
+}
+
+.logo {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.links {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: clamp(30px, 3.4vw, 49px);
+  padding-top: 8px;
+  font-size: clamp(15px, 1.25vw, 18px);
+  line-height: 21px;
+  font-weight: 600;
+}
+
+.links a {
+  color: rgba(255, 255, 255, 0.88);
+  text-decoration: none;
+  transition: color 180ms ease, opacity 180ms ease;
+}
+
+.links a:hover,
+.links a:focus-visible,
+.links .activeLink {
+  color: #fff;
+}
+
+/* A link that leaves the site. The mark is the only thing distinguishing it
+   from its neighbours, so it sits on the baseline with the label rather than
+   floating, and stays quiet until the link is hovered. */
+.offsite {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.offsiteMark {
+  flex: none;
+  opacity: 0.5;
+  transition: opacity 180ms ease;
+}
+
+.links a:hover .offsiteMark,
+.links a:focus-visible .offsiteMark,
+.drawerLinks a:hover .offsiteMark {
+  opacity: 1;
+}
+
+.cta {
+  display: grid;
+  width: 144.955px;
+  height: 43.265px;
+  grid-column: 3;
+  place-items: center;
+  justify-self: end;
+  border-radius: 999px;
+  background: #fff;
+  color: #000;
+  font-size: 18px;
+  line-height: 22px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.cta:hover,
+.cta:focus-visible {
+  opacity: 0.84;
+  transform: translateY(-1px);
+}
+
+.brand:focus-visible,
+.links a:focus-visible,
+.cta:focus-visible,
+.menuButton:focus-visible,
+.drawerLinks a:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+}
+
+.menuButton {
+  display: none;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  border: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(5px);
+}
+
+.drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: 40;
+  width: min(86vw, 360px);
+  overflow-y: auto;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(9, 9, 9, 0.98);
+  padding: 98px 24px 32px;
+  color: #fff;
+  box-shadow: -28px 0 72px rgba(0, 0, 0, 0.48);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+.drawerLabel {
+  margin: 0 0 18px;
+  color: rgba(255, 255, 255, 0.42);
+  font-family: var(--font-fira), ui-monospace, monospace;
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.drawerLinks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.drawerLinks li {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.drawerLinks li:last-child {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.drawerLinks a {
+  display: grid;
+  min-height: 72px;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 18px;
+  line-height: 1.2;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 180ms ease;
+}
+
+.drawerLinks a:hover,
+.drawerLinks a:focus-visible,
+.drawerLinks .activeDrawerLink {
+  color: #fff;
+}
+
+.routeNumber {
+  color: rgba(255, 255, 255, 0.34);
+  font-family: var(--font-fira), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+@media (min-width: 1440px) {
+  /*
+   * The link row is the flex row from the base rule at every width, including
+   * this one.
+   *
+   * It used to be a Figma port: the row absolutely positioned at a measured
+   * 344.5984px wide, with each link pinned by `nth-child` to a measured `left`.
+   * That encoded the label widths of exactly three links into the stylesheet,
+   * so adding Enterprise as a fourth route gave it no rule to match, `left`
+   * resolved to `auto`, and it rendered on top of Products on every page that
+   * shows the nav. A fifth route would have done the same thing again.
+   *
+   * The grid does the centring instead: `.nav` is `1fr auto 1fr` and the row
+   * sits in column 2, so it stays centred while sizing to whatever labels it
+   * actually holds. Only the vertical offset survives from the port, as
+   * padding rather than a `top`: 22px of `.nav` padding plus this lands the
+   * row on the same 33.2596px baseline it had before.
+   */
+  .links {
+    padding-top: 11.2596px;
+  }
+
+  .cta {
+    position: absolute;
+    top: 22.1268px;
+    right: 27.7989px;
+  }
+}
+
+@media (min-width: 700px) and (max-width: 1439px) {
+  .shell {
+    height: clamp(60px, 5.139vw, 74px);
+  }
+
+  .nav {
+    padding: clamp(14px, 1.537vw, 22px) clamp(22px, 1.944vw, 28px) 0;
+  }
+
+  .links {
+    gap: clamp(18px, 3.403vw, 49px);
+    padding-top: clamp(7px, 0.556vw, 8px);
+    font-size: clamp(12px, 1.25vw, 18px);
+    line-height: clamp(16px, 1.458vw, 21px);
+  }
+
+  .cta {
+    width: clamp(108px, 10.066vw, 144.955px);
+    height: clamp(36px, 3.004vw, 43.265px);
+    font-size: clamp(13px, 1.25vw, 18px);
+    line-height: clamp(16px, 1.528vw, 22px);
+  }
+}
+
+@media (max-width: 699px) {
+  .shell {
+    height: 70px;
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 18px;
+  }
+
+  .brand {
+    width: 72px;
+    flex: 0 0 auto;
+    align-self: center;
+  }
+
+  .links {
+    display: none;
+  }
+
+  .cta {
+    width: 104px;
+    height: 38px;
+    margin-left: auto;
+    flex: 0 0 auto;
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  .menuButton {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+    color: #fff;
+  }
+
+  .menuIcon {
+    position: relative;
+    display: block;
+    width: 16px;
+    height: 12px;
+  }
+
+  .menuIcon > span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: currentColor;
+    transition: top 240ms ease, transform 240ms ease;
+  }
+
+  .menuIcon > span:first-child {
+    top: 1px;
+  }
+
+  .menuIcon > span:last-child {
+    top: 10px;
+  }
+
+  .menuIcon > .menuLineOpenOne {
+    top: 5px;
+    transform: rotate(45deg);
+  }
+
+  .menuIcon > .menuLineOpenTwo {
+    top: 5px;
+    transform: rotate(-45deg);
+  }
+}
+
+@media (max-width: 420px) {
+  .nav {
+    gap: 9px;
+    padding-inline: 14px;
+  }
+
+  .brand {
+    width: 68px;
+  }
+
+  .cta {
+    width: 96px;
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 700px) {
+  .backdrop,
+  .drawer {
+    display: none;
+  }
+}

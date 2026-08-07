@@ -13,17 +13,15 @@
  * unreachable.
  */
 
-export type Block =
-  | { kind: "h2" | "h3" | "p" | "quote" | "code"; text: string }
-  | { kind: "list"; items: string[] }
-  | { kind: "table"; header: string[]; rows: string[][] };
+/**
+ * Note bodies are written in the shared long-form vocabulary. Re-exported so
+ * the many modules that already import `Block` from here keep working.
+ */
+import type { Block } from "./prose";
+export type { Block };
 
 /** The coarse shelf a note sits on. `tag` stays the fine-grained label. */
-export type Topic =
-  | "foundations"
-  | "accounting"
-  | "evidence"
-  | "experiments";
+export type Topic = "speed-trials" | "from-the-desk" | "proving-grounds";
 
 export type Banner = {
   /** Under public/research, one 16:9 master per post. */
@@ -61,31 +59,29 @@ export type TopicMeta = {
   blurb: string;
 };
 
-/** Listed in reading order, which is also the order of the notes themselves. */
+/**
+ * Listed in chip-rail order, which is a reading order of its own and not the
+ * order of the notes themselves: the stream still runs in POSTS order, and a
+ * note keeps its number wherever it is shelved.
+ */
 export const TOPICS: TopicMeta[] = [
   {
-    slug: "foundations",
-    label: "Foundations",
+    slug: "speed-trials",
+    label: "Speed Trials",
     blurb:
-      "The two definitions the rest of the program stands on: the job a business hands over, and the unit its delivery mints.",
+      "Measured runs, one configuration against another: what we changed, what it cost in tokens, and what each result does not license us to say.",
   },
   {
-    slug: "accounting",
-    label: "Accounting",
+    slug: "from-the-desk",
+    label: "From the desk",
     blurb:
-      "Turning verified work into numbers an operator can read: every calculation in the ledger, and the monthly artifact it produces.",
+      "The definitions the program stands on, the accounting they produce, and the arguments about what this field is actually measuring.",
   },
   {
-    slug: "evidence",
-    label: "Evidence",
+    slug: "proving-grounds",
+    label: "Proving grounds",
     blurb:
-      "What has actually been measured and what would falsify it: the hypotheses, the numbered experiments, and the results as they land.",
-  },
-  {
-    slug: "experiments",
-    label: "Experiments",
-    blurb:
-      "The run studies themselves, ported from the XO research program: what we measured, what the numbers were, and what each result does not license us to say.",
+      "Claims put under test in the open: hypotheses stated with their falsifiers, pre-registrations filed before the run, and harnesses pointed at real work.",
   },
 ];
 
@@ -95,7 +91,7 @@ export const POSTS: Post[] = [
     title: "The quirq",
     dek: "The unit of measurement for AI's business impact: budgeted by a human, minted by verification, dual to the token.",
     tag: "unit of account",
-    topic: "foundations",
+    topic: "from-the-desk",
     banner: {
       src: "/research/the-quirq.jpg",
       width: 1600,
@@ -125,7 +121,7 @@ export const POSTS: Post[] = [
     title: "Unit of work",
     dek: "The contract that replaces the prompt: a job with a definition of done, a budget, and a single owner, living in a workspace.",
     tag: "unit of work",
-    topic: "foundations",
+    topic: "from-the-desk",
     banner: {
       src: "/research/unit-of-work.jpg",
       width: 1600,
@@ -182,7 +178,7 @@ export const POSTS: Post[] = [
     title: "The quirq calculus",
     dek: "Every calculation in quirq accounting: scoring, the mint, the all-in cost model, unit and portfolio metrics, the time axis, and the energy bridge.",
     tag: "the calculus",
-    topic: "accounting",
+    topic: "from-the-desk",
     banner: {
       src: "/research/the-quirq-calculus.jpg",
       width: 1600,
@@ -241,7 +237,7 @@ export const POSTS: Post[] = [
     title: "The company dashboard",
     dek: "The quirq ledger a company reads monthly, and the reading discipline that goes with it. A worked quarter where token spend rose 83% while verified value per all-in dollar rose 81%.",
     tag: "accounting",
-    topic: "accounting",
+    topic: "from-the-desk",
     banner: {
       src: "/research/the-company-dashboard.jpg",
       width: 1600,
@@ -276,7 +272,7 @@ export const POSTS: Post[] = [
     title: "Validation",
     dek: "Hypothesis-first validation: every empirical claim stated with its falsifier and bound to numbered experiments E1 through E7, completed or scheduled.",
     tag: "validation",
-    topic: "evidence",
+    topic: "proving-grounds",
     banner: {
       src: "/research/validation.jpg",
       width: 1600,
@@ -322,7 +318,7 @@ export const POSTS: Post[] = [
     title: "Agent Context Research: The Evidence So Far",
     dek: "A guided map of five agent-context studies, including the 84-run replication that did not reproduce the pilot's cheaper-context headline, and the question each follow-up was built to answer.",
     tag: "evidence map",
-    topic: "experiments",
+    topic: "from-the-desk",
     banner: {
       src: "/research/research-series.jpg",
       width: 1600,
@@ -372,7 +368,7 @@ export const POSTS: Post[] = [
     title: "How the Environment Affects Agent Performance and Token Cost",
     dek: "A pilot running one coding agent against one fixed task under six escalating levels of project context. Every environment finished, the richest ones spent up to 36 percent fewer tokens, and caching served 88 to 96 percent of the input.",
     tag: "experiment",
-    topic: "experiments",
+    topic: "speed-trials",
     banner: {
       src: "/research/environment-and-token-cost.jpg",
       width: 1600,
@@ -455,7 +451,7 @@ export const POSTS: Post[] = [
     title: "The Incurious Agent",
     dek: "84 controlled runs on environmental curiosity across two coding agents and seven progressively richer environments. Agents read the surface and skip the substance: the curated memory built for the task was opened in 1 of 12 runs.",
     tag: "experiment",
-    topic: "experiments",
+    topic: "speed-trials",
     banner: {
       src: "/research/the-incurious-agent.jpg",
       width: 1600,
@@ -529,7 +525,7 @@ export const POSTS: Post[] = [
     title: "The Self-Sufficient Agent",
     dek: "We raised the difficulty until the bare agent should have broken: harder tasks on a real 170-file service. On these tasks it didn't break. With no documentation at all, two coding agents satisfied nine of nine non-obvious functional requirements, identically.",
     tag: "experiment",
-    topic: "experiments",
+    topic: "speed-trials",
     banner: {
       src: "/research/the-self-sufficient-agent.jpg",
       width: 1600,
@@ -585,7 +581,7 @@ export const POSTS: Post[] = [
     title: "Relevance, Not Volume",
     dek: "Two operating contracts for a coding agent, matched to the same ~14 KB. The generic one left conformance at its 8% floor; the one carrying a single project-specific rule lifted it to 100% for Codex and 80% for Claude.",
     tag: "experiment",
-    topic: "experiments",
+    topic: "speed-trials",
     banner: {
       src: "/research/relevance-not-volume.jpg",
       width: 1600,
@@ -639,7 +635,7 @@ export const POSTS: Post[] = [
     title: "Curiosity Comparison Between Agents",
     dek: "A third coding agent joins the context ladder. Gemini tops the curiosity index at 100 against Claude's 60 and Codex's 23, spends 38% of its actions reading files, and is the only one of the three that explores more as the workspace gets richer.",
     tag: "experiment",
-    topic: "experiments",
+    topic: "speed-trials",
     banner: {
       src: "/research/curiosity-comparison.jpg",
       width: 1600,
@@ -706,7 +702,7 @@ export const POSTS: Post[] = [
     title: "Fable 5 vs Opus 4.8: A Coding-Agent Evaluation",
     dek: "A head-to-head on real engineering work through a harness built to make the comparison mean something. Both models passed every gate, so pass/fail did not separate them; Fable led modestly on tool calls and tokens. Only 4 of 10 tasks ran before Fable was suspended.",
     tag: "evaluation",
-    topic: "experiments",
+    topic: "speed-trials",
     banner: {
       src: "/research/coding-model-eval-harness.jpg",
       width: 1600,
@@ -774,7 +770,7 @@ export const POSTS: Post[] = [
     title: "Case Study: The Harvey Harness",
     dek: "Reverse-engineered from Harvey's public technical disclosures: the advantage is the harness, not exclusive access to a smarter model. Harvey reports its auto routing cuts inference cost three to five times against a frontier-only baseline. A reconstruction, not a measurement.",
     tag: "case study",
-    topic: "experiments",
+    topic: "proving-grounds",
     banner: {
       src: "/research/harvey-case-study.jpg",
       width: 1600,
@@ -865,7 +861,7 @@ export const POSTS: Post[] = [
     title: "Why Alignment Testing Needs a Real Environment",
     dek: "Frontier models can tell when they are being tested and behave differently when they do. Anthropic reported that ablating Claude Sonnet 4.5's eval-detection features lifted default misaligned behaviour from zero to as high as nine percent. An analysis of the 2025-2026 disclosures.",
     tag: "analysis",
-    topic: "experiments",
+    topic: "from-the-desk",
     banner: {
       src: "/research/alignment-environments.jpg",
       width: 1600,
@@ -946,7 +942,7 @@ export const POSTS: Post[] = [
     title: "Is the Language Hard to Model, or Its Tokenizer?",
     dek: "A pre-registered test of whether cross-lingual efficiency gaps come from languages or from how we represent them. Sanskrit encodes 5.07 characters per token under an aligned tokenizer, 1.13 under GPT-4's. Five languages, three scripts, four tokenizers.",
     tag: "pre-registration",
-    topic: "experiments",
+    topic: "proving-grounds",
     banner: {
       src: "/research/tokenizer-not-the-language.jpg",
       width: 1600,
@@ -1055,7 +1051,7 @@ export const POSTS: Post[] = [
     title: "Why Organic Data Still Beats Agent-Mimicked Synthetic Data in Evaluation",
     dek: "Organic replay forecasts production misbehavior at r = 0.91, while agent-mimicked synthesis stalls at a 49.5% discriminator win-rate even when handed real ground truth. The gap is structural, and narrower than the usual headline.",
     tag: "analysis",
-    topic: "experiments",
+    topic: "from-the-desk",
     banner: {
       src: "/research/organic-vs-synthetic-evaluation-data.jpg",
       width: 1600,
@@ -1265,9 +1261,9 @@ export function resolveIndex({
 
   // The whole stream paginates. A topic archive is one page by design: an
   // archive is a shelf you scan in one go, and a second URL scheme for it buys
-  // nothing. Experiments is now much longer than a page of the stream, which is
-  // deliberate: the run studies read as one list. If an archive ever gets long
-  // enough that the single page is a burden, give it PAGE_SIZE and add
+  // nothing. Every archive is now longer than a page of the stream, which is
+  // deliberate: a shelf reads as one list. If an archive ever gets long enough
+  // that the single page is a burden, give it PAGE_SIZE and add
   // /research/topic/<topic>/page/<n> alongside the stream's own route.
   //
   // A topic's page size is its own length, never Infinity: the offset below is

@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Nav } from "@/components/ui/nav";
 import { SiteFooter } from "@/components/ui/footer";
 
 /**
@@ -14,8 +13,6 @@ export default function ResearchLayout({ children }: { children: ReactNode }) {
       <div className="research-glow" aria-hidden />
       <div className="vignette" aria-hidden />
       <div className="grain" aria-hidden />
-
-      <Nav />
 
       <main className="relative z-10 flex min-h-svh flex-col">
         <div className="flex-1">{children}</div>

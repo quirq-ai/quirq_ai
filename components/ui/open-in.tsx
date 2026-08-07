@@ -170,7 +170,8 @@ export function OpenIn({
       >
         <span
           aria-hidden
-          className="absolute -inset-px -z-10 rounded-full opacity-0 blur-lg transition-opacity duration-500 group-hover:opacity-70"
+          // `cta-bloom`: same noscript hook as ActionLink's bloom. See there.
+          className="cta-bloom absolute -inset-px -z-10 rounded-full opacity-0 blur-lg transition-opacity duration-500 group-hover:opacity-70"
           style={{ background: "var(--spectrum)" }}
         />
         <button

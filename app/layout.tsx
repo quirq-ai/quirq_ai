@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono, Poppins } from "next/font/google";
+import { Fira_Mono, Inter, JetBrains_Mono, Poppins } from "next/font/google";
 import { MotionProvider } from "@/components/motion-provider";
+import { Nav } from "@/components/ui/nav";
 import "./globals.css";
 
 /* Geometric for the mark, grotesque for reading, mono for anything metered. */
@@ -20,6 +21,13 @@ const inter = Inter({
 const jetbrains = JetBrains_Mono({
   variable: "--font-jetbrains",
   weight: ["400", "500"],
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const fira = Fira_Mono({
+  variable: "--font-fira",
+  weight: ["400", "700"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -64,20 +72,26 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${poppins.variable} ${jetbrains.variable} antialiased`}
+      className={`${inter.variable} ${poppins.variable} ${jetbrains.variable} ${fira.variable} antialiased`}
     >
       <head>
         {/* Entrance animations start from opacity:0. Without JS those inline
             styles would never be cleared, so the page would render blank. */}
         {/* The agent disclosure and copy button need JS, so they are hidden
             rather than left as dead controls; the install command itself
-            remains selectable and the page content remains fully readable. */}
+            remains selectable and the page content remains fully readable.
+            .cta-bloom is hidden for a different reason: it is a hover-only
+            spectrum glow that the opacity reset above would otherwise pin on,
+            painting a rainbow blob behind every CTA on the page. */}
         <noscript>
-          <style>{`main *, nav, nav * { opacity: 1 !important; transform: none !important; filter: none !important; } .openin-toggle, .copy-command, .menu-toggle { display: none !important; }`}</style>
+          <style>{`main *, nav, nav * { opacity: 1 !important; transform: none !important; filter: none !important; } .openin-toggle, .copy-command, .menu-toggle, .cta-bloom { display: none !important; }`}</style>
         </noscript>
       </head>
       <body>
-        <MotionProvider>{children}</MotionProvider>
+        <MotionProvider>
+          <Nav />
+          {children}
+        </MotionProvider>
       </body>
     </html>
   );

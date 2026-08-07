@@ -1,0 +1,1054 @@
+/*
+ * The products page, in the home page's material.
+ *
+ * Every value here is lifted from frame-one-home-responsive.module.css so the
+ * two pages read as one site: the #090909 ground, the 1220px measure, the
+ * 48px section heading, the 999px pill buttons, and the 20px plate with its
+ * grey gradient and 5.4px backdrop blur.
+ *
+ * What is deliberately NOT lifted is that file's method. The home page is a
+ * Figma port and positions its contents at measured pixel offsets inside fixed
+ * section heights. There is no export behind this page, and a table of eleven
+ * rows and a rail of seven cards have to survive their own copy changing, so
+ * everything below is flow layout and intrinsic sizing.
+ *
+ * The atmosphere is CSS rather than exported art, for the same reason: one
+ * borrowed burst (which carries no subject, only light) plus spectrum-tinted
+ * gradients that reflow at any size, instead of renders that would have to be
+ * commissioned per breakpoint.
+ */
+
+.page {
+  position: relative;
+  overflow-x: clip;
+  background: #090909;
+  color: #fff;
+  font-family: var(--font-sans);
+}
+
+/* The home page's measure: 1220px of content inside a 24px gutter. */
+.wrap {
+  width: min(100%, 1220px);
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
+.section {
+  position: relative;
+  padding-block: clamp(72px, 7.5vw, 116px);
+}
+
+.section + .section {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/*
+ * A whisper of the spectrum rising behind a section, so six stacked sections
+ * do not read as one flat sheet. Same idea as `.research-glow` in globals.css,
+ * scoped to a section rather than fixed to the viewport.
+ */
+.glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      52% 40% at 18% 0%,
+      rgba(10, 132, 255, 0.09),
+      transparent 70%
+    ),
+    radial-gradient(
+      46% 36% at 82% 8%,
+      rgba(191, 90, 242, 0.08),
+      transparent 70%
+    );
+}
+
+.glowWarm::before {
+  background:
+    radial-gradient(
+      50% 38% at 78% 0%,
+      rgba(255, 159, 10, 0.07),
+      transparent 70%
+    ),
+    radial-gradient(
+      44% 34% at 14% 6%,
+      rgba(48, 209, 88, 0.07),
+      transparent 70%
+    );
+}
+
+/* ============================== type ============================== */
+/* A section's chapter mark: spectrum chip, then a mono label. */
+.marker {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 22px;
+  color: rgba(255, 255, 255, 0.42);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.markerChip {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  background: var(--spectrum);
+  flex: none;
+}
+
+.markerRule {
+  flex: 1;
+  max-width: 90px;
+  height: 1px;
+  background: var(--spectrum);
+  opacity: 0.5;
+}
+
+/* The home page's section heading, to the decimal. */
+.heading {
+  font-size: clamp(38px, 3.333vw, 48px);
+  line-height: 1.18;
+  font-weight: 600;
+  letter-spacing: 0;
+  max-width: 22ch;
+  /* Headings here are full sentences, so the last line was routinely a single
+     orphaned word. Balancing evens the rag without hand-placed breaks. */
+  text-wrap: balance;
+}
+
+.heading em {
+  font-style: normal;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.lede {
+  margin-top: 20px;
+  max-width: 58ch;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: clamp(15px, 1.25vw, 17.5px);
+  line-height: 1.7;
+}
+
+.label {
+  color: rgba(255, 255, 255, 0.34);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* ============================== buttons ============================== */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(12px, 2vw, 20px);
+  margin-top: clamp(28px, 2.65vw, 38px);
+}
+
+.button {
+  display: grid;
+  min-width: clamp(164px, 12.5vw, 181px);
+  height: 54px;
+  place-items: center;
+  padding-inline: 26px;
+  border-radius: 999px;
+  font-size: clamp(17px, 1.45vw, 21px);
+  line-height: 1.2;
+  font-weight: 600;
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s,
+    border-color 0.3s,
+    color 0.3s;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+}
+
+.primary {
+  background: #fff;
+  color: #000;
+}
+
+.primary:hover {
+  box-shadow: 0 14px 40px rgba(255, 255, 255, 0.18);
+}
+
+.secondary {
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.secondary:hover {
+  border-color: rgba(255, 255, 255, 0.85);
+  color: #fff;
+}
+
+/* ============================== hero ============================== */
+.hero {
+  position: relative;
+  padding-block: clamp(104px, 11vw, 172px) clamp(52px, 5vw, 76px);
+}
+
+/*
+ * The one borrowed render on the page. It is pure light with no subject, so it
+ * reads as this page's own atmosphere rather than as the home page's hero
+ * quoted back. Screen-blended because the file's ground is black, and pinned
+ * behind the copy so the headline never sits in the bright core.
+ */
+.heroBurst {
+  position: absolute;
+  top: 50%;
+  left: 18%;
+  z-index: 0;
+  width: min(1120px, 108vw);
+  height: auto;
+  transform: translateY(-50%);
+  opacity: 0.85;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  user-select: none;
+  /* The file's ground is very-near black rather than pure black, so screen
+     blending lifts its whole bounding box and prints a visible rectangle.
+     Feathering to transparent around the burst's core kills the box edge
+     without touching the light itself. The home page never hit this because
+     its copy of the burst spans a section that is exactly as wide. */
+  mask-image: radial-gradient(
+    ellipse closest-side at 74% 41%,
+    #000 0%,
+    #000 34%,
+    transparent 92%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse closest-side at 74% 41%,
+    #000 0%,
+    #000 34%,
+    transparent 92%
+  );
+}
+
+/* Below the split the hero copy takes the full measure, and a burst sitting
+   under the headline only muddies it. */
+@media (max-width: 860px) {
+  .heroBurst {
+    left: 6%;
+    width: 150vw;
+    opacity: 0.5;
+  }
+}
+
+.heroInner {
+  position: relative;
+  z-index: 1;
+}
+
+/* The hero's own type, matching the home hero rather than its chapter opener. */
+.heroTitle {
+  font-size: clamp(38px, 3.333vw, 48px);
+  line-height: 1.18;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+.heroTagline {
+  margin-top: 16px;
+  max-width: 46ch;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: clamp(16px, 1.4vw, 20px);
+  line-height: 1.55;
+  font-weight: 500;
+}
+
+/* The three modes, as a strip under the hero. */
+.ladder {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  margin-top: clamp(44px, 4.4vw, 68px);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+@media (min-width: 760px) {
+  .ladder {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.rung {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 28px 26px 28px 0;
+  transition: background 0.35s;
+}
+
+/* A spectrum wick that lights along the top edge on hover. */
+.rung::after {
+  content: "";
+  position: absolute;
+  inset: -1px auto auto 0;
+  width: 100%;
+  height: 1px;
+  background: var(--spectrum);
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+
+.rung:hover::after,
+.rung:focus-visible::after {
+  opacity: 0.85;
+}
+
+.rung + .rung {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+@media (min-width: 760px) {
+  .rung {
+    padding-inline: 26px;
+  }
+
+  .rung:first-child {
+    padding-left: 0;
+  }
+
+  .rung + .rung {
+    border-top: 0;
+    border-left: 1px solid rgba(255, 255, 255, 0.14);
+  }
+}
+
+.rung:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.rungNumber {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+}
+
+.rungName {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.rungNote {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.rungGo {
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.3s;
+}
+
+.rung:hover .rungGo {
+  color: #fff;
+  transform: translateX(4px);
+}
+
+/* The spectrum accents the rest of the site rotates through. */
+.blue {
+  color: var(--color-spec-blue);
+}
+.green {
+  color: var(--color-spec-green);
+}
+.orange {
+  color: var(--color-spec-orange);
+}
+
+/* ============================== plates ============================== */
+/* The home page's featureCard material, without its fixed aspect ratio. */
+.card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+  background: linear-gradient(
+    180deg,
+    rgba(47, 47, 47, 0.8),
+    rgba(26, 26, 26, 0.8)
+  );
+  backdrop-filter: blur(5.4px);
+  -webkit-backdrop-filter: blur(5.4px);
+  transition:
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.35s,
+    box-shadow 0.4s;
+}
+
+/* A spectrum filament across the top of every plate. Off until hover, so the
+   rail reads as one material at rest and lights up under the pointer. */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: var(--spectrum);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.34);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.55);
+}
+
+.card:hover::before {
+  opacity: 0.9;
+}
+
+.cardTitle {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.cardBody {
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* A plate that leads with a big spectrum numeral. */
+.cardNumber {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+}
+
+/* ============================== capability pills ============================== */
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.pill {
+  padding: 9px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.68);
+  transition:
+    border-color 0.3s,
+    color 0.3s;
+}
+
+.pill:hover {
+  border-color: rgba(255, 255, 255, 0.32);
+  color: #fff;
+}
+
+/* ============================== harness rail ============================== */
+/*
+ * A scroll-snap rail rather than the deck's paged carousel: no JavaScript, it
+ * keeps native keyboard and trackpad scrolling, and the seventh card is
+ * reachable the same way on a phone and a desktop.
+ *
+ * The wrapper carries a fade on the trailing edge so the cut-off card reads as
+ * "there is more" rather than as a layout bug.
+ */
+.railWrap {
+  position: relative;
+  margin-top: 36px;
+}
+
+.railWrap::after {
+  content: "";
+  position: absolute;
+  inset: 0 -1px 14px auto;
+  width: 96px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, #090909 88%);
+}
+
+.rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(268px, 1fr);
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 14px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+.rail > * {
+  scroll-snap-align: start;
+}
+
+@media (min-width: 900px) {
+  .rail {
+    grid-auto-columns: minmax(296px, 1fr);
+  }
+}
+
+.railHint {
+  margin-top: 14px;
+  color: rgba(255, 255, 255, 0.3);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.badge {
+  flex: none;
+  padding: 3px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.badgeFeatured {
+  border-color: color-mix(in srgb, var(--color-spec-green) 45%, transparent);
+  color: var(--color-spec-green);
+}
+
+/* The featured harness carries a standing accent rather than a hover-only one. */
+.cardFeatured {
+  border-color: color-mix(in srgb, var(--color-spec-green) 32%, transparent);
+}
+
+.cardFeatured::before {
+  opacity: 0.7;
+}
+
+/* The three-position setup read. */
+.setup {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.dots {
+  display: flex;
+  gap: 3px;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.dotOn {
+  background: var(--color-spec-green);
+}
+
+.cardList {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 13px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.cardCta {
+  display: grid;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    border-color 0.3s,
+    background 0.3s,
+    color 0.3s;
+}
+
+.cardCta:hover {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ============================== split ============================== */
+.split {
+  display: grid;
+  gap: clamp(36px, 5vw, 76px);
+  align-items: start;
+}
+
+@media (min-width: 1000px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.trio {
+  display: grid;
+  gap: 20px;
+  margin-top: 22px;
+}
+
+@media (min-width: 700px) {
+  .trio {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.stack {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+/* Four plates: two up on a tablet, four across once there is room. */
+.quad {
+  display: grid;
+  gap: 20px;
+  margin-top: 22px;
+}
+
+@media (min-width: 640px) {
+  .quad {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1060px) {
+  .quad {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ============================== steps ============================== */
+/*
+ * A sequence rather than a grid of plates: these three happen in order, and
+ * the connecting rule says so. Hairline-separated so a step can be as tall as
+ * its copy needs without the others being re-measured.
+ */
+.steps {
+  display: grid;
+  margin-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Four steps, so the run breaks two-up before it goes four across. A stray
+   fourth card alone on a second row reads as a mistake. */
+@media (min-width: 640px) {
+  .steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 0;
+  }
+}
+
+@media (min-width: 1060px) {
+  .steps {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 24px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+@media (min-width: 640px) {
+  .step {
+    flex-direction: column;
+    gap: 12px;
+    padding: 24px 24px 0 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-bottom: 0;
+  }
+}
+
+.stepNumber {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+}
+
+/* ============================== terms ============================== */
+.terms {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px 28px;
+  margin-top: 48px;
+  padding-top: 30px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.termsNote {
+  color: rgba(255, 255, 255, 0.46);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Terms read left, the action sits at the far end of the rail. Only once the
+   row is wide enough to hold both; wrapped, they stack in reading order. */
+@media (min-width: 720px) {
+  .terms > a {
+    margin-left: auto;
+  }
+}
+
+/* A lede that follows a label rather than a headline needs less air above it. */
+.ledeTight {
+  margin-top: 12px;
+}
+
+/* A link inside body copy, which the page has exactly one of. */
+.inlineLink {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: rgba(255, 255, 255, 0.3);
+  transition: text-decoration-color 0.3s;
+}
+
+.inlineLink:hover {
+  text-decoration-color: rgba(255, 255, 255, 0.9);
+}
+
+/* ============================== on-ramp ============================== */
+/*
+ * The open-source install, sitting inside bring-your-own-cloud rather than
+ * beside it. Set apart as a panel so it reads as an aside within the lane,
+ * not as a third thing to choose.
+ */
+.onramp {
+  display: grid;
+  gap: 24px 40px;
+  align-items: center;
+  margin-top: 60px;
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+@media (min-width: 900px) {
+  .onramp {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+/* ============================== install ============================== */
+.installNote {
+  margin-top: 24px;
+  max-width: 54ch;
+  font-size: 13px;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.commandSlot {
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 30px;
+}
+
+/* ============================== comparison ============================== */
+/* Scrolls inside its own box so the page never scrolls sideways. */
+.tableWrap {
+  position: relative;
+  margin-top: 48px;
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 20px;
+  background: linear-gradient(
+    180deg,
+    rgba(38, 38, 38, 0.5),
+    rgba(20, 20, 20, 0.5)
+  );
+}
+
+.table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.table th,
+.table td {
+  padding: 15px 20px;
+  font-size: 13px;
+  vertical-align: top;
+}
+
+/* Two solution columns of equal weight. Without this the capability column
+   takes whatever it likes and the two answers huddle to the left of a wide
+   empty margin. */
+.table th:first-child,
+.table td:first-child {
+  width: 34%;
+}
+
+.table th:not(:first-child),
+.table td:not(:first-child) {
+  width: 33%;
+}
+
+.table thead th {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.table tbody tr + tr {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.table tbody th {
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.table td {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* A bare tick is the densest cell in the table; give it the spectrum green so
+   the eye can scan the yes-column without reading. */
+.yes {
+  color: var(--color-spec-green);
+  font-size: 14px;
+}
+
+.no {
+  color: rgba(255, 255, 255, 0.24);
+}
+
+.colName {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: #fff;
+}
+
+.colStanding {
+  display: block;
+  margin-top: 3px;
+  font-size: 11.5px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ============================== pricing ============================== */
+.plans {
+  display: grid;
+  gap: 20px;
+  margin-top: 48px;
+  align-items: stretch;
+}
+
+@media (min-width: 720px) {
+  .plans {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Three plans: two managed tiers and the quoted one. */
+@media (min-width: 1060px) {
+  .plans {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* The recommended plan stands proud of the row rather than merely brighter. */
+.planFeatured {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: linear-gradient(
+    180deg,
+    rgba(62, 62, 62, 0.85),
+    rgba(28, 28, 28, 0.85)
+  );
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.5);
+}
+
+.planFeatured::before {
+  opacity: 0.85;
+}
+
+.planTag {
+  align-self: flex-start;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.priceValue {
+  font-size: 38px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+
+.priceCadence {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.planFeatures {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.planFeatures li {
+  display: flex;
+  gap: 9px;
+}
+
+.tick {
+  flex: none;
+  color: var(--color-spec-green);
+  opacity: 0.65;
+}
+
+.planFootnote {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ============================== contact ============================== */
+/* The closing plate: one panel, centred, so the page ends on an object. */
+.contactPlate {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(38px, 5vw, 68px) clamp(24px, 4vw, 60px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 26px;
+  background: linear-gradient(
+    180deg,
+    rgba(44, 44, 44, 0.72),
+    rgba(20, 20, 20, 0.72)
+  );
+  text-align: center;
+}
+
+.contactPlate::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: var(--spectrum);
+  opacity: 0.7;
+}
+
+.contactPlate .heading,
+.contactPlate .lede {
+  margin-inline: auto;
+}
+
+.contactPlate .actions {
+  justify-content: center;
+}
+
+.contactRoutes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.route {
+  padding: 11px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.7);
+  transition:
+    border-color 0.3s,
+    color 0.3s;
+}
+
+.route:hover {
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button:hover,
+  .card:hover,
+  .rung:hover .rungGo {
+    transform: none;
+  }
+}

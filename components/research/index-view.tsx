@@ -252,7 +252,7 @@ export function ResearchIndexView({ view }: { view: IndexView }) {
           >
             <TopicChip
               href="/research"
-              label="All notes"
+              label="All research"
               count={POSTS.length}
               active={!topic}
             />

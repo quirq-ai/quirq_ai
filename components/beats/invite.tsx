@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Mark, Reveal, Rise } from "@/components/ui/primitives";
+import { Reveal, Rise } from "@/components/ui/primitives";
 import { GlassPool, GlassText } from "@/components/ui/glass";
 import { LoopCta } from "@/components/ui/loop-cta";
+import { QuirqLogo } from "@/components/ui/quirq-logo";
 import { registerBeat } from "@/lib/beat-registry";
 
 export function Invite() {
@@ -56,8 +57,7 @@ export function Invite() {
         <div className="mx-auto flex w-full max-w-[1180px] flex-wrap items-end justify-between gap-7 px-5 pb-9 sm:px-8 lg:px-11">
           <div>
             <div className="flex items-center gap-2.5">
-              <Mark className="h-[18px] w-auto text-ink" />
-              <span className="font-mark text-[17px] font-semibold">quirq</span>
+              <QuirqLogo className="h-[22px] w-auto" />
               <span className="text-[13px] text-faint">· by XO Labs</span>
             </div>
             <p className="mt-3 font-mono text-[10px] tracking-[0.14em] text-faint uppercase">

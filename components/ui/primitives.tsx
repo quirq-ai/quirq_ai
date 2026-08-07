@@ -211,11 +211,17 @@ export function ActionLink({
       )}
     >
       {/* Spectrum bloom under the pill; on the dark tone it stays quieter and
-          bleeds through the smoked glass instead of haloing it. */}
+          bleeds through the smoked glass instead of haloing it.
+
+          `cta-bloom` is a noscript hook, not a style. This span is invisible
+          until hover, and the noscript stylesheet forces `opacity: 1` on
+          everything inside main so the entrance animations cannot strand the
+          page blank: without the hook that same rule lights every bloom at
+          once, and a rainbow blob sits permanently behind every CTA. */}
       <span
         aria-hidden
         className={cn(
-          "absolute -inset-px -z-10 rounded-full opacity-0 blur-lg transition-opacity duration-500",
+          "cta-bloom absolute -inset-px -z-10 rounded-full opacity-0 blur-lg transition-opacity duration-500",
           tone === "solid" ? "group-hover:opacity-70" : "group-hover:opacity-40",
         )}
         style={{ background: "var(--spectrum)" }}
