@@ -15,7 +15,7 @@ The site contains static product marketing, research, interactive tools and a sh
 
 For product positioning and page planning, also read
 [`docs/brand-strategy.md`](./docs/brand-strategy.md). It records the owner's
-Space-first homepage and separate XO computer/platform direction alongside
+three-offering homepage and separate product journeys alongside
 recommended strategy and key decisions. Respect those status distinctions: a recommendation is not an
 implemented feature, approved page redesign or verified price. Keep the strategy
 and [`docs/product-evidence.md`](./docs/product-evidence.md) current as decisions
@@ -92,29 +92,31 @@ Do not create a custom component merely to change copy, alignment, rows, tiles, 
 ## Page authoring mode 0: static marketing and product media
 
 The current homepage is the canonical example: `app/page.tsx` exports metadata
-and renders `components/home/home-page.tsx`. Preserve the original Space-first
-split layout with “Give your agents a place to work” beside a real product
-capture. Its flow is hero → Trusted by → projects/agents/sharing benefits →
-Machine Speed → trial and open-source entry. This is a static composition,
-without a product carousel or WebGL stage.
+and renders `components/home/home-page.tsx`, styled by `home-page.module.css`.
+The owner approved the three-offering content on 28 September 2026. Its promise
+is **Put AI to work across your business**. Flow: hero, XO Space / XO Cloud /
+MachineSpeed choices, original Trusted by, separate offering journeys, then
+three entry paths. Use normal server-rendered sections and real product captures.
+The prior Space-first homepage and editorial draft were removed. Their preview
+URLs `/draft` and `/draft/content` redirect to `/`; do not restore duplicate pages.
 
-`/products` has a separate job: Projects, Sessions and Git-backed Sharing, then
-cloud or local deployment. `/xo`, labeled **Cloud** in navigation,
-retains the XO brand and follows the reviewed app: catalog → configure a Space
-→ connect tools → monitor usage → subscription pricing → custom Enterprise. Keep that
-detail on `/xo`. Use the shared `ProductCapture` and `lib/product-media.ts`
-manifest on `/products` and `/xo`. Screenshots have truthful
-source/date labels, a native full-size link and internal mobile scrolling.
-The header groups Products (Space `/products`, Cloud `/xo`) and Resources
-(Docs `/docs`, Research `/research`, Writing `/writing`), followed by Enterprise
-and `TryOnXo`. Cloud is a navigation label; XO remains the product brand. Keep
-direct XO pricing access in the footer and page links; preserve existing routes.
-Static sections do not need registry IDs, a choreography track or `StagePage`.
+`/products` retains the Projects, Sessions and Git-backed Sharing walkthrough.
+`/xo` retains catalog, configuration, tools, usage, subscriptions and custom
+platform deployment. Use shared `ProductCapture` and `lib/product-media.ts`.
+Screenshots retain truthful source/date labels and narrow-screen scrolling.
 
-- State the two-product model consistently: **Space** is the open-source
-  workspace for projects, files, agents and tools. **XO** is Quirq's managed cloud
-  platform and can host Space; open source runs Space on the user's machine.
-  **Machine Speed** is the custom enterprise implementation offering.
+The shared header has **Spaces** (`/products`) and **Cloud** (`/xo`), each with
+the canonical XO mark instead of a written XO prefix; **MachineSpeed**
+(`/machinespeed`); **Resources** (Docs, Research, Writing); and **Find your path**
+(`/#offerings`). Mobile uses the same destinations. Keep direct cloud pricing
+access in the footer. Static sections do not need a stage or choreography IDs.
+
+- **XO Space** is the open-source offering for developers managing company work
+  from Claude Code or Codex. **XO Cloud** creates and manages autonomous AI
+  employees operating 24/7. **MachineSpeed** is the human-and-AI enterprise
+  delivery team. These are owner-confirmed descriptions, not measured uptime
+  or universal instant-delivery guarantees. The Cloud entry keeps `TryOnXo`;
+  Space links to installation/GitHub; MachineSpeed links to contact.
 - The owner confirms that XO supports any agent harness and configurable
   runtime/policies. XO Enterprise offers self-hosting, connection to the
   customer's cloud and white-label deployment across multiple clouds. Present
@@ -151,14 +153,13 @@ Static sections do not need registry IDs, a choreography track or `StagePage`.
   historical attribution. Tours encoded at 4 fps from real CUA frames are edited
   step-through tours, not continuous recordings. Preserve provenance and encoding
   status in `docs/product-evidence.md` and the review report. No live provisioning
-  or billing transaction was performed. Keep the original homepage and Quirq's
-  gray/white style; this task does not adopt the separate visual draft.
+  or billing transaction was performed. Keep the accepted three-offering homepage and Quirq's gray/white style.
   Keep captions truthful about the visible screen; do not fabricate app
   interfaces, data, video, logos, testimonials or customer relationships.
 - `public/assets/quirq-logo.svg` and `components/ui/quirq-logo.tsx` own the Quirq
   mark. `components/ui/xo-logo.tsx` preserves the canonical XO logo geometry,
-  with a monochrome X and the original green O. Use this mark for XO; Space stays
-  text unless an approved Space mark exists. Existing source-attributed agent
+  with a monochrome X and the original green O. Use this shared mark for both
+  Spaces and Cloud navigation. Existing source-attributed agent
   icons represent supported tools, not customers.
 - Keep copy brief and specific. Use native `details`/`summary` for supporting
   setup, sharing, plan and transcript detail. Keep trial eligibility, prices and
@@ -1087,12 +1088,12 @@ The current `/journey` route intentionally restores `?j=` and `?t=` after hydrat
 
 ## Navigation and metadata rules
 
-The shared header uses Products (Space and Cloud), Resources (Docs, Research and
-Writing), Enterprise and the direct `TryOnXo` action. Keep these groups consistent
-in the desktop dropdowns and mobile sheet. Use shared Radix controls for keyboard
-and focus behavior; preserve route-current state, Escape dismissal and sensible
-focus after navigation or a responsive breakpoint change. Cloud maps to `/xo`;
-this label does not rename the XO product. Whitepaper remains within Research.
+The shared header uses direct Spaces, Cloud and MachineSpeed links, a Resources
+dropdown and Find your path. Spaces and Cloud pair the canonical XO logo with
+those short labels. Use the same destinations in the mobile sheet. Preserve
+current-route state, keyboard access, Escape dismissal and sensible focus on
+navigation or breakpoint changes. Existing product URLs remain unchanged.
+Whitepaper stays within Research.
 
 For every new route:
 

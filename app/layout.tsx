@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 const DESCRIPTION =
-  "Quirq builds infrastructure for agentic work. XO gives agents cloud computers; Space keeps projects, tools and agent activity together. Try XO free for 30 days.";
+  "Put AI to work across your business. Run your company with XO Space, launch AI employees on XO Cloud, or build a solution with MachineSpeed.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://quirq.ai"),

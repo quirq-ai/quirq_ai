@@ -5,8 +5,10 @@ import { SocialLinks } from "./social-links";
 
 type FooterLink = { href: string; label: string; newTab?: boolean };
 const LINKS: readonly FooterLink[] = [
-  { href: "/products", label: "Space" },
+  { href: "/products", label: "Spaces" },
   { href: "/xo", label: "Cloud" },
+  { href: "/machinespeed", label: "MachineSpeed" },
+  { href: "/xo#pricing", label: "Pricing" },
   { href: "/docs", label: "Docs" },
   { href: "/research", label: "Research" },
   { href: "/writing", label: "Writing" },
@@ -16,7 +18,7 @@ const LINKS: readonly FooterLink[] = [
 export function SiteFooter({
   links = LINKS,
   brandSuffix = null,
-  note = "Space · XO · Machine Speed",
+  note = "XO Space · XO Cloud · MachineSpeed",
   trailing = <SocialLinks />,
 }: {
   links?: readonly FooterLink[];

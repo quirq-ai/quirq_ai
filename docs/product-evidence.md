@@ -1,5 +1,39 @@
 # Quirq product evidence
 
+## Owner clarification — 28 September 2026
+
+The owner described the current offering model as follows:
+
+- **XO Space:** an open-source repository enabling developers to manage their
+  company from a single Claude or Codex session.
+- **XO Cloud:** a managed platform to create, launch and manage autonomous AI
+  employees working and running 24/7.
+- **MachineSpeed:** enterprise pipelines delivered by a team of humans and AI
+  agents to solve business problems, with a fast and engaging collaborative
+  process.
+
+These are owner-provided positioning and capability statements. The company
+workflows, continuous execution behavior and service outcomes were not newly
+tested during this content pass. Existing captures still establish only their
+documented scope. “24/7” does not establish a measured uptime SLA, and the
+owner's “any and every” / “instantly” phrasing is not evidence of a universal
+instant-delivery guarantee.
+
+The [accepted content direction](./content-direction.md) establishes differentiated
+audiences, copy and journeys using these names. It records the request for
+concrete XO Space workflows and keeps proposed onboarding sequences separate
+from observed application behavior. Existing pricing and trial evidence remain
+unchanged. The homepage at `/` uses these owner-provided claims and
+existing source-attributed captures; its steps describe intended user journeys,
+not a newly recorded end-to-end demonstration. The owner approved promoting the
+preview to the homepage, using Spaces and Cloud with the XO logo in navigation,
+and removing the superseded homepage implementations. Both draft URLs now
+redirect to `/`. Below, historical references to
+Space, XO and Machine Speed retain
+the terminology used when those observations were made.
+
+## Source review — 22 September 2026
+
 Updated on **2026-09-22** after the owner requested a review of the running XO
 app at `http://localhost:3000`. Its local source was
 `xo-swarm` commit `3be532fe9b5cd173425e6ae299ed77faa19e5dfd`. The authenticated
@@ -184,14 +218,13 @@ implementation evidence, not proof of a live external service test.
 
 ## Page roles
 
-The homepage restores the earlier Space-first split layout: “Give your agents
-a place to work” beside the Projects capture, then Trusted by, project/agent/sharing
-benefits, Machine Speed and trial/open-source entry. `/products` is the detailed
-Projects, Sessions and Sharing walkthrough. `/xo`, labeled **Managed solutions**
-in navigation, follows the reviewed app: **catalog → configure a Space → connect
-tools → monitor usage → subscription pricing → custom Enterprise**. The original
-homepage and gray/white Quirq style remain; this review does not replace them
-with the separate visual draft. Source screenshots stay unchanged.
+The accepted homepage leads with **Put AI to work across your business**, then
+three offering choices, Trusted by, separate XO Space / XO Cloud / MachineSpeed
+journeys and entry actions. `/products` retains the Projects, Sessions and
+Sharing walkthrough. `/xo` retains the reviewed catalog, configuration, tools,
+usage, subscriptions and Enterprise deployment options. Navigation uses the
+short labels Spaces and Cloud beside the canonical XO logo. Source screenshots
+and their provenance stay unchanged.
 
 The product pages use authentic captures from different example contexts. They
 must not be described as an end-to-end recording of one project. The official

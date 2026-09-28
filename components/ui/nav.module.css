@@ -32,20 +32,25 @@
 .links {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
-.enterpriseLink {
+.offeringLink {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   min-height: 44px;
+  padding-inline: 12px;
+  border-radius: var(--radius-md);
   font-size: var(--text-small);
   color: var(--muted-foreground);
-  transition: color var(--duration-fast);
+  transition:
+    color var(--duration-fast),
+    background var(--duration-fast);
 }
-.enterpriseLink:hover,
-.enterpriseLink[aria-current] {
+.offeringLink:hover,
+.offeringLink[aria-current] {
   color: var(--foreground);
+  background: var(--accent);
 }
 .groupTrigger {
   padding-inline: 12px;
@@ -62,34 +67,22 @@
 .groupTrigger[data-state="open"] > svg {
   transform: rotate(180deg);
 }
-.productMenu,
 .resourceMenu {
   max-width: calc(100vw - 32px);
-}
-.productMenu {
-  width: 320px;
-}
-.resourceMenu {
   width: 216px;
 }
 .dropdownLink[aria-current] {
   background: var(--accent);
   color: var(--foreground);
 }
-.routeCopy {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-}
 .routeTitle {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
-.routeDescription {
-  color: var(--muted-foreground);
-  font-size: var(--text-caption);
-  line-height: 1.6;
+.productLogo {
+  width: 30px;
+  height: 12px;
 }
 .actions {
   display: flex;
@@ -142,7 +135,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .enterpriseLink,
+  .offeringLink,
   .groupTrigger > svg {
     transition: none;
   }

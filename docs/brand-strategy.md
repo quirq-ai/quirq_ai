@@ -1,5 +1,28 @@
 # Quirq brand direction and product strategy
 
+## Current owner direction — 28 September 2026
+
+The owner clarified three offerings: **XO Space**, an open-source repository
+for developers to manage their company from a Claude or Codex session;
+**XO Cloud**, a managed platform for creating, launching and managing autonomous
+AI employees working 24/7; and **MachineSpeed**, enterprise agent pipelines
+delivered by a combined human and AI team.
+
+The owner approved the [three-offering content](./content-direction.md) as the
+final homepage. It now lives at `/`: company promise, three choices, Trusted by,
+separate journeys and distinct entry actions. Navigation uses **Spaces** and
+**Cloud** with the XO mark, **MachineSpeed**, **Resources**, and **Find your path**.
+Both preview URLs redirect to `/`; old homepage components and CSS were removed.
+Detailed product routes and their existing functionality remain available.
+
+This approval supersedes the older naming, Space-first layout and positioning
+below. It does not change the existing commercial
+evidence, media provenance or established visual identity. The remainder of
+this document records the 22 September implementation baseline and its review
+history; its Space-first homepage is historical and has been replaced.
+
+## Historical implementation baseline — 22 September 2026
+
 Approved direction · updated 22 September 2026
 
 This document connects positioning, product naming, commercial choices, visual

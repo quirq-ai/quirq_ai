@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { HomePage } from "@/components/home/home-page";
 
 const DESCRIPTION =
-  "Your projects, AI agents and tools in one working environment. Explore Space, try it free for 30 days on XO, or build custom workflows with Quirq.";
-const TITLE = "quirq — Space for agentic work";
+  "Run your company from Claude or Codex with XO Space, launch AI employees on XO Cloud, or build a custom solution with MachineSpeed.";
+const TITLE = "quirq — Put AI to work across your business";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
   description: DESCRIPTION,
+  alternates: { canonical: "/" },
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,

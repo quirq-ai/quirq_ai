@@ -2,60 +2,43 @@
 
 The marketing, research and interactive documentation site for [quirq.ai](https://quirq.ai).
 
-- **Space** is the open-source workspace for projects, files, agents and tools.
-  It brings project work, sessions, todos and usage into one view. Run it on your
-  own machine or infrastructure, or on XO.
-- **XO** is Quirq's managed cloud platform, with its product page at `/xo`,
-  navigated as **Managed solutions**.
-  It gives agents cloud computers and preconfigured environments. The owner also
-  confirms delegation, parallel work and autonomous scaling; exact mechanics and
-  limits are recorded separately from verified deployment evidence. Try it free
-  for **30 days**. Paid usage is based on compute.
-- **Machine Speed** delivers custom enterprise workflows, setup and infrastructure.
+- **XO Space** is the open-source workspace for developers managing their company
+  from Claude Code or Codex.
+- **XO Cloud** is the managed platform for creating, launching and managing
+  autonomous AI employees working 24/7.
+- **MachineSpeed** delivers enterprise agent pipelines through a team of humans
+  and AI agents.
 
-Space supports sharing Git-backed projects with another Space ID. Incoming
-commits are fetched for review and applied explicitly. Account linking and the
-recipient's Git repository access are prerequisites; sharing is not live document
-coediting. The [product evidence](./docs/product-evidence.md) records the verified
-implementation, terminology and copy constraints.
+The homepage leads with **Put AI to work across your business**, followed by
+three offering choices, Trusted by, the individual journeys and separate entry
+paths. It uses normal server-rendered sections and real product captures.
+Content and styling live in `components/home/home-page.tsx` and
+`components/home/home-page.module.css`; metadata lives in `app/page.tsx`.
 
-The canonical Space installer is:
+Navigation uses **Spaces** and **Cloud** with the canonical XO mark,
+**MachineSpeed**, **Resources**, and **Find your path**. Detailed pages remain at
+`/products`, `/xo` and `/machinespeed`. The superseded homepage and visual draft
+were removed; `/draft` and `/draft/content` redirect to `/`.
+
+The [content direction](./docs/content-direction.md),
+[brand strategy](./docs/brand-strategy.md) and
+[product evidence](./docs/product-evidence.md) distinguish owner positioning,
+observed product behavior and planned demonstrations. Cloud subscriptions have
+an eligible Starter/Pro 30-day trial; Business does not. Current source and
+pricing qualifications remain in the evidence record.
+
+The canonical open-source Space installer is:
 
 ```bash
 curl -fsSL https://quirq.ai/install | sh
 ```
 
-This installs Space; the development commands below run this marketing website.
-Space's [repository](https://github.com/quirq-ai/xo-space) and
-[documentation](https://docs.quirq.ai/docs/space) explain product setup.
-
-The homepage restores the earlier Space-first split layout: **Give your agents
-a place to work**, followed by Trusted by, projects/agents/sharing benefits,
-Machine Speed, and trial/open-source entry. It is a static composition.
-`/products` provides the detailed Projects, Sessions and Sharing flow.
-**Managed solutions** (`/xo`) retains the XO brand and its cloud-computer story:
-templates, provisioning, parallel work, compute pricing and enterprise cloud
-deployments. Its official setup video remains prominent. `/products` and `/xo`
-use the shared `ProductCapture` viewer and source manifest; mobile visitors can
-pan readable screenshots without widening the page. Pricing stays directly
-available in navigation.
-
-A separate visual draft is available at `/draft`, with `noindex` metadata. It
-preserves the homepage's content flow and original Trusted by section while
-exploring a larger asymmetric hero, real screenshots, warm ivory benefit columns
-and more expressive typography. The approved homepage remains at `/`.
-The draft lives in [`app/draft/page.tsx`](./app/draft/page.tsx),
-[`editorial-home.tsx`](./components/home/editorial-home.tsx) and
-[`editorial-home.module.css`](./components/home/editorial-home.module.css), using
-the shared theme and components.
-
-The primary action uses the shared **Try on XO** control: visible “Try on” text
-and the authentic XO mark link directly to `APP_URL` in `lib/products.ts`. The
-30-day free trial is product-owner direction; payment-card requirements,
-automatic charging, discounts and exact rates are not established. Conflicting
-paid schedules are documented in `docs/product-evidence.md`; do not publish them
-as verified pricing. Research, journey authoring, the optical story renderer and
-the reference measurement kit remain independent parts of the site.
+This installs Space; the development commands below run the marketing website.
+[GitHub](https://github.com/quirq-ai/xo-space) and
+[documentation](https://docs.quirq.ai/) explain setup. Git-backed sharing requires
+account linking and repository access; changes are reviewed before applying.
+Research, interactive journeys and the measurement kit remain independent
+parts of the site.
 
 ## Setup
 
@@ -86,7 +69,7 @@ Server Components by default, with client boundaries around interactive controls
 | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Homepage value and trust                           | [`components/home/home-page.tsx`](./components/home/home-page.tsx), [`trusted-by.tsx`](./components/home/trusted-by.tsx)                                     |
 | Space walkthrough and deployment options           | [`components/products/products-page.tsx`](./components/products/products-page.tsx), [`deployment-options.tsx`](./components/products/deployment-options.tsx) |
-| Managed solutions / XO page                        | [`app/xo`](./app/xo)                                                                                                                                         |
+| XO Cloud page                                      | [`app/xo`](./app/xo)                                                                                                                                         |
 | Shared product captures                            | [`components/products/product-capture.tsx`](./components/products/product-capture.tsx), [`lib/product-media.ts`](./lib/product-media.ts)                     |
 | Shared XO action and canonical mark                | [`components/ui/try-on-xo.tsx`](./components/ui/try-on-xo.tsx), [`xo-logo.tsx`](./components/ui/xo-logo.tsx)                                                 |
 | Shared colors, type, spacing and motion            | [`styles/theme.css`](./styles/theme.css)                                                                                                                     |

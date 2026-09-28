@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
+      // The accepted content draft is now the homepage; keep old preview links useful.
+      { source: "/draft", destination: "/", permanent: true },
+      { source: "/draft/content", destination: "/", permanent: true },
       {
         // The whitepaper PDF moved out of public/ and is served by the route
         // handler at app/whitepaper/pdf, so one URL is its only address. The

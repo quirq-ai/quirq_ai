@@ -229,3 +229,22 @@ Restoring the preferred split homepage removed the only consumer of
 `app/layout.tsx`. A repository search and Knip confirmed no remaining consumers.
 The shared `ProductCapture` and authentic cloud captures remain in use on the
 product pages; XO's setup and commercial content remain on `/xo`.
+
+## Accepted homepage cleanup — 28 September 2026
+
+The owner approved the three-offering content preview as the homepage and
+requested removal of superseded implementations. The accepted content now
+lives in `components/home/home-page.tsx` and `home-page.module.css`, with public
+metadata in `app/page.tsx`.
+
+Removed the previous `product-home.module.css`, `editorial-home.tsx`,
+`editorial-home.module.css`, and both draft page implementations. The draft CSS
+was moved into the canonical home module; draft badges and comparison links
+were removed. `/draft` and `/draft/content` are redirect rules in
+`next.config.ts`, with no retained alternate page renderer.
+
+Navigation now has one shared offering list and resource list. Removed the
+Products dropdown, draft-only navigation branches, duplicate enterprise link,
+and their unused CSS. Spaces and Cloud use the canonical XO mark and short labels.
+Product, research, writing, documentation, engine and tool routes retain their
+independent purpose. No shared media or functional product route was deleted.

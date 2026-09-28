@@ -63,31 +63,21 @@ actions remain unchanged.
 
 ## Navigation
 
-The shared header groups **Products** and **Resources**, followed by
-**Enterprise** and the direct **Try on XO** action. Products contains **Space**
-(`/products`) and **Cloud** (`/xo`); Cloud is the navigation label and XO remains
-the product brand. Resources contains **Docs** (`/docs`), **Research**
-(`/research`) and **Writing** (`/writing`). Enterprise preserves the
-`/machinespeed` destination and its announced new-tab behavior. Whitepaper stays
-inside Research, and direct pricing access remains `/xo#pricing`.
+The shared header uses direct **Spaces**, **Cloud** and **MachineSpeed** links,
+with **Resources** and **Find your path**. Spaces and Cloud each use the canonical
+XO logo followed by the short label; no written XO prefix. Their destinations
+remain `/products`, `/xo` and `/machinespeed`. Find your path links to
+`/#offerings`. The footer includes direct cloud pricing access.
 
-`components/ui/nav.tsx` owns the grouped route data. Desktop groups use the
-shared Radix `DropdownMenu`; the mobile `Sheet` presents the same groups as
-labeled link lists. Keep link semantics, current-route state, keyboard access,
-Escape dismissal and focus return. Close disclosures after navigation and when
-crossing the desktop/mobile breakpoint; focus must not return to a hidden
-trigger. Do not make navigation depend on hover or change established URLs to
-match a shorter label. Without JavaScript, the existing `noscript` fallback
-hides inert popup triggers; native footer links, the trial action and page
-content remain available.
+`components/ui/nav.tsx` owns one offering list and one resource list shared by
+desktop and mobile. Radix owns dropdown and sheet behavior. Preserve native link
+semantics, current-route indicators, keyboard focus and Escape dismissal.
 
 ## Page roles and conversion
 
-- **Homepage:** preserve the earlier Space-first split layout and “Give your
-  agents a place to work” promise → Trusted by → projects/agents/sharing
-  benefits → Machine Speed → trial and open source. Keep the real product
-  capture beside the hero copy and the composition static. Preserve the original
-  eight-brand trust section; it is separate from agent compatibility.
+- **Homepage:** the accepted three-offering composition: company promise,
+  offering choices, original Trusted by, XO Space / XO Cloud / MachineSpeed
+  journeys and three entry paths. Use real media and separate conversion actions.
 - **Space (`/products`):** Projects, Agents and Sharing walkthrough → XO or
   open-source deployment. Keep GitHub, Docs and the installer easy to find.
   Sharing is a Git-backed Share → Review → Apply flow. Its disclosure must
@@ -167,7 +157,7 @@ Below 768px, screenshots retain a 960px minimum width inside a keyboard-focusabl
 horizontal viewport. Only the image scrolls; the page and captions remain within
 the screen. A visible scroll hint and original-image link expose the detail.
 
-The homepage uses its restored static split layout and benefit sections. It
+The homepage uses static offering choices and individual product journeys. It
 does not use a product carousel or require JavaScript to read its product story.
 
 ## Product-page motion
@@ -193,18 +183,13 @@ browser history, keyboard navigation and the no-JavaScript path. Do not add
 scroll interception or the staged-story runtime to these product pages. The
 original homepage composition remains unchanged by this motion pattern.
 
-## Separate visual draft
+## Accepted homepage
 
-`/draft` is a `noindex` design alternative that keeps the approved flow: Space
-hero, eight-brand Trusted by, projects/agents/sharing benefits, Machine Speed,
-then trial and open source. It explores an asymmetric hero and full desktop
-capture, staggered numbered benefits on warm ivory, and an unboxed enterprise
-section with prismatic art. Shared tokens and controls still apply. Optional
-scroll-linked decoration must keep content visible and respect reduced motion.
-Its sources are [`app/draft/page.tsx`](../app/draft/page.tsx),
-[`editorial-home.tsx`](../components/home/editorial-home.tsx) and
-[`editorial-home.module.css`](../components/home/editorial-home.module.css).
-The canonical homepage at `/` retains its approved layout.
+The content formerly previewed at `/draft/content` is now the homepage at `/`.
+`components/home/home-page.tsx` and `home-page.module.css` own its static content
+and composition; `app/page.tsx` owns public metadata and the canonical URL.
+Superseded homepage components and CSS were deleted. The two preview URLs
+redirect to `/`; no alternate homepage renderer is retained.
 
 ## Whitepaper reader
 

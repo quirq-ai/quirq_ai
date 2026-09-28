@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight, ChevronDown, Menu } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 import { Button } from "./button";
 import {
   DropdownMenu,
@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "./dropdown-menu";
 import { QuirqLogo } from "./quirq-logo";
-import { TryOnXo } from "./try-on-xo";
 import { XoLogo } from "./xo-logo";
 import {
   Sheet,
@@ -26,43 +25,21 @@ import {
 } from "./sheet";
 import styles from "./nav.module.css";
 
-type NavigationRoute = {
-  href: string;
-  label: string;
-  description?: string;
-};
-
-const GROUPS: readonly {
-  id: string;
-  label: string;
-  routes: readonly NavigationRoute[];
-}[] = [
-  {
-    id: "products",
-    label: "Products",
-    routes: [
-      {
-        href: "/products",
-        label: "Space",
-        description: "Projects, agents and tools in one place.",
-      },
-      {
-        href: "/xo",
-        label: "Cloud",
-        description: "Managed computers for your agents.",
-      },
-    ],
-  },
-  {
-    id: "resources",
-    label: "Resources",
-    routes: [
-      { href: "/docs", label: "Docs" },
-      { href: "/research", label: "Research" },
-      { href: "/writing", label: "Writing" },
-    ],
-  },
-] as const;
+type NavigationRoute = { href: string; label: string; xo?: boolean };
+const OFFERINGS: readonly NavigationRoute[] = [
+  { href: "/products", label: "Spaces", xo: true },
+  { href: "/xo", label: "Cloud", xo: true },
+  { href: "/machinespeed", label: "MachineSpeed" },
+];
+const RESOURCES: readonly NavigationRoute[] = [
+  { href: "/docs", label: "Docs" },
+  { href: "/research", label: "Research" },
+  { href: "/writing", label: "Writing" },
+];
+const MOBILE_GROUPS = [
+  { id: "offerings", label: "Offerings", routes: OFFERINGS },
+  { id: "resources", label: "Resources", routes: RESOURCES },
+];
 const DESKTOP_NAV = "(min-width: 900px)";
 
 function currentRoute(pathname: string, href: string): "page" | "location" | undefined {
@@ -71,49 +48,34 @@ function currentRoute(pathname: string, href: string): "page" | "location" | und
     pathname.startsWith(`${href}/`) ||
     (href === "/research" &&
       (pathname === "/whitepaper" || pathname.startsWith("/whitepaper/")))
-  ) {
+  )
     return "location";
-  }
   return undefined;
 }
 
 function useNavigationDisclosure() {
   const [open, setOpen] = useState(false);
-
   useEffect(() => {
     const query = window.matchMedia(DESKTOP_NAV);
     const closeOnBreakpoint = () => setOpen(false);
     query.addEventListener("change", closeOnBreakpoint);
     return () => query.removeEventListener("change", closeOnBreakpoint);
   }, []);
-
   return { open, setOpen };
 }
 
 function RouteLabel({ route }: { route: NavigationRoute }) {
   return (
-    <span className={styles.routeCopy}>
-      <span className={styles.routeTitle}>
-        {route.label}
-        {route.href === "/xo" && <XoLogo className="size-3 min-w-[30px]" />}
-      </span>
-      {route.description && (
-        <span className={styles.routeDescription}>{route.description}</span>
-      )}
+    <span className={styles.routeTitle}>
+      {route.xo && <XoLogo className={styles.productLogo} />}
+      {route.label}
     </span>
   );
 }
 
-function NavigationGroup({
-  group,
-  pathname,
-}: {
-  group: (typeof GROUPS)[number];
-  pathname: string;
-}) {
+function ResourcesMenu({ pathname }: { pathname: string }) {
   const { open, setOpen } = useNavigationDisclosure();
-  const active = group.routes.some((route) => currentRoute(pathname, route.href));
-
+  const active = RESOURCES.some((route) => currentRoute(pathname, route.href));
   return (
     <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
       <DropdownMenuTrigger asChild>
@@ -122,12 +84,12 @@ function NavigationGroup({
           className={`${styles.groupTrigger} menu-toggle`}
           data-active={active || undefined}
         >
-          {group.label} <ChevronDown aria-hidden="true" className="size-3.5" />
+          Resources <ChevronDown aria-hidden="true" className="size-3.5" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
-        className={group.id === "products" ? styles.productMenu : styles.resourceMenu}
+        className={styles.resourceMenu}
         onCloseAutoFocus={(event) => {
           if (!window.matchMedia(DESKTOP_NAV).matches) {
             event.preventDefault();
@@ -137,7 +99,7 @@ function NavigationGroup({
           }
         }}
       >
-        {group.routes.map((route) => (
+        {RESOURCES.map((route) => (
           <DropdownMenuItem
             asChild
             key={route.href}
@@ -145,7 +107,7 @@ function NavigationGroup({
             className={styles.dropdownLink}
           >
             <Link href={route.href} aria-current={currentRoute(pathname, route.href)}>
-              <RouteLabel route={route} />
+              {route.label}
             </Link>
           </DropdownMenuItem>
         ))}
@@ -156,7 +118,6 @@ function NavigationGroup({
 
 function MobileNavigation({ pathname }: { pathname: string }) {
   const { open, setOpen } = useNavigationDisclosure();
-
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -181,11 +142,11 @@ function MobileNavigation({ pathname }: { pathname: string }) {
         <SheetHeader>
           <SheetTitle>Explore Quirq</SheetTitle>
           <SheetDescription className="sr-only">
-            Products, resources and enterprise services.
+            Spaces, Cloud, MachineSpeed and resources.
           </SheetDescription>
         </SheetHeader>
         <nav aria-label="Mobile navigation" className={styles.mobileNav}>
-          {GROUPS.map((group) => (
+          {MOBILE_GROUPS.map((group) => (
             <section
               key={group.id}
               className={styles.mobileGroup}
@@ -207,21 +168,13 @@ function MobileNavigation({ pathname }: { pathname: string }) {
               ))}
             </section>
           ))}
-          <SheetClose asChild>
-            <Link
-              href="/machinespeed"
-              className={styles.mobileLink}
-              aria-current={currentRoute(pathname, "/machinespeed")}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Enterprise <ArrowUpRight aria-hidden="true" className="size-4" />
-              <span className="sr-only">(opens in a new tab)</span>
-            </Link>
-          </SheetClose>
         </nav>
         <SheetFooter>
-          <TryOnXo onClick={() => setOpen(false)} />
+          <Button asChild>
+            <Link href="/#offerings" onClick={() => setOpen(false)}>
+              Find your path
+            </Link>
+          </Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -237,26 +190,22 @@ export function Nav() {
           <QuirqLogo alt="" className={styles.logo} />
         </Link>
         <div className={styles.links}>
-          {GROUPS.map((group) => (
-            <NavigationGroup
-              key={`${group.id}:${pathname}`}
-              group={group}
-              pathname={pathname}
-            />
+          {OFFERINGS.map((route) => (
+            <Link
+              key={route.href}
+              href={route.href}
+              className={styles.offeringLink}
+              aria-current={currentRoute(pathname, route.href)}
+            >
+              <RouteLabel route={route} />
+            </Link>
           ))}
-          <Link
-            href="/machinespeed"
-            className={styles.enterpriseLink}
-            aria-current={currentRoute(pathname, "/machinespeed")}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Enterprise <ArrowUpRight className="size-3.5" aria-hidden="true" />
-            <span className="sr-only">(opens in a new tab)</span>
-          </Link>
+          <ResourcesMenu key={pathname} pathname={pathname} />
         </div>
         <div className={styles.actions}>
-          <TryOnXo />
+          <Button asChild>
+            <Link href="/#offerings">Find your path</Link>
+          </Button>
           <MobileNavigation key={pathname} pathname={pathname} />
         </div>
       </nav>

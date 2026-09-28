@@ -1,36 +1,28 @@
 # quirq
 
-> Quirq makes Space, the open-source workspace for projects, files, agents and
-> tools, and XO, the cloud platform that gives agents computers. Launch
-> preconfigured environments, delegate tasks and run work in parallel on XO. XO is free for 30 days; paid usage is based on compute.
-> Machine Speed builds custom enterprise AI workflows, setup and infrastructure.
+> Put AI to work across your business. XO Space lets developers manage company
+> work from Claude Code or Codex. XO Cloud creates and manages autonomous AI
+> employees working 24/7. MachineSpeed delivers business solutions through a
+> team of humans and AI agents.
 
-Space brings project files, agent sessions, todos and usage into one view.
-It works with supported, separately configured agent runtimes. Git-backed
-projects can be shared with another Space ID: incoming commits are fetched
-for review and applied explicitly. Sharing requires account linking and
-access to the Git repository; it is not simultaneous document editing.
-
-This file is a map to the site's canonical product and research pages.
-The quirq measurement model is a separate subject documented in the whitepaper.
-The homepage introduces Space with “Give your agents a place to work”, then
-Trusted by, projects/agents/sharing benefits, Machine Speed, and trial/open-source
-entry. XO's cloud-computer and deployment story lives under Managed solutions.
+The homepage introduces the three offerings, their journeys and distinct entry
+paths. Navigation labels are Spaces, Cloud and MachineSpeed. Space's open-source
+repository, Cloud's managed application and MachineSpeed's contact path are
+separate starting points. The quirq measurement model is documented in Research.
 
 ## Pages
 
-- [Space](https://quirq.ai/products): The environment for agentic work.
+- [Spaces](https://quirq.ai/products): The environment for agentic work.
   Explore projects, files, agents, activity and sharing, then choose an
   open-source installation or managed hosting on XO. Current deployment
   details belong on this page; do not infer fixed per-environment tiers or
   a required self-hosting license.
 
-- [Managed solutions](https://quirq.ai/xo): XO, Quirq's managed cloud platform,
+- [Cloud](https://quirq.ai/xo): XO, Quirq's managed cloud platform,
   a separate product that gives agents cloud computers and can host Space. Preconfigured templates,
   task delegation, parallel execution, autonomous scaling, and configurable
   runtime/policies. The chosen harness supplies agent behavior. XO manages the underlying
-  infrastructure on its cloud. Pricing cards show a $0 trial for 30 days,
-  compute-based XO Cloud and custom Enterprise. Enterprise supports self-hosting
+  infrastructure on its cloud. Pricing shows Starter, Pro and Business subscriptions, plus custom Enterprise. Eligible Starter and Pro accounts can try the platform for 30 days. Enterprise supports self-hosting
   XO, connecting the customer's cloud and white-label deployments across multiple
   clouds. These are separate from open-source Space installation.
   [Try on XO](https://app.xo.builders/) opens the managed platform directly.
@@ -44,7 +36,7 @@ entry. XO's cloud-computer and deployment story lives under Managed solutions.
 - [Space source](https://github.com/quirq-ai/xo-space): The open-source product
   repository. The canonical installer is `curl -fsSL https://quirq.ai/install | sh`.
 
-- [Enterprise](https://quirq.ai/machinespeed): Machine Speed. Custom AI workflows,
+- [MachineSpeed](https://quirq.ai/machinespeed): Custom AI workflows,
   integrations, setup and infrastructure for businesses. Enterprise implementation
   is a service offering; it is not a prerequisite for running open-source Space.
 
