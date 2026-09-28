@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { StoryBeat } from "@/components/story/story-beat";
 import type { BeatData } from "@/components/story/types";
-import { cn } from "@/components/ui/primitives";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import {
   KEYFRAMES,
   getResolvedLeaves,
   overrideLeaves,
   type Keyframe,
-  type ResolvedLeaf,
 } from "@/components/stage/choreography";
 import { CHOREOGRAPHY, type ChoreoNode } from "@/components/stage/choreo-tree";
 import { beatEntries, onBeatsChange } from "@/lib/beat-registry";
@@ -197,8 +198,7 @@ function toJourney(beats: EditorBeat[], slugRaw: string): JourneyDefinition {
                 prompt: "Keep walking?",
                 choices: [
                   {
-                    label:
-                      beats[i + 1].title.join(" ").trim() || `Beat ${i + 2}`,
+                    label: beats[i + 1].title.join(" ").trim() || `Beat ${i + 2}`,
                     to: ids[i + 1],
                   },
                 ],
@@ -232,6 +232,8 @@ export function Editor() {
       if (raw) {
         const parsed = JSON.parse(raw) as EditorBeat[];
         if (Array.isArray(parsed) && parsed.length >= MIN_BEATS) {
+          // Restore browser-owned draft storage after the server's default render hydrates.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setBeats(parsed);
         }
       }
@@ -255,9 +257,7 @@ export function Editor() {
   const sel = beats[Math.min(selected, beats.length - 1)];
 
   const patch = (changes: Partial<EditorBeat>) =>
-    setBeats((prev) =>
-      prev.map((b, i) => (i === selected ? { ...b, ...changes } : b)),
-    );
+    setBeats((prev) => prev.map((b, i) => (i === selected ? { ...b, ...changes } : b)));
 
   const patchKeyframe = (key: keyof Keyframe, value: number) =>
     setBeats((prev) =>
@@ -341,9 +341,7 @@ export function Editor() {
       setStoreNote(null);
     } catch (err) {
       setStoredSlug(null);
-      setStoreNote(
-        err instanceof Error ? err.message : "Could not create the page.",
-      );
+      setStoreNote(err instanceof Error ? err.message : "Could not create the page.");
     }
   };
 
@@ -371,27 +369,31 @@ export function Editor() {
       <aside
         aria-label="Page editor"
         data-lenis-prevent
-        className="fixed top-20 right-4 bottom-5 z-40 hidden w-[420px] flex-col overflow-hidden rounded-2xl border border-hair bg-black/80 backdrop-blur-xl lg:flex"
+        className="fixed top-20 right-4 bottom-5 z-40 hidden w-[420px] flex-col overflow-hidden rounded-xl border border-border bg-card backdrop-blur-xl lg:flex"
       >
-        <div className="flex items-center justify-between border-b border-hair-soft px-4 py-3">
-          <span className="flex items-center gap-2.5 font-mono text-[10px] tracking-[0.18em] text-dim uppercase">
+        <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+          <span className="flex items-center gap-2.5 font-mono text-[10px] tracking-[0.18em] text-muted-foreground uppercase">
             <span className="pulse-dot" />
             Page editor · live
           </span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => {
               setBeats(defaultBeats());
               setSelected(0);
             }}
-            className="font-mono text-[9.5px] tracking-[0.1em] text-faint uppercase transition-colors hover:text-ink"
           >
             Reset
-          </button>
+          </Button>
         </div>
 
         {/* Tabs: the draft, and the live machinery underneath it. */}
-        <div className="flex gap-1.5 border-b border-hair-soft px-4 py-2.5">
+        <div
+          className="flex flex-wrap gap-1.5 border-b border-border/60 px-4 py-2.5"
+          role="group"
+          aria-label="Editor views"
+        >
           {TABS.map((t) => (
             <EditorChip key={t} active={tab === t} onClick={() => setTab(t)}>
               {t}
@@ -405,205 +407,228 @@ export function Editor() {
           {tab === "golden" && <GoldenTab />}
           {tab === "beats" && (
             <>
-          {/* Beat list */}
-          <p className="label text-[9px]">Beats</p>
-          <div className="mt-2 overflow-hidden rounded-xl border border-hair-soft">
-            {beats.map((b, i) => (
-              <button
-                key={b.id}
-                type="button"
-                onClick={() => setSelected(i)}
-                className={cn(
-                  "flex w-full items-center gap-3 px-3 py-2 text-left transition-colors",
-                  i > 0 && "border-t border-hair-soft",
-                  i === selected ? "bg-white/[0.08]" : "hover:bg-white/[0.04]",
-                )}
-              >
-                <span className="font-mono text-[10px] text-faint">{i}</span>
-                <span className="min-w-0 flex-1 truncate text-[12.5px] text-ink/85">
-                  {b.title[0]} {b.title[1]}
-                </span>
-              </button>
-            ))}
-          </div>
-          <div className="mt-2 flex gap-2">
-            <EditorChip onClick={addBeat} disabled={beats.length >= MAX_BEATS}>
-              + Add
-            </EditorChip>
-            <EditorChip onClick={removeBeat} disabled={beats.length <= MIN_BEATS}>
-              Remove
-            </EditorChip>
-            <EditorChip onClick={() => move(-1)} disabled={selected === 0}>
-              Up
-            </EditorChip>
-            <EditorChip
-              onClick={() => move(1)}
-              disabled={selected === beats.length - 1}
-            >
-              Down
-            </EditorChip>
-          </div>
-
-          {/* Copy */}
-          <p className="label mt-6 text-[9px]">Copy</p>
-          <div className="mt-2 space-y-2">
-            <EditorInput
-              placeholder="marker, e.g. 01 · the point"
-              value={sel.marker}
-              onChange={(v) => patch({ marker: v })}
-            />
-            <EditorInput
-              placeholder="title line one"
-              value={sel.title[0]}
-              onChange={(v) => patch({ title: [v, sel.title[1]] })}
-            />
-            <EditorInput
-              placeholder="title line two"
-              value={sel.title[1]}
-              onChange={(v) => patch({ title: [sel.title[0], v] })}
-            />
-            <textarea
-              placeholder="lede"
-              value={sel.lede}
-              onChange={(e) => patch({ lede: e.target.value })}
-              rows={2}
-              className="w-full resize-none rounded-lg border border-hair-soft bg-white/[0.04] px-3 py-2 text-[12.5px] text-ink placeholder:text-faint focus:outline-none"
-            />
-            <div className="flex gap-2">
-              {(["center", "left", "right"] as const).map((l) => (
-                <EditorChip
-                  key={l}
-                  active={sel.layout === l}
-                  onClick={() => patch({ layout: l })}
-                >
-                  {l}
-                </EditorChip>
-              ))}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[9.5px] text-faint uppercase">
-                glass line
-              </span>
-              {([null, 0, 1] as const).map((g) => (
-                <EditorChip
-                  key={String(g)}
-                  active={sel.glass === g}
-                  onClick={() => patch({ glass: g })}
-                >
-                  {g === null ? "none" : g === 0 ? "first" : "second"}
-                </EditorChip>
-              ))}
-            </div>
-          </div>
-
-          {/* Pose presets */}
-          <p className="label mt-6 text-[9px]">Pose presets</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {POSES.map((pose) => (
-              <EditorChip
-                key={pose.name}
-                onClick={() => patch({ keyframe: { ...pose.keyframe } })}
-              >
-                {pose.name}
-              </EditorChip>
-            ))}
-          </div>
-
-          {/* Channels */}
-          {CHANNEL_GROUPS.map((group) => (
-            <div key={group.group}>
-              <p className="label mt-6 text-[9px]">{group.group}</p>
-              <div className="mt-2 space-y-2.5">
-                {group.channels.map((ch) => (
-                  <label key={ch.key} className="block">
-                    <span className="flex justify-between font-mono text-[10px] text-dim">
-                      <span>{ch.key}</span>
-                      <span className="tabular-nums text-faint">
-                        {sel.keyframe[ch.key].toFixed(3)}
-                      </span>
+              {/* Beat list */}
+              <p className="label text-[9px]">Beats</p>
+              <div className="mt-2 overflow-hidden rounded-xl border border-border/60">
+                {beats.map((b, i) => (
+                  <Button
+                    key={b.id}
+                    type="button"
+                    variant="ghost"
+                    aria-pressed={i === selected}
+                    onClick={() => setSelected(i)}
+                    className={cn(
+                      "flex w-full items-center justify-start gap-3 rounded-none px-3 py-2 text-left focus-visible:ring-inset focus-visible:ring-offset-0",
+                      i > 0 && "border-t border-border/60",
+                      i === selected ? "bg-accent" : "hover:bg-muted",
+                    )}
+                  >
+                    <span className="font-mono text-[10px] text-muted-foreground">
+                      {i}
                     </span>
-                    <input
-                      type="range"
-                      min={ch.min}
-                      max={ch.max}
-                      step={ch.step}
-                      value={sel.keyframe[ch.key]}
-                      onChange={(e) =>
-                        patchKeyframe(ch.key, Number(e.target.value))
-                      }
-                      className="mt-1 h-1 w-full cursor-pointer accent-white"
-                    />
-                  </label>
+                    <span className="min-w-0 flex-1 truncate text-[12.5px] text-foreground/85">
+                      {b.title[0]} {b.title[1]}
+                    </span>
+                  </Button>
                 ))}
               </div>
-            </div>
-          ))}
+              <div className="mt-2 flex gap-2">
+                <EditorChip onClick={addBeat} disabled={beats.length >= MAX_BEATS}>
+                  + Add
+                </EditorChip>
+                <EditorChip onClick={removeBeat} disabled={beats.length <= MIN_BEATS}>
+                  Remove
+                </EditorChip>
+                <EditorChip onClick={() => move(-1)} disabled={selected === 0}>
+                  Up
+                </EditorChip>
+                <EditorChip
+                  onClick={() => move(1)}
+                  disabled={selected === beats.length - 1}
+                >
+                  Down
+                </EditorChip>
+              </div>
 
-          {/* Export: the draft as a journey file */}
-          <p className="label mt-6 text-[9px]">Export · journey</p>
-          <div className="mt-2 flex items-center gap-1.5">
-            <span className="shrink-0 font-mono text-[9.5px] text-faint">
-              .quirq/journeys/
-            </span>
-            <input
-              type="text"
-              value={slug}
-              placeholder="my-journey"
-              onChange={(e) => {
-                setSlug(e.target.value);
-                setStoredSlug(null);
-              }}
-              className="min-w-0 flex-1 rounded-lg border border-hair-soft bg-white/[0.04] px-2.5 py-1.5 font-mono text-[11px] text-ink placeholder:text-faint focus:outline-none"
-            />
-            <span className="shrink-0 font-mono text-[9.5px] text-faint">
-              .json
-            </span>
-          </div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <EditorChip onClick={copy}>
-              {copied ? "Copied" : "Copy journey JSON"}
-            </EditorChip>
-            <EditorChip onClick={() => setShowJson((v) => !v)} active={showJson}>
-              {showJson ? "Hide" : "Show"}
-            </EditorChip>
-            {process.env.NODE_ENV === "development" && (
-              <EditorChip onClick={createPage}>Create page</EditorChip>
-            )}
-          </div>
-          {storeNote && (
-            <p className="mt-2 font-mono text-[9.5px] leading-relaxed text-spec-orange">
-              {storeNote}
-            </p>
-          )}
-          {storedSlug && (
-            <a
-              href={`/journey?j=${storedSlug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-block rounded-full border border-hair-soft bg-white/[0.05] px-3 py-1.5 font-mono text-[9.5px] tracking-[0.08em] text-ink/85 uppercase transition-colors hover:border-ink/30 hover:text-ink"
-            >
-              Page created · open /journey?j={storedSlug}
-            </a>
-          )}
-          {showJson && (
-            <pre className="mt-2 max-h-56 overflow-auto rounded-lg border border-hair-soft bg-white/[0.03] p-3 font-mono text-[10px] leading-relaxed text-ink/75">
-              {exportJson}
-            </pre>
-          )}
-          <p className="mt-3 pb-2 font-mono text-[9.5px] leading-relaxed text-faint">
-            The JSON is a complete journey: beats chained in order, poses
-            included. Paste it as .quirq/journeys/{cleanSlug(slug) || "my-journey"}.json and
-            Reload .quirq on /journey, or in development hit Create page and
-            it is written for you. Open forks later by editing choices in the
-            file.
-          </p>
+              {/* Copy */}
+              <p className="label mt-6 text-[9px]">Copy</p>
+              <div className="mt-2 space-y-2">
+                <EditorInput
+                  label="Section marker"
+                  placeholder="marker, e.g. 01 · the point"
+                  value={sel.marker}
+                  onChange={(v) => patch({ marker: v })}
+                />
+                <EditorInput
+                  label="Title line one"
+                  placeholder="title line one"
+                  value={sel.title[0]}
+                  onChange={(v) => patch({ title: [v, sel.title[1]] })}
+                />
+                <EditorInput
+                  label="Title line two"
+                  placeholder="title line two"
+                  value={sel.title[1]}
+                  onChange={(v) => patch({ title: [sel.title[0], v] })}
+                />
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-foreground">Description</span>
+                  <textarea
+                    placeholder="lede"
+                    value={sel.lede}
+                    onChange={(e) => patch({ lede: e.target.value })}
+                    rows={2}
+                    className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:text-sm"
+                  />
+                </label>
+                <div className="flex gap-2">
+                  {(["center", "left", "right"] as const).map((l) => (
+                    <EditorChip
+                      key={l}
+                      active={sel.layout === l}
+                      onClick={() => patch({ layout: l })}
+                    >
+                      {l}
+                    </EditorChip>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[9.5px] text-muted-foreground uppercase">
+                    glass line
+                  </span>
+                  {([null, 0, 1] as const).map((g) => (
+                    <EditorChip
+                      key={String(g)}
+                      active={sel.glass === g}
+                      onClick={() => patch({ glass: g })}
+                    >
+                      {g === null ? "none" : g === 0 ? "first" : "second"}
+                    </EditorChip>
+                  ))}
+                </div>
+              </div>
+
+              {/* Pose presets */}
+              <p className="label mt-6 text-[9px]">Pose presets</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {POSES.map((pose) => (
+                  <EditorChip
+                    key={pose.name}
+                    onClick={() => patch({ keyframe: { ...pose.keyframe } })}
+                  >
+                    {pose.name}
+                  </EditorChip>
+                ))}
+              </div>
+
+              {/* Channels */}
+              {CHANNEL_GROUPS.map((group) => (
+                <div key={group.group}>
+                  <p className="label mt-6 text-[9px]">{group.group}</p>
+                  <div className="mt-2 space-y-2.5">
+                    {group.channels.map((ch) => (
+                      <label key={ch.key} className="block">
+                        <span className="flex justify-between font-mono text-[10px] text-muted-foreground">
+                          <span>{ch.key}</span>
+                          <span className="tabular-nums text-muted-foreground">
+                            {sel.keyframe[ch.key].toFixed(3)}
+                          </span>
+                        </span>
+                        <input
+                          type="range"
+                          min={ch.min}
+                          max={ch.max}
+                          step={ch.step}
+                          value={sel.keyframe[ch.key]}
+                          onChange={(e) => patchKeyframe(ch.key, Number(e.target.value))}
+                          className="mt-1 min-h-11 w-full cursor-pointer rounded-md accent-primary outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {/* Export: the draft as a journey file */}
+              <label
+                htmlFor="editor-journey-slug"
+                className="label mt-6 block text-[9px]"
+              >
+                Export · journey filename
+              </label>
+              <div className="mt-2 flex items-center gap-1.5">
+                <span className="shrink-0 font-mono text-[9.5px] text-muted-foreground">
+                  .quirq/journeys/
+                </span>
+                <Input
+                  id="editor-journey-slug"
+                  type="text"
+                  value={slug}
+                  placeholder="my-journey"
+                  onChange={(e) => {
+                    setSlug(e.target.value);
+                    setStoredSlug(null);
+                  }}
+                  className="min-w-0 flex-1 font-mono"
+                />
+                <span className="shrink-0 font-mono text-[9.5px] text-muted-foreground">
+                  .json
+                </span>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <EditorChip onClick={copy}>
+                  {copied ? "Copied" : "Copy journey JSON"}
+                </EditorChip>
+                <EditorChip onClick={() => setShowJson((v) => !v)} active={showJson}>
+                  {showJson ? "Hide" : "Show"}
+                </EditorChip>
+                {process.env.NODE_ENV === "development" && (
+                  <EditorChip onClick={createPage}>Create page</EditorChip>
+                )}
+              </div>
+              {storeNote && (
+                <p className="mt-2 font-mono text-[9.5px] leading-relaxed text-spec-orange">
+                  {storeNote}
+                </p>
+              )}
+              {storedSlug && (
+                <Button
+                  asChild
+                  variant="outline"
+                  className="mt-2 max-w-full whitespace-normal text-left"
+                >
+                  <a
+                    href={`/journey?j=${storedSlug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Page created · open /journey?j={storedSlug}
+                    <span className="sr-only"> (opens in a new tab)</span>
+                  </a>
+                </Button>
+              )}
+              {showJson && (
+                <pre
+                  tabIndex={0}
+                  aria-label="Journey JSON"
+                  className="mt-2 max-h-56 overflow-auto rounded-md border border-border bg-muted p-3 font-mono text-xs leading-relaxed text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {exportJson}
+                </pre>
+              )}
+              <p className="mt-3 pb-2 font-mono text-[9.5px] leading-relaxed text-muted-foreground">
+                The JSON is a complete journey: beats chained in order, poses included.
+                Paste it as .quirq/journeys/{cleanSlug(slug) || "my-journey"}.json and
+                Reload .quirq on /journey, or in development hit Create page and it is
+                written for you. Open forks later by editing choices in the file.
+              </p>
             </>
           )}
         </div>
       </aside>
 
       {/* Small screens get the page, not the panel. */}
-      <div className="fixed right-4 bottom-4 z-40 rounded-full border border-hair bg-black/70 px-4 py-2 font-mono text-[9.5px] tracking-[0.12em] text-dim uppercase backdrop-blur-xl lg:hidden">
+      <div className="fixed right-4 bottom-4 z-40 rounded-full border border-border bg-card px-4 py-2 font-mono text-[9.5px] tracking-[0.12em] text-muted-foreground uppercase backdrop-blur-xl lg:hidden">
         Editor needs a wider screen
       </div>
     </>
@@ -622,40 +647,40 @@ function EditorChip({
   active?: boolean;
 }) {
   return (
-    <button
+    <Button
       type="button"
+      variant={active ? "secondary" : "outline"}
+      size="sm"
       onClick={onClick}
       disabled={disabled}
-      className={cn(
-        "rounded-full border px-3 py-1.5 font-mono text-[9.5px] tracking-[0.08em] uppercase transition-colors",
-        active
-          ? "border-ink/40 bg-white/[0.1] text-ink"
-          : "border-hair-soft bg-white/[0.03] text-dim hover:text-ink",
-        disabled && "cursor-not-allowed opacity-35 hover:text-dim",
-      )}
+      aria-pressed={active}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
 function EditorInput({
+  label,
   value,
   onChange,
   placeholder,
 }: {
+  label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder: string;
 }) {
   return (
-    <input
-      type="text"
-      value={value}
-      placeholder={placeholder}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-lg border border-hair-soft bg-white/[0.04] px-3 py-2 text-[12.5px] text-ink placeholder:text-faint focus:outline-none"
-    />
+    <label className="block space-y-2">
+      <span className="text-sm font-medium text-foreground">{label}</span>
+      <Input
+        type="text"
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </label>
   );
 }
 
@@ -700,17 +725,17 @@ function TreeTab({ beats }: { beats: EditorBeat[] }) {
   return (
     <div>
       <p className="label text-[9px]">Authored tree · choreo-tree.ts</p>
-      <div className="mt-2 overflow-hidden rounded-xl border border-hair-soft">
+      <div className="mt-2 overflow-hidden rounded-xl border border-border/60">
         {authored.map(({ depth, node, isLeaf }, i) => (
           <div
             key={node.id}
             className={cn(
               "flex items-center gap-2 px-3 py-2",
-              i > 0 && "border-t border-hair-soft",
+              i > 0 && "border-t border-border/60",
             )}
             style={{ paddingLeft: `${12 + depth * 14}px` }}
           >
-            <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-ink/85">
+            <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground/85">
               {node.id}
             </span>
             {node.when && (
@@ -718,7 +743,7 @@ function TreeTab({ beats }: { beats: EditorBeat[] }) {
                 when
               </span>
             )}
-            <span className="font-mono text-[9px] text-faint">
+            <span className="font-mono text-[9px] text-muted-foreground">
               {isLeaf
                 ? `leaf · ${Object.keys(node.keyframe ?? {}).length}ch`
                 : `root · ${Object.keys(node.keyframe ?? {}).length}ch`}
@@ -730,28 +755,28 @@ function TreeTab({ beats }: { beats: EditorBeat[] }) {
       <p className="label mt-6 text-[9px]">
         Live resolved leaves · serving the glass now
       </p>
-      <div className="mt-2 overflow-hidden rounded-xl border border-hair-soft">
+      <div className="mt-2 overflow-hidden rounded-xl border border-border/60">
         {live.map((leaf, i) => (
           <div
             key={leaf.id}
             className={cn(
               "flex items-center gap-2 px-3 py-2",
-              i > 0 && "border-t border-hair-soft",
+              i > 0 && "border-t border-border/60",
             )}
           >
-            <span className="font-mono text-[10px] text-faint">{i}</span>
-            <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-ink/85">
+            <span className="font-mono text-[10px] text-muted-foreground">{i}</span>
+            <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground/85">
               {leaf.id}
             </span>
-            <span className="font-mono text-[9px] text-faint tabular-nums">
+            <span className="font-mono text-[9px] text-muted-foreground tabular-nums">
               z {leaf.keyframe.z.toFixed(1)} · χ {leaf.keyframe.chroma.toFixed(2)}
             </span>
           </div>
         ))}
       </div>
-      <p className="mt-2 font-mono text-[9.5px] leading-relaxed text-faint">
-        While the editor is open, its draft stands in front of the authored
-        tree via overrideLeaves; leave the editor and the tree takes back over.
+      <p className="mt-2 font-mono text-[9.5px] leading-relaxed text-muted-foreground">
+        While the editor is open, its draft stands in front of the authored tree via
+        overrideLeaves; leave the editor and the tree takes back over.
       </p>
 
       <p className="label mt-6 text-[9px]">Save the draft as a tree</p>
@@ -774,13 +799,13 @@ function TreeTab({ beats }: { beats: EditorBeat[] }) {
         </EditorChip>
       </div>
       {show && (
-        <pre className="mt-2 max-h-56 overflow-auto rounded-lg border border-hair-soft bg-white/[0.03] p-3 font-mono text-[10px] leading-relaxed text-ink/75">
+        <pre className="mt-2 max-h-56 overflow-auto rounded-lg border border-border/60 bg-muted p-3 font-mono text-[10px] leading-relaxed text-foreground/75">
           {draftJson}
         </pre>
       )}
-      <p className="mt-2 pb-2 font-mono text-[9.5px] leading-relaxed text-faint">
-        Root carries the first beat's full pose; children carry only what
-        differs, which is exactly how choreo-tree.ts wants them.
+      <p className="mt-2 pb-2 font-mono text-[9.5px] leading-relaxed text-muted-foreground">
+        Root carries the first beat&apos;s full pose; children carry only what differs,
+        which is exactly how choreo-tree.ts wants them.
       </p>
     </div>
   );
@@ -827,53 +852,49 @@ function RegistryTab() {
             "rounded-full px-2.5 py-1 font-mono text-[8.5px] tracking-[0.08em] uppercase",
             idBound
               ? "bg-spec-green/10 text-spec-green"
-              : "bg-white/5 text-dim",
+              : "bg-muted text-muted-foreground",
           )}
         >
           {idBound ? "bound by id" : "positional"}
         </span>
       </div>
 
-      <div className="mt-2 overflow-hidden rounded-xl border border-hair-soft">
+      <div className="mt-2 overflow-hidden rounded-xl border border-border/60">
         {rows.map((row, i) => (
           <div
             key={row.id}
-            className={cn(
-              "px-3 py-2",
-              i > 0 && "border-t border-hair-soft",
-            )}
+            className={cn("px-3 py-2", i > 0 && "border-t border-border/60")}
           >
             <div className="flex items-center gap-2">
-              <span className="font-mono text-[10px] text-faint">
+              <span className="font-mono text-[10px] text-muted-foreground">
                 {row.index}
               </span>
-              <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-ink/85">
+              <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground/85">
                 {row.id}
               </span>
               <span
                 className={cn(
                   "font-mono text-[9px] tabular-nums",
-                  row.ratio < 0.85 ? "text-spec-orange" : "text-faint",
+                  row.ratio < 0.85 ? "text-spec-orange" : "text-muted-foreground",
                 )}
               >
                 {Math.round(row.ratio * 100)}% vh
               </span>
             </div>
-            <p className="mt-0.5 font-mono text-[9px] text-faint tabular-nums">
+            <p className="mt-0.5 font-mono text-[9px] text-muted-foreground tabular-nums">
               centre {row.centre}px · height {row.height}px
             </p>
           </div>
         ))}
         {rows.length === 0 && (
-          <p className="px-3 py-3 font-mono text-[10px] text-faint">
-            Nothing registered; the runtime would fall back to the data-beat
-            query.
+          <p className="px-3 py-3 font-mono text-[10px] text-muted-foreground">
+            Nothing registered; the runtime would fall back to the data-beat query.
           </p>
         )}
       </div>
-      <p className="mt-2 font-mono text-[9.5px] leading-relaxed text-faint">
-        Sections under about 85% of a viewport flash their pose past; that is
-        the one-viewport rule, measured live.
+      <p className="mt-2 font-mono text-[9.5px] leading-relaxed text-muted-foreground">
+        Sections under about 85% of a viewport flash their pose past; that is the
+        one-viewport rule, measured live.
       </p>
 
       <div className="mt-4 flex gap-2 pb-2">
@@ -939,16 +960,13 @@ function GoldenTab() {
         <EditorChip onClick={capture} disabled={busy}>
           {busy ? "Walking the page" : "Capture 21 stops"}
         </EditorChip>
-        <EditorChip
-          onClick={() => latest && setBaseline(latest)}
-          disabled={!latest}
-        >
+        <EditorChip onClick={() => latest && setBaseline(latest)} disabled={!latest}>
           Set as baseline
         </EditorChip>
       </div>
-      <p className="mt-2 font-mono text-[9.5px] leading-relaxed text-faint">
-        The capture scrolls the page top to bottom and returns; the numbers
-        are read from the live runtime, exactly like docs/goldens.
+      <p className="mt-2 font-mono text-[9.5px] leading-relaxed text-muted-foreground">
+        The capture scrolls the page top to bottom and returns; the numbers are read from
+        the live runtime, exactly like docs/goldens.
       </p>
 
       {latest && (
@@ -968,8 +986,8 @@ function GoldenTab() {
               </span>
             )}
           </div>
-          <div className="mt-2 rounded-xl border border-hair-soft px-3 py-2.5">
-            <p className="font-mono text-[9.5px] leading-relaxed break-words text-ink/70 tabular-nums">
+          <div className="mt-2 rounded-xl border border-border/60 px-3 py-2.5">
+            <p className="font-mono text-[9.5px] leading-relaxed break-words text-foreground/70 tabular-nums">
               {latest.samples.map((s) => s.beat.toFixed(3)).join(" · ")}
             </p>
           </div>

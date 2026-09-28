@@ -1,6 +1,14 @@
 "use client";
 
-import { ActionLink, Beat, Marker, Reveal, Rise, TextScrim, cn } from "@/components/ui/primitives";
+import {
+  ActionLink,
+  Beat,
+  Marker,
+  Reveal,
+  Rise,
+  TextScrim,
+  cn,
+} from "@/components/ui/primitives";
 import { GlassPool, GlassText } from "@/components/ui/glass";
 import { FigureView } from "./figure";
 import type { BeatData } from "./types";
@@ -9,7 +17,6 @@ import type { BeatData } from "./types";
  * One generic component renders any story beat from its data. /dynamic,
  * /scenes and the /editor all compose their middles from this.
  */
-
 
 /** One component renders every beat of this page from its data. */
 export function StoryBeat({ data }: { data: BeatData }) {
@@ -39,10 +46,7 @@ export function StoryBeat({ data }: { data: BeatData }) {
             </h2>
           ) : (
             <h2
-              className={cn(
-                "over-stage mt-8",
-                data.panelRows ? "display-sm" : "display",
-              )}
+              className={cn("over-stage mt-8", data.panelRows ? "display-sm" : "display")}
             >
               <Reveal delay={0.05}>{titleLines[0]}</Reveal>
               <Reveal delay={0.13}>{titleLines[1]}</Reveal>
@@ -51,12 +55,7 @@ export function StoryBeat({ data }: { data: BeatData }) {
 
           {data.lede && (
             <Rise delay={0.24}>
-              <p
-                className={cn(
-                  "lede over-stage mt-7",
-                  center && "mx-auto text-center",
-                )}
-              >
+              <p className={cn("lede over-stage mt-7", center && "mx-auto text-center")}>
                 {data.lede}
               </p>
             </Rise>
@@ -73,9 +72,7 @@ export function StoryBeat({ data }: { data: BeatData }) {
               {data.rows.map((row, i) => (
                 <Rise key={row.title} delay={0.28 + i * 0.07}>
                   <div className="flex gap-5 border-t border-hair py-4.5 sm:gap-7">
-                    <span className="font-mono text-[11px] text-faint">
-                      0{i + 1}
-                    </span>
+                    <span className="font-mono text-[11px] text-faint">0{i + 1}</span>
                     <div>
                       <p className="over-stage text-[15.5px] font-medium text-ink">
                         {row.title}
@@ -128,9 +125,7 @@ export function StoryBeat({ data }: { data: BeatData }) {
                       0{i + 1}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[14.5px] font-medium text-ink">
-                        {row.title}
-                      </p>
+                      <p className="text-[14.5px] font-medium text-ink">{row.title}</p>
                       <p className="mt-1 text-[13px] leading-relaxed text-dim">
                         {row.note}
                       </p>

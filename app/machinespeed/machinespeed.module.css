@@ -1,75 +1,37 @@
-/*
- * MACHINE SPEED, ported from quirq-package/site/machinespeed.html.
- *
- * The route keeps the palette and layout it was authored with, but it wears
- * quirq's chrome: the site nav sits above it and SiteFooter closes it, so the
- * page reads as part of the site rather than a separate property. That is why
- * the values below are literal rather than references to app/globals.css, and
- * why the underline rule is scoped to .prose instead of the whole page: the
- * shared footer's links must keep the site's own treatment.
- *
- * Three deliberate departures from the source file:
- *   - the fonts bind to the families the app already loads, instead of leaving
- *     the page on whatever the system happens to have;
- *   - the hero image is a file under public/assets/machinespeed rather than a
- *     76 kB base64 string inlined into the stylesheet;
- *   - the authored footer is replaced by the site footer.
- *
- * Custom properties are --ms-* so they cannot collide with the site's tokens
- * on a page that is still inside the root layout.
- */
+/* Machine Speed keeps its editorial layout and workflow diagrams within the shared site theme. */
 
 .page {
-  --ms-bg: #10120f;
-  --ms-ink: #e9eae6;
-  --ms-ink-dim: #a8aba3;
-  --ms-ink-faint: #6b6e67;
-  --ms-line: rgba(233, 234, 230, 0.12);
-  --ms-green: #b4e34a;
-  --ms-blue: #57b6ff;
-  --ms-mono: var(--font-jetbrains), "SF Mono", ui-monospace, "IBM Plex Mono",
-    Menlo, Consolas, monospace;
-  --ms-sans: var(--font-inter), "Helvetica Neue", Helvetica, Arial, sans-serif;
-  /* Tracks .shell in components/ui/nav.module.css: the nav is fixed, so the
-     hero has to clear it rather than start underneath it. Revise together. */
-  --ms-nav: 74px;
-
   min-height: 100svh;
-  background: var(--ms-bg);
-  color: var(--ms-ink);
-  font-family: var(--ms-sans);
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
   font-size: 17px;
   line-height: 1.75;
   -webkit-font-smoothing: antialiased;
 }
 
 .page ::selection {
-  background: var(--ms-green);
-  color: #10120f;
-}
-
-.page :is(h1, h2, p, ol, ul, li, figure) {
-  margin: 0;
-  padding: 0;
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .col {
-  max-width: 660px;
+  max-width: var(--layout-reading);
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 var(--layout-gutter);
 }
 
 /* Scoped to the body copy: the shared footer below brings its own link
    treatment and must not inherit this one. */
 .prose a {
-  color: var(--ms-ink);
+  color: var(--foreground);
   text-decoration: underline;
-  text-decoration-color: var(--ms-ink-faint);
+  text-decoration-color: var(--muted-foreground);
   text-underline-offset: 4px;
   transition: text-decoration-color 0.15s;
 }
 .prose a:hover {
-  text-decoration-color: var(--ms-ink);
+  text-decoration-color: var(--foreground);
 }
 
 /* The mark: three skewed bars. */
@@ -81,7 +43,7 @@
   display: block;
   width: 7px;
   height: 22px;
-  background: var(--ms-ink);
+  background: var(--foreground);
   transform: skewX(-24deg);
   border-radius: 1.5px;
 }
@@ -93,9 +55,9 @@
   gap: clamp(24px, 4vw, 64px);
   /* Border-box, so the nav clearance comes out of the viewport height and the
      hero still measures exactly one screen. */
-  padding: calc(var(--ms-nav) + 20px) 20px 20px;
+  padding: calc(var(--header-height) + 20px) var(--layout-gutter) 20px;
   min-height: 100svh;
-  max-width: 1680px;
+  max-width: var(--layout-max);
   margin: 0 auto;
 }
 .heroLeft {
@@ -112,7 +74,7 @@
   padding: 48px 0;
 }
 .heroMid h1 {
-  font-size: clamp(32px, 3.6vw, 52px);
+  font-size: var(--text-heading);
   line-height: 1.18;
   font-weight: 600;
   letter-spacing: -0.015em;
@@ -122,7 +84,7 @@
 }
 .heroMid h1 em {
   font-style: italic;
-  background: linear-gradient(95deg, #ffb46b 0%, #ff5e8a 45%, #57d9ff 100%);
+  background: linear-gradient(95deg, var(--warning), var(--primary), var(--info));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -153,16 +115,16 @@
   margin-left: 58%;
 }
 .o1 {
-  color: rgba(233, 234, 230, 0.06);
+  color: color-mix(in srgb, var(--foreground) 6%, transparent);
 }
 .o2 {
-  color: rgba(233, 234, 230, 0.1);
+  color: color-mix(in srgb, var(--foreground) 10%, transparent);
 }
 .o3 {
-  color: rgba(233, 234, 230, 0.16);
+  color: color-mix(in srgb, var(--foreground) 16%, transparent);
 }
 .o4 {
-  color: rgba(233, 234, 230, 0.24);
+  color: color-mix(in srgb, var(--foreground) 24%, transparent);
 }
 .stack .it {
   font-style: italic;
@@ -172,35 +134,25 @@
   max-width: 560px;
 }
 .heroBottom .lead {
-  color: var(--ms-ink);
+  color: var(--foreground);
   font-size: 19px;
   font-weight: 600;
   margin-bottom: 14px;
 }
 .heroBottom p {
-  color: var(--ms-ink-dim);
+  color: var(--muted-foreground);
   font-size: 15.5px;
   line-height: 1.7;
 }
 
 .heroImg {
-  border-radius: 22px;
-  background: #000 url("/assets/machinespeed/hero.jpg") center / cover no-repeat;
+  border-radius: var(--radius-xl);
+  background: var(--background) url("/assets/machinespeed/hero.jpg") center / cover
+    no-repeat;
   min-height: 540px;
 }
 
 /* The two breakpoints where .shell changes height in nav.module.css. */
-@media (min-width: 700px) and (max-width: 1439px) {
-  .page {
-    --ms-nav: clamp(60px, 5.139vw, 74px);
-  }
-}
-@media (max-width: 699px) {
-  .page {
-    --ms-nav: 70px;
-  }
-}
-
 @media (max-width: 860px) {
   .heroSplit {
     grid-template-columns: 1fr;
@@ -228,14 +180,14 @@
 }
 .prose p {
   margin-bottom: 26px;
-  color: var(--ms-ink-dim);
+  color: var(--muted-foreground);
 }
 .prose p strong {
-  color: var(--ms-ink);
+  color: var(--foreground);
   font-weight: 600;
 }
 .prose p.lead {
-  color: var(--ms-ink);
+  color: var(--foreground);
   font-size: 19px;
 }
 
@@ -243,7 +195,7 @@
   font-size: 22px;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: var(--ms-ink);
+  color: var(--foreground);
   margin: 72px 0 24px;
 }
 
@@ -257,24 +209,24 @@
   counter-increment: n;
   position: relative;
   padding: 20px 0 20px 56px;
-  border-top: 1px solid var(--ms-line);
-  color: var(--ms-ink-dim);
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
 }
 .plan li:last-child {
-  border-bottom: 1px solid var(--ms-line);
+  border-bottom: 1px solid var(--border);
 }
 .plan li::before {
   content: counter(n);
   position: absolute;
   left: 0;
   top: 22px;
-  font-family: var(--ms-mono);
+  font-family: var(--font-mono);
   font-size: 13px;
-  color: var(--ms-ink-faint);
+  color: var(--muted-foreground);
 }
 .plan li b {
   display: block;
-  color: var(--ms-ink);
+  color: var(--foreground);
   font-weight: 600;
   margin-bottom: 2px;
 }
@@ -288,9 +240,9 @@
   transform: translateX(-50%);
 }
 .canvas {
-  border: 1px solid var(--ms-line);
-  border-radius: 12px;
-  background: #0b0d0a;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--background);
   overflow: hidden;
 }
 .cvBar {
@@ -298,17 +250,17 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
-  border-bottom: 1px solid var(--ms-line);
-  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--border);
+  background: var(--secondary);
 }
 .cvTitle {
-  font-family: var(--ms-mono);
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
-  color: var(--ms-ink-dim);
+  color: var(--muted-foreground);
 }
 .cvTitle b {
-  color: var(--ms-ink);
+  color: var(--foreground);
   font-weight: 600;
 }
 .cvRight {
@@ -317,18 +269,18 @@
   gap: 14px;
 }
 .cvBrand {
-  font-family: var(--ms-mono);
+  font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--ms-ink-faint);
+  color: var(--muted-foreground);
   letter-spacing: 0.04em;
 }
 .cvDeploy {
-  font-family: var(--ms-mono);
+  font-family: var(--font-mono);
   font-size: 10.5px;
   letter-spacing: 0.1em;
-  color: #0a1018;
-  background: var(--ms-blue);
-  border-radius: 3px;
+  color: var(--primary-foreground);
+  background: var(--info);
+  border-radius: var(--radius-sm);
   padding: 3px 8px;
   font-weight: 600;
 }
@@ -340,7 +292,7 @@
   width: 880px;
   height: 400px;
   background-image: radial-gradient(
-    rgba(233, 234, 230, 0.07) 1px,
+    color-mix(in srgb, var(--foreground) 7%, transparent) 1px,
     transparent 1px
   );
   background-size: 22px 22px;
@@ -354,9 +306,9 @@
 .node {
   position: absolute;
   width: 190px;
-  border: 1px solid var(--ms-line);
-  border-radius: 9px;
-  background: #13160f;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   font-size: 11px;
 }
@@ -365,17 +317,17 @@
   align-items: center;
   gap: 7px;
   padding: 8px 11px;
-  border-bottom: 1px solid var(--ms-line);
-  font-family: var(--ms-mono);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--ms-ink-faint);
+  color: var(--muted-foreground);
 }
 .nDot {
   width: 7px;
   height: 7px;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   transform: skewX(-10deg);
 }
 .nBd {
@@ -383,94 +335,90 @@
 }
 .nT {
   font-weight: 600;
-  color: var(--ms-ink);
+  color: var(--foreground);
   font-size: 12px;
   line-height: 1.35;
 }
 .nS {
-  color: var(--ms-ink-faint);
+  color: var(--muted-foreground);
   font-size: 10px;
   line-height: 1.5;
   margin-top: 3px;
 }
 .nFt {
-  border-top: 1px solid var(--ms-line);
+  border-top: 1px solid var(--border);
   padding: 7px 11px;
-  font-family: var(--ms-mono);
+  font-family: var(--font-mono);
   font-size: 9.5px;
-  color: var(--ms-ink-faint);
+  color: var(--muted-foreground);
   letter-spacing: 0.03em;
 }
 .nFt b {
-  color: var(--ms-blue);
+  color: var(--info);
   font-weight: 600;
 }
 .hl {
-  border-color: rgba(87, 182, 255, 0.45);
+  border-color: color-mix(in srgb, var(--info) 60%, transparent);
 }
 .flowNote {
-  font-family: var(--ms-mono);
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.06em;
-  color: var(--ms-ink-faint);
+  color: var(--muted-foreground);
   margin-top: 16px;
   text-align: center;
 }
 .flowNote b {
-  color: var(--ms-blue);
+  color: var(--info);
   font-weight: 600;
 }
 
 /* ---------- mono block ---------- */
 .term {
-  font-family: var(--ms-mono);
+  font-family: var(--font-mono);
   font-size: 13.5px;
   line-height: 2;
-  color: var(--ms-ink-dim);
-  border: 1px solid var(--ms-line);
-  border-radius: 8px;
+  color: var(--muted-foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   padding: 20px 24px;
   margin: 26px 0 34px;
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--card);
   overflow-x: auto;
   white-space: pre;
 }
 .c {
-  color: var(--ms-ink-faint);
+  color: var(--muted-foreground);
 }
 .g {
-  color: var(--ms-blue);
+  color: var(--info);
 }
 .w {
-  color: var(--ms-ink);
+  color: var(--foreground);
 }
 
 /* ---------- inline calculator ---------- */
 .calc {
   margin: 88px 0 0;
-  border: 1px solid var(--ms-line);
-  border-radius: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
   padding: 38px 34px 32px;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.035),
-    rgba(255, 255, 255, 0.008)
-  );
+  background: var(--card);
 }
 .k {
-  font-family: var(--ms-mono);
+  font-family: var(--font-mono);
   font-size: 10.5px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--ms-ink-faint);
+  color: var(--muted-foreground);
   margin-bottom: 14px;
 }
 .calc h2 {
   margin: 0 0 10px;
-  font-size: clamp(23px, 3vw, 31px);
+  font-size: var(--text-subheading);
 }
 .calc .lede {
-  color: var(--ms-ink-dim);
+  color: var(--muted-foreground);
   font-size: 15.5px;
   line-height: 1.7;
   margin-bottom: 30px;
@@ -500,51 +448,65 @@
   flex: 1;
   -webkit-appearance: none;
   appearance: none;
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(233, 234, 230, 0.18);
-  outline: none;
+  height: 44px;
+  background: transparent;
   min-width: 0;
+}
+.calc input[type="range"]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+.calc input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--input);
+}
+.calc input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--input);
 }
 .calc input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
+  margin-top: -8px;
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: var(--ms-blue);
+  background: var(--info);
   cursor: pointer;
-  border: 3px solid var(--ms-bg);
-  box-shadow: 0 0 0 1px rgba(233, 234, 230, 0.25);
+  border: 3px solid var(--background);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--foreground) 25%, transparent);
 }
 .calc input[type="range"]::-moz-range-thumb {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: var(--ms-blue);
+  background: var(--info);
   cursor: pointer;
-  border: 3px solid var(--ms-bg);
-  box-shadow: 0 0 0 1px rgba(233, 234, 230, 0.25);
+  border: 3px solid var(--background);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--foreground) 25%, transparent);
 }
 .val {
   min-width: 92px;
   text-align: right;
   font-size: 18px;
   font-weight: 600;
-  font-family: var(--ms-mono);
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 .val span {
   font-size: 12px;
   font-weight: 400;
-  color: var(--ms-ink-faint);
-  font-family: var(--ms-sans);
+  color: var(--muted-foreground);
+  font-family: var(--font-sans);
 }
 .out {
-  border: 1px solid var(--ms-line);
-  border-radius: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
   padding: 26px 24px;
-  background: rgba(0, 0, 0, 0.22);
+  background: var(--background);
 }
 .big {
   font-size: clamp(40px, 6vw, 52px);
@@ -556,29 +518,29 @@
 .big small {
   font-size: 17px;
   font-weight: 400;
-  color: var(--ms-ink-dim);
+  color: var(--muted-foreground);
   margin-left: 8px;
 }
 .bar {
   height: 8px;
-  background: rgba(233, 234, 230, 0.12);
-  border-radius: 4px;
+  background: color-mix(in srgb, var(--foreground) 12%, transparent);
+  border-radius: var(--radius-sm);
   margin: 20px 0 10px;
   overflow: hidden;
 }
 .fill {
   height: 100%;
-  background: var(--ms-blue);
-  border-radius: 4px;
+  background: var(--info);
+  border-radius: var(--radius-sm);
   width: 0;
   transition: width 0.18s ease;
 }
 .hit {
-  background: var(--ms-green);
+  background: var(--success);
 }
 .note {
   font-size: 13px;
-  color: var(--ms-ink-dim);
+  color: var(--muted-foreground);
   line-height: 1.6;
 }
 .pair {
@@ -588,13 +550,13 @@
 }
 .stat {
   flex: 1;
-  border: 1px solid var(--ms-line);
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   padding: 16px 16px 14px;
 }
 .kk {
   font-size: 12px;
-  color: var(--ms-ink-faint);
+  color: var(--muted-foreground);
   line-height: 1.5;
   margin-bottom: 8px;
 }
@@ -623,7 +585,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  border-top: 1px solid var(--ms-line);
+  border-top: 1px solid var(--border);
   padding-top: 30px;
 }
 .attribution .bars i {
@@ -631,13 +593,13 @@
   height: 15px;
 }
 .footCopy {
-  font-family: var(--ms-mono);
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.06em;
-  color: var(--ms-ink-faint);
+  color: var(--muted-foreground);
 }
 .footCopy b {
-  color: var(--ms-green);
+  color: var(--primary);
   text-transform: lowercase;
   font-weight: 600;
 }

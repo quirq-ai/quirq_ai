@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { StoryBeat } from "@/components/story/story-beat";
 import type { BeatData } from "@/components/story/types";
-import { Rise, TextScrim, cn } from "@/components/ui/primitives";
+import { Rise, TextScrim } from "@/components/ui/primitives";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { overrideLeaves } from "@/components/stage/choreography";
 import {
   DEFAULT_DEFINITION,
@@ -57,10 +59,7 @@ const toDefinition = (journey: ResolvedJourney): JourneyDefinition =>
       };
 
 /** One recorded transition, in words, for the recap. */
-const describeEvent = (
-  journey: ResolvedJourney,
-  ev: JourneyRecordingEvent,
-) => {
+const describeEvent = (journey: ResolvedJourney, ev: JourneyRecordingEvent) => {
   const short = journey.nodes[ev.node]?.short ?? ev.node;
   if (ev.kind === "start") return `opened at ${short}`;
   if (ev.kind === "choose") return `${ev.label ?? "chose"} · ${short}`;
@@ -95,16 +94,14 @@ function JourneyShelf() {
         <div className="relative mx-auto max-w-3xl">
           <TextScrim />
           <Rise>
-            <p className="label over-stage mb-6 text-center">
-              How the journey works
-            </p>
+            <p className="label over-stage mb-6 text-center">How the journey works</p>
           </Rise>
           <Rise delay={0.08}>
-            <div className="grid gap-px overflow-hidden rounded-2xl border border-hair bg-white/6 backdrop-blur-xl sm:grid-cols-3">
+            <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-muted backdrop-blur-xl sm:grid-cols-3">
               {SHELF.map((tile) => (
-                <div key={tile.label} className="bg-black/55 px-5 py-5">
+                <div key={tile.label} className="bg-card px-5 py-5">
                   <p className="label text-[9.5px]">{tile.label}</p>
-                  <p className="mt-2 text-[13px] leading-relaxed text-dim">
+                  <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
                     {tile.body}
                   </p>
                 </div>
@@ -257,6 +254,8 @@ export function Journey() {
       const raw = localStorage.getItem(TRACES_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as Trace[];
+        // Saved traces belong to localStorage and can only be restored after hydration.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (Array.isArray(parsed)) setSaved(parsed);
       }
     } catch {
@@ -297,9 +296,7 @@ export function Journey() {
     if (!recording || recording.events.length === 0) return;
     try {
       const raw = localStorage.getItem(RECORDINGS_KEY);
-      const all = raw
-        ? (JSON.parse(raw) as Record<string, JourneyRecording>)
-        : {};
+      const all = raw ? (JSON.parse(raw) as Record<string, JourneyRecording>) : {};
       all[recording.journey] = recording;
       localStorage.setItem(RECORDINGS_KEY, JSON.stringify(all));
     } catch {
@@ -367,9 +364,7 @@ export function Journey() {
       setTimeout(() => setStored(false), 1600);
       refreshLibrary();
     } catch (err) {
-      setLoadNote(
-        err instanceof Error ? err.message : "Could not store the journey.",
-      );
+      setLoadNote(err instanceof Error ? err.message : "Could not store the journey.");
     }
   };
 
@@ -392,17 +387,14 @@ export function Journey() {
     let step = 0;
     const drive = () => {
       if (cancelled) return;
-      const sections = Array.from(
-        document.querySelectorAll<HTMLElement>("[data-beat]"),
-      );
+      const sections = Array.from(document.querySelectorAll<HTMLElement>("[data-beat]"));
       if (step >= sections.length) {
         setReplaying(false);
         return;
       }
       const el = sections[step];
       const box = el.getBoundingClientRect();
-      const y =
-        box.top + window.scrollY + box.height / 2 - window.innerHeight / 2;
+      const y = box.top + window.scrollY + box.height / 2 - window.innerHeight / 2;
       window.dispatchEvent(
         new CustomEvent("stage:scrollto", { detail: { y: Math.max(0, y) } }),
       );
@@ -459,8 +451,7 @@ export function Journey() {
         const el = sections[Math.min(ev.path.length - 1, sections.length - 1)];
         if (el) {
           const box = el.getBoundingClientRect();
-          const y =
-            box.top + window.scrollY + box.height / 2 - window.innerHeight / 2;
+          const y = box.top + window.scrollY + box.height / 2 - window.innerHeight / 2;
           window.dispatchEvent(
             new CustomEvent("stage:scrollto", {
               detail: { y: Math.max(0, y) },
@@ -557,7 +548,7 @@ export function Journey() {
 
             {/* The library: what the local .quirq folder offers. */}
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <span className="font-mono text-[9.5px] tracking-[0.22em] text-faint uppercase">
+              <span className="font-mono text-[9.5px] tracking-[0.22em] text-muted-foreground uppercase">
                 Journey
               </span>
               <TraceChip
@@ -591,33 +582,27 @@ export function Journey() {
             {/* The trail: the dimension already travelled. Any earlier stop
                 rewinds to it, so the other branches stay explorable. */}
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-              <span className="font-mono text-[9.5px] tracking-[0.22em] text-faint uppercase">
+              <span className="font-mono text-[9.5px] tracking-[0.22em] text-muted-foreground uppercase">
                 Your path
               </span>
               {path.map((id, i) => (
-                <button
+                <Button
                   key={id}
                   type="button"
+                  variant={i === path.length - 1 ? "secondary" : "outline"}
+                  size="sm"
                   onClick={() => rewind(i)}
-                  disabled={
-                    i === path.length - 1 || !journey.rules.allowRewind
-                  }
-                  className={cn(
-                    "rounded-full border px-3 py-1.5 font-mono text-[9.5px] tracking-[0.08em] uppercase transition-colors",
-                    i === path.length - 1
-                      ? "border-ink/40 bg-white/[0.1] text-ink"
-                      : "border-hair-soft bg-white/[0.03] text-dim hover:border-ink/30 hover:text-ink",
-                  )}
+                  disabled={i === path.length - 1 || !journey.rules.allowRewind}
                 >
                   {journey.nodes[id].short}
-                </button>
+                </Button>
               ))}
             </div>
 
             {/* The trace: capture the walk, share it, watch it performed. */}
             {path.length > 1 && (
               <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                <span className="font-mono text-[9.5px] tracking-[0.22em] text-faint uppercase">
+                <span className="font-mono text-[9.5px] tracking-[0.22em] text-muted-foreground uppercase">
                   Trace
                 </span>
                 <TraceChip
@@ -642,19 +627,19 @@ export function Journey() {
 
             {journeyTraces.length > 0 && (
               <div className="mt-6 w-full max-w-md">
-                <p className="font-mono text-[9.5px] tracking-[0.22em] text-faint uppercase">
+                <p className="font-mono text-[9.5px] tracking-[0.22em] text-muted-foreground uppercase">
                   Saved journeys
                 </p>
-                <div className="mt-2 overflow-hidden rounded-xl border border-hair-soft bg-black/40 text-left backdrop-blur-md">
+                <div className="mt-2 overflow-hidden rounded-xl border border-border/60 bg-card text-left backdrop-blur-md">
                   {journeyTraces.map((trace, i) => (
                     <div
                       key={trace.key}
                       className={cn(
                         "flex items-center gap-2 px-3 py-2",
-                        i > 0 && "border-t border-hair-soft",
+                        i > 0 && "border-t border-border/60",
                       )}
                     >
-                      <span className="min-w-0 flex-1 truncate font-mono text-[10.5px] text-ink/85">
+                      <span className="min-w-0 flex-1 truncate font-mono text-[10.5px] text-foreground/85">
                         {traceName(journey, trace.path)}
                       </span>
                       {journey.rules.allowReplay && (
@@ -665,16 +650,15 @@ export function Journey() {
                           Replay
                         </TraceChip>
                       )}
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         aria-label={`Delete saved journey ${traceName(journey, trace.path)}`}
-                        onClick={() =>
-                          persist(saved.filter((t) => t.key !== trace.key))
-                        }
-                        className="px-1.5 font-mono text-[11px] text-faint transition-colors hover:text-ink"
+                        onClick={() => persist(saved.filter((t) => t.key !== trace.key))}
                       >
                         ×
-                      </button>
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -686,11 +670,12 @@ export function Journey() {
                 <p className="display-sm mt-9 max-w-[18ch]">{tip.prompt}</p>
                 <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                   {tip.choices.map((choice) => (
-                    <button
+                    <Button
                       key={choice.to}
                       type="button"
+                      variant="outline"
                       onClick={() => choose(choice.to, choice.label)}
-                      className="group inline-flex items-center gap-2.5 rounded-full border border-hair bg-black/40 px-6 py-3.5 font-mono text-[11.5px] tracking-[0.14em] text-ink/85 uppercase backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-ink/30 hover:text-ink"
+                      className="group max-w-full whitespace-normal text-left"
                     >
                       {choice.label}
                       <svg
@@ -699,7 +684,7 @@ export function Journey() {
                         viewBox="0 0 12 12"
                         fill="none"
                         aria-hidden
-                        className="transition-transform duration-300 group-hover:translate-x-0.5"
+                        className="transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
                       >
                         <path
                           d="M2 6H10M10 6L6.5 2.5M10 6L6.5 9.5"
@@ -709,12 +694,12 @@ export function Journey() {
                           strokeLinejoin="round"
                         />
                       </svg>
-                    </button>
+                    </Button>
                   ))}
                 </div>
-                <p className="mt-7 font-mono text-[10px] leading-relaxed tracking-[0.1em] text-faint">
-                  {path.length} {path.length === 1 ? "beat" : "beats"} walked ·
-                  the glass is on your branch of the tree
+                <p className="mt-7 font-mono text-[10px] leading-relaxed tracking-[0.1em] text-muted-foreground">
+                  {path.length} {path.length === 1 ? "beat" : "beats"} walked · the glass
+                  is on your branch of the tree
                 </p>
               </>
             ) : (
@@ -729,25 +714,25 @@ export function Journey() {
                     transition, rewinds and loops included. */}
                 {recording && recording.events.length > 0 && (
                   <div className="mt-8 w-full max-w-md">
-                    <p className="font-mono text-[9.5px] tracking-[0.22em] text-faint uppercase">
+                    <p className="font-mono text-[9.5px] tracking-[0.22em] text-muted-foreground uppercase">
                       Your walk, recorded
                     </p>
-                    <div className="mt-2 overflow-hidden rounded-xl border border-hair-soft bg-black/40 text-left backdrop-blur-md">
+                    <div className="mt-2 overflow-hidden rounded-xl border border-border/60 bg-card text-left backdrop-blur-md">
                       {recording.events.map((ev, i) => (
                         <div
                           key={`${ev.at}-${i}`}
                           className={cn(
                             "flex items-center gap-3 px-3 py-2",
-                            i > 0 && "border-t border-hair-soft",
+                            i > 0 && "border-t border-border/60",
                           )}
                         >
-                          <span className="w-4 shrink-0 text-center font-mono text-[10px] text-faint">
+                          <span className="w-4 shrink-0 text-center font-mono text-[10px] text-muted-foreground">
                             {i + 1}
                           </span>
-                          <span className="min-w-0 flex-1 truncate font-mono text-[10.5px] text-ink/85">
+                          <span className="min-w-0 flex-1 truncate font-mono text-[10.5px] text-foreground/85">
                             {describeEvent(journey, ev)}
                           </span>
-                          <span className="shrink-0 font-mono text-[9px] tracking-[0.12em] text-faint uppercase">
+                          <span className="shrink-0 font-mono text-[9px] tracking-[0.12em] text-muted-foreground uppercase">
                             {ev.kind}
                           </span>
                         </div>
@@ -760,42 +745,39 @@ export function Journey() {
                   {journey.rules.allowReplay &&
                     recording &&
                     recording.events.length > 1 && (
-                      <button
+                      <Button
                         type="button"
                         onClick={() => setRetracing(true)}
                         disabled={replaying || retracing}
-                        className="inline-flex items-center gap-2.5 rounded-full bg-ink px-6 py-3.5 font-mono text-[11.5px] tracking-[0.14em] text-void uppercase transition-transform duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         Replay every transition
-                      </button>
+                      </Button>
                     )}
-                  <button
+                  <Button
                     type="button"
                     onClick={walkAgain}
-                    className={cn(
-                      "inline-flex items-center gap-2.5 rounded-full px-6 py-3.5 font-mono text-[11.5px] tracking-[0.14em] uppercase transition-all duration-300 hover:-translate-y-0.5",
+                    variant={
                       journey.rules.allowReplay &&
-                        recording &&
-                        recording.events.length > 1
-                        ? "border border-hair bg-black/40 text-ink/85 backdrop-blur-md hover:border-ink/30 hover:text-ink"
-                        : "bg-ink text-void",
-                    )}
+                      recording &&
+                      recording.events.length > 1
+                        ? "outline"
+                        : "default"
+                    }
                   >
                     Walk again
-                  </button>
+                  </Button>
                   {path.length > 1 && journey.rules.allowRewind && (
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
                       onClick={() => rewind(path.length - 2)}
-                      className="inline-flex items-center gap-2.5 rounded-full border border-hair bg-black/40 px-6 py-3.5 font-mono text-[11.5px] tracking-[0.14em] text-ink/85 uppercase backdrop-blur-md transition-colors hover:border-ink/30 hover:text-ink"
                     >
                       One step back
-                    </button>
+                    </Button>
                   )}
                 </div>
-                <p className="mt-7 font-mono text-[10px] leading-relaxed tracking-[0.1em] text-faint">
-                  the walk is circular · every ending leads back into the
-                  journey
+                <p className="mt-7 font-mono text-[10px] leading-relaxed tracking-[0.1em] text-muted-foreground">
+                  the walk is circular · every ending leads back into the journey
                 </p>
               </>
             )}
@@ -805,9 +787,9 @@ export function Journey() {
 
       {/* Replay is a performance, not a lockout: any scroll takes over. */}
       {(replaying || retracing) && (
-        <div className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2.5 rounded-full border border-hair bg-black/75 px-4 py-2 backdrop-blur-xl">
+        <div className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2.5 rounded-full border border-border bg-card px-4 py-2 backdrop-blur-xl">
           <span className="pulse-dot" />
-          <span className="font-mono text-[9.5px] tracking-[0.14em] text-dim uppercase">
+          <span className="font-mono text-[9.5px] tracking-[0.14em] text-muted-foreground uppercase">
             {retracing
               ? "Replaying every transition · scroll to take over"
               : "Replaying your journey · scroll to take over"}
@@ -830,20 +812,15 @@ function TraceChip({
   active?: boolean;
 }) {
   return (
-    <button
+    <Button
       type="button"
+      variant={active ? "secondary" : "outline"}
+      size="sm"
       onClick={onClick}
       disabled={disabled}
-      className={cn(
-        "rounded-full border px-3 py-1.5 font-mono text-[9.5px] tracking-[0.08em] uppercase transition-colors",
-        active
-          ? "border-ink/40 bg-white/[0.1] text-ink"
-          : "border-hair-soft bg-white/[0.03] text-dim hover:border-ink/30 hover:text-ink",
-        disabled &&
-          "cursor-not-allowed opacity-40 hover:border-hair-soft hover:text-dim",
-      )}
+      aria-pressed={active}
     >
       {children}
-    </button>
+    </Button>
   );
 }

@@ -1,5 +1,10 @@
 import { stage } from "./stage-store";
-import { KEYFRAMES, getTrack, sampleKeyframes, type Keyframe } from "@/components/stage/choreography";
+import {
+  KEYFRAMES,
+  getTrack,
+  sampleKeyframes,
+  type Keyframe,
+} from "@/components/stage/choreography";
 
 /**
  * Phase 0 of the list-to-tree migration: the golden harness.
@@ -29,12 +34,14 @@ export type Golden = {
 const round = (n: number) => Math.round(n * 1e5) / 1e5;
 
 export async function captureGolden(steps = 21): Promise<Golden> {
-  const lenis = (window as unknown as { __lenis?: { scrollTo: (y: number, o: { immediate: boolean }) => void } }).__lenis;
+  const lenis = (
+    window as unknown as {
+      __lenis?: { scrollTo: (y: number, o: { immediate: boolean }) => void };
+    }
+  ).__lenis;
   const limit = document.documentElement.scrollHeight - window.innerHeight;
 
-  const centres = Array.from(
-    document.querySelectorAll<HTMLElement>("[data-beat]"),
-  )
+  const centres = Array.from(document.querySelectorAll<HTMLElement>("[data-beat]"))
     .sort((a, b) => Number(a.dataset.beat ?? 0) - Number(b.dataset.beat ?? 0))
     .map((el) => {
       const box = el.getBoundingClientRect();
@@ -67,7 +74,12 @@ export async function captureGolden(steps = 21): Promise<Golden> {
     for (const key of Object.keys(k) as Array<keyof Keyframe>) {
       values[key] = round(k[key]);
     }
-    samples.push({ f: round(f), scroll: Math.round(scroll), beat: round(stage.beat), values });
+    samples.push({
+      f: round(f),
+      scroll: Math.round(scroll),
+      beat: round(stage.beat),
+      values,
+    });
   }
 
   if (lenis) lenis.scrollTo(0, { immediate: true });

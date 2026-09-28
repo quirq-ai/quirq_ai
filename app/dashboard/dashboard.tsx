@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   compactCount,
   formatDuration,
@@ -22,7 +15,9 @@ import {
   type TimelineEvent,
 } from "@/lib/quirq/folder";
 import { formatAgo, formatBytes, secondsSince } from "@/lib/quirq/instance";
-import { Beat, cn } from "@/components/ui/primitives";
+import { Beat } from "@/components/ui/primitives";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { beatsResized } from "@/lib/beat-registry";
 import { CalendarFilter, Columns, FolderMap } from "./charts";
 
@@ -39,13 +34,7 @@ type FolderState =
   | { status: "ready"; payload: FolderPayload; ms: number }
   | { status: "failed"; reason: string };
 
-const TAB_IDS = [
-  "overview",
-  "folder",
-  "presence",
-  "telemetry",
-  "timeline",
-] as const;
+const TAB_IDS = ["overview", "folder", "presence", "telemetry", "timeline"] as const;
 
 type TabId = (typeof TAB_IDS)[number];
 
@@ -89,12 +78,12 @@ function Panel({
   return (
     <section
       className={cn(
-        "min-w-0 rounded-2xl border border-hair bg-black/70",
+        "min-w-0 rounded-xl border border-border bg-card",
         scrolls ? "overflow-visible" : "overflow-hidden",
         className,
       )}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-hair-soft px-5 py-3.5 sm:px-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-5 py-3.5 sm:px-6">
         <h2 className="label">{title}</h2>
         {aside}
       </div>
@@ -105,35 +94,21 @@ function Panel({
 
 function Caption({ children }: { children: ReactNode }) {
   return (
-    <p className="border-t border-hair-soft px-5 py-4 font-mono text-[10.5px] leading-relaxed text-dim sm:px-6">
+    <p className="border-t border-border/60 px-5 py-4 font-mono text-[10.5px] leading-relaxed text-muted-foreground sm:px-6">
       {children}
     </p>
   );
 }
 
-const PILL =
-  "rounded-full px-4 py-2 font-mono text-[10.5px] tracking-[0.14em] uppercase transition-colors";
-
-const GHOST_PILL =
-  "border border-hair text-dim hover:border-ink/30 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-hair disabled:hover:text-dim";
-
-function Tile({
-  label,
-  value,
-  note,
-}: {
-  label: string;
-  value: string;
-  note?: string;
-}) {
+function Tile({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
-    <div className="bg-black/80 px-5 py-6 text-left">
+    <div className="bg-card px-5 py-6 text-left">
       <p className="label text-[9.5px]">{label}</p>
-      <p className="numeric mt-3.5 font-mark text-[clamp(21px,2.4vw,30px)] font-semibold text-ink tabular-nums">
+      <p className="numeric mt-3.5 font-mark text-[clamp(21px,2.4vw,30px)] font-semibold text-foreground tabular-nums">
         {value}
       </p>
       {note && (
-        <p className="mt-2.5 font-mono text-[10px] leading-relaxed text-faint">
+        <p className="mt-2.5 font-mono text-[10px] leading-relaxed text-muted-foreground">
           {note}
         </p>
       )}
@@ -141,24 +116,16 @@ function Tile({
   );
 }
 
-function Field({
-  term,
-  value,
-  tone,
-}: {
-  term: string;
-  value: string;
-  tone?: "warn";
-}) {
+function Field({ term, value, tone }: { term: string; value: string; tone?: "warn" }) {
   return (
     <div className="min-w-0">
-      <dt className="font-mono text-[9.5px] tracking-[0.14em] text-faint uppercase">
+      <dt className="font-mono text-[9.5px] tracking-[0.14em] text-muted-foreground uppercase">
         {term}
       </dt>
       <dd
         className={cn(
           "numeric mt-1 font-mono text-[11px] break-words tabular-nums",
-          tone === "warn" ? "text-spec-orange" : "text-ink/80",
+          tone === "warn" ? "text-spec-orange" : "text-foreground/80",
         )}
       >
         {value}
@@ -180,7 +147,7 @@ function Th({
     <th
       scope="col"
       className={cn(
-        "px-4 py-3 font-mono text-[9.5px] font-medium tracking-[0.14em] text-faint uppercase whitespace-nowrap",
+        "px-4 py-3 font-mono text-[9.5px] font-medium tracking-[0.14em] text-muted-foreground uppercase whitespace-nowrap",
         align === "right" ? "text-right" : "text-left",
         className,
       )}
@@ -198,10 +165,10 @@ function ShareBar({ share }: { share: number }) {
   return (
     <span
       aria-hidden
-      className="mt-2 block h-1 w-full overflow-hidden rounded-full bg-white/6"
+      className="mt-2 block h-1 w-full overflow-hidden rounded-full bg-muted"
     >
       <span
-        className="block h-full rounded-full bg-white/30"
+        className="block h-full rounded-full bg-muted-foreground/40"
         style={{ width: `${(Math.min(Math.max(share, 0), 1) * 100).toFixed(2)}%` }}
       />
     </span>
@@ -233,8 +200,7 @@ function TabBar({
     const current = tabs.findIndex((t) => t.id === active);
     let next = -1;
     if (event.key === "ArrowRight") next = (current + 1) % tabs.length;
-    else if (event.key === "ArrowLeft")
-      next = (current - 1 + tabs.length) % tabs.length;
+    else if (event.key === "ArrowLeft") next = (current - 1 + tabs.length) % tabs.length;
     else if (event.key === "Home") next = 0;
     else if (event.key === "End") next = tabs.length - 1;
     if (next === -1) return;
@@ -248,13 +214,14 @@ function TabBar({
       role="tablist"
       aria-label="Dashboard sections"
       onKeyDown={onKeyDown}
-      className="flex overflow-x-auto border-b border-hair-soft"
+      className="flex overflow-x-auto border-b border-border/60"
     >
       {tabs.map((tab, i) => {
         const selected = tab.id === active;
         return (
-          <button
+          <Button
             key={tab.id}
+            variant="ghost"
             ref={(el) => {
               refs.current[i] = el;
             }}
@@ -266,10 +233,10 @@ function TabBar({
             tabIndex={selected ? 0 : -1}
             onClick={() => onSelect(tab.id)}
             className={cn(
-              "-mb-px shrink-0 border-b-2 px-4 py-2.5 font-mono text-[10.5px] tracking-[0.14em] uppercase transition-colors",
+              "-mb-px shrink-0 rounded-none border-x-0 border-t-0 border-b-2 px-4 focus-visible:ring-inset focus-visible:ring-offset-0",
               selected
-                ? "border-ink text-ink"
-                : "border-transparent text-dim hover:text-ink",
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
             {tab.label}
@@ -277,13 +244,13 @@ function TabBar({
               <span
                 className={cn(
                   "numeric ml-2 tabular-nums",
-                  selected ? "text-dim" : "text-faint",
+                  selected ? "text-muted-foreground" : "text-muted-foreground",
                 )}
               >
                 {compactCount(tab.count)}
               </span>
             )}
-          </button>
+          </Button>
         );
       })}
     </div>
@@ -341,6 +308,8 @@ export function Dashboard() {
   }, []);
 
   useEffect(() => {
+    // Read the browser-facing folder API after hydration; refresh uses the same loader.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [load]);
 
@@ -367,9 +336,7 @@ export function Dashboard() {
     window.history.replaceState(
       null,
       "",
-      id === "overview"
-        ? window.location.pathname + window.location.search
-        : `#${id}`,
+      id === "overview" ? window.location.pathname + window.location.search : `#${id}`,
     );
   }, []);
 
@@ -415,9 +382,7 @@ export function Dashboard() {
 
   const days = useMemo(
     () =>
-      Object.entries(payload?.stats?.by_day ?? {}).sort(([a], [b]) =>
-        a.localeCompare(b),
-      ),
+      Object.entries(payload?.stats?.by_day ?? {}).sort(([a], [b]) => a.localeCompare(b)),
     [payload],
   );
 
@@ -432,8 +397,7 @@ export function Dashboard() {
       stats: payload.stats?.by_session[id] ?? null,
       augment: payload.sessions_augment?.sessions[id] ?? null,
     }));
-    const lastOf = (row: (typeof rows)[number]) =>
-      row.augment?.lastActivity ?? 0;
+    const lastOf = (row: (typeof rows)[number]) => row.augment?.lastActivity ?? 0;
     return rows.sort((a, b) => lastOf(b) - lastOf(a));
   }, [payload]);
 
@@ -482,10 +446,7 @@ export function Dashboard() {
     return events;
   }, [payload, timelineDay, timelineTypes]);
 
-  const timelineRows = useMemo(
-    () => timelineMatches.slice(0, 60),
-    [timelineMatches],
-  );
+  const timelineRows = useMemo(() => timelineMatches.slice(0, 60), [timelineMatches]);
 
   const outputByDay = useMemo(
     () =>
@@ -530,11 +491,11 @@ export function Dashboard() {
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
         <div className="min-w-0">
           <h1 className="label">Dashboard</h1>
-          <p className="mt-2 font-mark text-[24px] font-semibold text-ink">
+          <p className="mt-2 font-mark text-[24px] font-semibold text-foreground">
             .quirq
           </p>
           {payload && present && (
-            <p className="mt-1 font-mono text-[10.5px] break-all text-faint">
+            <p className="mt-1 font-mono text-[10.5px] break-all text-muted-foreground">
               {payload.root.path}
             </p>
           )}
@@ -542,7 +503,7 @@ export function Dashboard() {
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
           <span
             role="status"
-            className="font-mono text-[10.5px] leading-relaxed text-faint"
+            className="font-mono text-[10.5px] leading-relaxed text-muted-foreground"
           >
             {folder.status === "loading" && "Reading…"}
             {folder.status === "failed" && `Could not read: ${folder.reason}`}
@@ -551,14 +512,14 @@ export function Dashboard() {
                 ? `read in ${Math.max(folder.ms, 0).toFixed(0)} ms · ${isoClock(payload!.generated_at)} UTC`
                 : "no folder")}
           </span>
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={() => void load()}
             disabled={folder.status === "loading"}
-            className={cn(PILL, GHOST_PILL)}
           >
             Refresh
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -575,8 +536,8 @@ export function Dashboard() {
           {/* ---------------- overview ---------------- */}
 
           <TabPanel id="overview" active={tab}>
-            <div className="overflow-hidden rounded-2xl border border-hair bg-black/40">
-              <div className="grid grid-cols-2 gap-px bg-white/6 md:grid-cols-3 xl:grid-cols-6">
+            <div className="overflow-hidden rounded-xl border border-border bg-card">
+              <div className="grid grid-cols-2 gap-px bg-muted md:grid-cols-3 xl:grid-cols-6">
                 <Tile
                   label="On disk"
                   value={formatBytes(payload.totals.bytes)}
@@ -587,9 +548,7 @@ export function Dashboard() {
                   value={String(openSessions.length)}
                   note={
                     openSessions.length > 0
-                      ? [...new Set(openSessions.map((s) => s.agent))].join(
-                          " · ",
-                        )
+                      ? [...new Set(openSessions.map((s) => s.agent))].join(" · ")
                       : undefined
                   }
                 />
@@ -597,9 +556,7 @@ export function Dashboard() {
                   label="Tokens · 7d"
                   value={
                     rolling7
-                      ? compactCount(
-                          rolling7.tokens.input + rolling7.tokens.output,
-                        )
+                      ? compactCount(rolling7.tokens.input + rolling7.tokens.output)
                       : "n/a"
                   }
                   note={
@@ -625,8 +582,7 @@ export function Dashboard() {
                   label="Timeline"
                   value={String(payload.timeline?.total ?? 0)}
                   note={
-                    payload.timeline &&
-                    Object.keys(payload.timeline.by_type).length > 0
+                    payload.timeline && Object.keys(payload.timeline.by_type).length > 0
                       ? Object.entries(payload.timeline.by_type)
                           .map(([type, count]) => `${count} ${type}`)
                           .join(" · ")
@@ -642,7 +598,7 @@ export function Dashboard() {
                   <Panel
                     title="Output tokens · by day"
                     aside={
-                      <span className="font-mono text-[10px] text-faint">
+                      <span className="font-mono text-[10px] text-muted-foreground">
                         click a day to open it in the timeline
                       </span>
                     }
@@ -653,9 +609,7 @@ export function Dashboard() {
                         ariaLabel="Output tokens by day"
                         unit="output tokens"
                         showValues
-                        selectedIndex={days.findIndex(
-                          ([day]) => day === timelineDay,
-                        )}
+                        selectedIndex={days.findIndex(([day]) => day === timelineDay)}
                         onSelect={(i) => {
                           const day = days[i]?.[0];
                           if (!day) return;
@@ -674,9 +628,8 @@ export function Dashboard() {
                   <Panel
                     title="Timeline events · by hour · UTC"
                     aside={
-                      <span className="numeric font-mono text-[11px] text-dim tabular-nums">
-                        last {servedEvents}{" "}
-                        {plural(servedEvents, "event", "events")}
+                      <span className="numeric font-mono text-[11px] text-muted-foreground tabular-nums">
+                        last {servedEvents} {plural(servedEvents, "event", "events")}
                       </span>
                     }
                   >
@@ -737,12 +690,10 @@ export function Dashboard() {
                 </div>
               )}
 
-              {sessionRows.length > 0 && (
-                <SessionsTable rows={sessionRows} now={now} />
-              )}
+              {sessionRows.length > 0 && <SessionsTable rows={sessionRows} now={now} />}
 
               {days.length === 0 && sessionRows.length === 0 && (
-                <p className="font-mono text-[10.5px] leading-relaxed text-faint">
+                <p className="font-mono text-[10.5px] leading-relaxed text-muted-foreground">
                   stats.json is present and empty.
                 </p>
               )}
@@ -759,13 +710,14 @@ export function Dashboard() {
                     title="Calendar"
                     aside={
                       timelineDay && (
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
                           onClick={() => setTimelineDay(null)}
-                          className="font-mono text-[10px] tracking-[0.1em] text-dim uppercase transition-colors hover:text-ink"
+                          aria-label={`Clear date filter: ${timelineDay}`}
                         >
                           {timelineDay} ✕
-                        </button>
+                        </Button>
                       )
                     }
                   >
@@ -798,7 +750,7 @@ export function Dashboard() {
                   now={now}
                 />
               ) : (
-                <p className="font-mono text-[10.5px] leading-relaxed text-faint">
+                <p className="font-mono text-[10.5px] leading-relaxed text-muted-foreground">
                   timeline.jsonl has no events.
                 </p>
               )}
@@ -816,14 +768,14 @@ export function Dashboard() {
 
 function MissingFolder({ path }: { path: string }) {
   return (
-    <div className="mt-8 max-w-2xl overflow-hidden rounded-2xl border border-hair bg-black/70 px-5 py-9 sm:px-6">
+    <div className="mt-8 max-w-2xl overflow-hidden rounded-xl border border-border bg-card px-5 py-9 sm:px-6">
       <p className="label text-[9.5px]">No folder to read</p>
       {path && (
-        <p className="mt-4 font-mono text-[11px] leading-relaxed break-all text-dim">
+        <p className="mt-4 font-mono text-[11px] leading-relaxed break-all text-muted-foreground">
           {path}
         </p>
       )}
-      <p className="mt-3 max-w-[62ch] font-mono text-[10.5px] leading-relaxed text-faint">
+      <p className="mt-3 max-w-[62ch] font-mono text-[10.5px] leading-relaxed text-muted-foreground">
         QUIRQ_DIR selects another workspace&rsquo;s .quirq.
       </p>
     </div>
@@ -863,13 +815,13 @@ function TreePanel({
     <Panel
       title=".quirq"
       aside={
-        <span className="numeric font-mono text-[11px] text-dim tabular-nums">
+        <span className="numeric font-mono text-[11px] text-muted-foreground tabular-nums">
           {formatBytes(totals.bytes)} · {totals.files}{" "}
           {plural(totals.files, "file", "files")}
         </span>
       }
     >
-      <div className="border-b border-hair-soft px-5 py-5 sm:px-6">
+      <div className="border-b border-border/60 px-5 py-5 sm:px-6">
         <FolderMap
           tree={tree}
           totalBytes={totals.bytes}
@@ -877,13 +829,15 @@ function TreePanel({
           onSelect={setSelectedPath}
           footer={
             selectedPath && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => setSelectedPath(null)}
-                className="truncate font-mono text-[9.5px] tracking-[0.08em] text-dim uppercase transition-colors hover:text-ink"
+                aria-label={`Clear selected file: ${selectedPath}`}
+                className="max-w-full justify-start"
               >
-                {selectedPath} ✕
-              </button>
+                <span className="truncate">{selectedPath} ✕</span>
+              </Button>
             )
           }
         />
@@ -895,19 +849,16 @@ function TreePanel({
             key={node.path}
             id={`fnode-${node.path}`}
             className={cn(
-              "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 border-b border-hair-soft py-2.5 last:border-b-0 sm:gap-x-6",
-              selectedPath === node.path && "bg-white/[0.05]",
+              "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 border-b border-border/60 py-2.5 last:border-b-0 sm:gap-x-6",
+              selectedPath === node.path && "bg-muted",
             )}
           >
-            <span
-              className="min-w-0"
-              style={{ paddingLeft: `${node.depth * 18}px` }}
-            >
+            <span className="min-w-0" style={{ paddingLeft: `${node.depth * 18}px` }}>
               <span className="flex min-w-0 items-baseline gap-3">
                 <span
                   className={cn(
                     "truncate font-mono text-[12.5px]",
-                    node.kind === "directory" ? "text-ink" : "text-ink/85",
+                    node.kind === "directory" ? "text-foreground" : "text-foreground/85",
                   )}
                 >
                   {node.name}
@@ -923,11 +874,11 @@ function TreePanel({
                 <ShareBar share={node.bytes / maxFileBytes} />
               )}
             </span>
-            <span className="numeric text-right font-mono text-[11px] text-dim tabular-nums">
+            <span className="numeric text-right font-mono text-[11px] text-muted-foreground tabular-nums">
               {node.kind === "directory"
                 ? `${node.entries} ${plural(node.entries, "entry", "entries")} · ${formatBytes(node.bytes)}`
                 : formatBytes(node.bytes)}
-              <span className="mt-1 block text-faint">
+              <span className="mt-1 block text-muted-foreground">
                 {formatAgo(node.modified_at, now)}
               </span>
             </span>
@@ -952,41 +903,35 @@ function TreePanel({
  * Presence and configuration
  * ------------------------------------------------------------------ */
 
-function SessionLine({
-  session,
-  now,
-}: {
-  session: OpenSession;
-  now: number;
-}) {
+function SessionLine({ session, now }: { session: OpenSession; now: number }) {
   const beat = secondsSince(session.last_activity_at, now);
   const fresh = beat !== null && beat < 120;
 
   return (
-    <li className="flex items-start gap-3 border-b border-hair-soft py-4 last:border-b-0">
+    <li className="flex items-start gap-3 border-b border-border/60 py-4 last:border-b-0">
       {fresh ? (
         <span className="pulse-dot mt-1.5 shrink-0" />
       ) : (
         <span
           aria-hidden
-          className="mt-1.5 h-[7px] w-[7px] shrink-0 rounded-full bg-dim"
+          className="mt-1.5 h-[7px] w-[7px] shrink-0 rounded-full bg-muted-foreground"
         />
       )}
       <span className="min-w-0">
         <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span className="font-mono text-[12.5px] text-ink">
+          <span className="font-mono text-[12.5px] text-foreground">
             {shortId(session.session_id)}
           </span>
-          <span className="font-mono text-[10.5px] text-dim">
+          <span className="font-mono text-[10.5px] text-muted-foreground">
             {session.agent} · {session.runtime}
           </span>
           {session.project_id && (
-            <span className="rounded-full border border-hair px-2 py-0.5 font-mono text-[9px] tracking-[0.1em] text-dim uppercase">
+            <span className="rounded-full border border-border px-2 py-0.5 font-mono text-[9px] tracking-[0.1em] text-muted-foreground uppercase">
               {session.project_id}
             </span>
           )}
         </span>
-        <span className="mt-1 block font-mono text-[10.5px] leading-relaxed text-faint">
+        <span className="mt-1 block font-mono text-[10.5px] leading-relaxed text-muted-foreground">
           opened {formatAgo(session.opened_at, now)} · last beat{" "}
           {formatAgo(session.last_activity_at, now)}
           {!fresh && " · gone quiet"}
@@ -1012,7 +957,7 @@ function PresencePanel({
       title="Open sessions"
       aside={
         workspace && (
-          <span className="numeric font-mono text-[11px] text-dim tabular-nums">
+          <span className="numeric font-mono text-[11px] text-muted-foreground tabular-nums">
             snapshot {formatAgo(workspace.updated_at, now)}
           </span>
         )
@@ -1021,23 +966,18 @@ function PresencePanel({
       {open.length > 0 ? (
         <ul className="px-5 py-1 sm:px-6">
           {open.map((session) => (
-            <SessionLine
-              key={session.session_id}
-              session={session}
-              now={now}
-            />
+            <SessionLine key={session.session_id} session={session} now={now} />
           ))}
         </ul>
       ) : (
-        <p className="px-5 py-6 font-mono text-[11px] text-dim sm:px-6">
+        <p className="px-5 py-6 font-mono text-[11px] text-muted-foreground sm:px-6">
           0 open
-          {workspace &&
-            ` · last heartbeat ${formatAgo(workspace.updated_at, now)}`}
+          {workspace && ` · last heartbeat ${formatAgo(workspace.updated_at, now)}`}
         </p>
       )}
 
       {projects.length > 0 && (
-        <div className="border-t border-hair-soft px-5 py-4 sm:px-6">
+        <div className="border-t border-border/60 px-5 py-4 sm:px-6">
           <p className="label text-[9.5px]">Per project</p>
           <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3">
             {projects.map(({ project_id, snapshot }) => (
@@ -1054,13 +994,7 @@ function PresencePanel({
   );
 }
 
-function ConfigPanel({
-  payload,
-  now,
-}: {
-  payload: FolderPayload;
-  now: number;
-}) {
+function ConfigPanel({ payload, now }: { payload: FolderPayload; now: number }) {
   const env = payload.runtime_env ?? {};
 
   return (
@@ -1084,10 +1018,7 @@ function ConfigPanel({
         )}
         {payload.workspace && (
           <>
-            <Field
-              term="Projects root"
-              value={payload.workspace.projects_root}
-            />
+            <Field term="Projects root" value={payload.workspace.projects_root} />
             <Field
               term="Projects"
               value={
@@ -1109,7 +1040,7 @@ function CapabilitiesPanel({ xo }: { xo: NonNullable<FolderPayload["xo"]> }) {
       title="Capabilities · xo.json"
       aside={
         xo.agent && (
-          <span className="font-mono text-[11px] text-dim">
+          <span className="font-mono text-[11px] text-muted-foreground">
             agent {xo.agent}
           </span>
         )
@@ -1117,34 +1048,27 @@ function CapabilitiesPanel({ xo }: { xo: NonNullable<FolderPayload["xo"]> }) {
     >
       <div className="px-5 py-5 sm:px-6">
         {xo.default_model && (
-          <p className="font-mono text-[10.5px] leading-relaxed text-faint">
+          <p className="font-mono text-[10.5px] leading-relaxed text-muted-foreground">
             default model{" "}
-            <span className="text-dim">{xo.default_model}</span>
+            <span className="text-muted-foreground">{xo.default_model}</span>
             {xo.models.length > 0 &&
               ` · ${xo.models.map((m) => `${m.id} ${m.status}`).join(" · ")}`}
           </p>
         )}
-        <ul
-          className={cn(
-            "flex flex-wrap gap-2",
-            xo.default_model ? "mt-4" : undefined,
-          )}
-        >
+        <ul className={cn("flex flex-wrap gap-2", xo.default_model ? "mt-4" : undefined)}>
           {xo.toggles.map((toggle) => (
             <li
               key={toggle.path}
               className={cn(
                 "rounded-full border px-2.5 py-1 font-mono text-[9.5px] tracking-[0.06em]",
                 toggle.enabled
-                  ? "border-ink/25 text-ink/85"
-                  : "border-hair text-faint line-through decoration-ink/40",
+                  ? "border-foreground/25 text-foreground/85"
+                  : "border-border text-muted-foreground line-through decoration-ink/40",
               )}
             >
               {toggle.path}
               {/* The strike is a visual channel; state still has to be text. */}
-              <span className="sr-only">
-                {toggle.enabled ? " on" : " off"}
-              </span>
+              <span className="sr-only">{toggle.enabled ? " on" : " off"}</span>
             </li>
           ))}
         </ul>
@@ -1174,11 +1098,11 @@ function DaysPanel({
       >
         <table className="w-full min-w-[760px] border-collapse text-left">
           <caption className="sr-only">
-            Per-day telemetry from stats.json: messages, tool calls, tokens in
-            and out, cache traffic and response latency.
+            Per-day telemetry from stats.json: messages, tool calls, tokens in and out,
+            cache traffic and response latency.
           </caption>
           <thead>
-            <tr className="border-b border-hair bg-white/[0.03]">
+            <tr className="border-b border-border bg-muted">
               <Th className="w-[26%]">Day</Th>
               <Th align="right">Messages</Th>
               <Th align="right">Tool calls</Th>
@@ -1192,34 +1116,32 @@ function DaysPanel({
             {days.map(([day, stat]) => {
               const latency = stat.latency;
               const avg =
-                latency && latency.count > 0
-                  ? latency.sum_ms / latency.count
-                  : null;
+                latency && latency.count > 0 ? latency.sum_ms / latency.count : null;
               return (
-                <tr key={day} className="border-b border-hair-soft last:border-b-0">
+                <tr key={day} className="border-b border-border/60 last:border-b-0">
                   <th scope="row" className="px-4 py-3 text-left font-normal">
-                    <span className="font-mono text-[12px] text-ink/90">
+                    <span className="font-mono text-[12px] text-foreground/90">
                       {day}
                     </span>
                     <ShareBar share={(stat.tokens?.output ?? 0) / maxOut} />
                   </th>
-                  <td className={cn(CELL, "numeric text-right text-ink/80")}>
+                  <td className={cn(CELL, "numeric text-right text-foreground/80")}>
                     {stat.messages?.total ?? 0}
                   </td>
-                  <td className={cn(CELL, "numeric text-right text-ink/80")}>
+                  <td className={cn(CELL, "numeric text-right text-foreground/80")}>
                     {stat.messages?.toolCalls ?? 0}
                   </td>
-                  <td className={cn(CELL, "numeric text-right text-ink/80")}>
+                  <td className={cn(CELL, "numeric text-right text-foreground/80")}>
                     {compactCount(stat.tokens?.input ?? 0)}
                   </td>
-                  <td className={cn(CELL, "numeric text-right text-ink")}>
+                  <td className={cn(CELL, "numeric text-right text-foreground")}>
                     {compactCount(stat.tokens?.output ?? 0)}
                   </td>
-                  <td className={cn(CELL, "numeric text-right text-dim")}>
+                  <td className={cn(CELL, "numeric text-right text-muted-foreground")}>
                     {compactCount(stat.tokens?.cache_read ?? 0)} ·{" "}
                     {compactCount(stat.tokens?.cache_write ?? 0)}
                   </td>
-                  <td className={cn(CELL, "numeric text-right text-dim")}>
+                  <td className={cn(CELL, "numeric text-right text-muted-foreground")}>
                     {avg === null
                       ? "n/a"
                       : `${(avg / 1000).toFixed(1)}s · ${((stat.latency?.max_ms ?? 0) / 1000).toFixed(1)}s`}
@@ -1234,22 +1156,14 @@ function DaysPanel({
   );
 }
 
-function ByModelPanel({
-  window,
-  label,
-}: {
-  window: StatsWindow;
-  label: string;
-}) {
-  const rows = Object.entries(window.by_model).sort(
-    (a, b) => b[1].output - a[1].output,
-  );
+function ByModelPanel({ window, label }: { window: StatsWindow; label: string }) {
+  const rows = Object.entries(window.by_model).sort((a, b) => b[1].output - a[1].output);
   const max = Math.max(1, ...rows.map(([, t]) => t.output));
 
   return (
     <Panel title={`By model · ${label}`}>
       {rows.length === 0 ? (
-        <p className="px-5 py-6 font-mono text-[11px] text-dim sm:px-6">
+        <p className="px-5 py-6 font-mono text-[11px] text-muted-foreground sm:px-6">
           no tokens in this window
         </p>
       ) : (
@@ -1257,20 +1171,20 @@ function ByModelPanel({
           {rows.map(([model, tokens], i) => (
             <li
               key={model}
-              className="grid grid-cols-[auto_1fr_auto] items-center gap-x-4 border-b border-hair-soft py-4 last:border-b-0 sm:gap-x-6"
+              className="grid grid-cols-[auto_1fr_auto] items-center gap-x-4 border-b border-border/60 py-4 last:border-b-0 sm:gap-x-6"
             >
-              <span className="font-mono text-[11px] text-faint">
+              <span className="font-mono text-[11px] text-muted-foreground">
                 {pad(i + 1)}
               </span>
               <span className="min-w-0">
-                <span className="block truncate font-mono text-[12.5px] text-ink">
+                <span className="block truncate font-mono text-[12.5px] text-foreground">
                   {model}
                 </span>
                 <ShareBar share={tokens.output / max} />
               </span>
-              <span className="numeric text-right font-mono text-[11px] text-dim tabular-nums">
+              <span className="numeric text-right font-mono text-[11px] text-muted-foreground tabular-nums">
                 {compactCount(tokens.output)} out
-                <span className="mt-1 block text-faint">
+                <span className="mt-1 block text-muted-foreground">
                   {compactCount(tokens.input)} in
                 </span>
               </span>
@@ -1282,20 +1196,14 @@ function ByModelPanel({
   );
 }
 
-function ByToolPanel({
-  window,
-  label,
-}: {
-  window: StatsWindow;
-  label: string;
-}) {
+function ByToolPanel({ window, label }: { window: StatsWindow; label: string }) {
   const rows = Object.entries(window.by_tool).sort((a, b) => b[1] - a[1]);
   const max = Math.max(1, ...rows.map(([, count]) => count));
 
   return (
     <Panel title={`By tool · ${label}`}>
       {rows.length === 0 ? (
-        <p className="px-5 py-6 font-mono text-[11px] text-dim sm:px-6">
+        <p className="px-5 py-6 font-mono text-[11px] text-muted-foreground sm:px-6">
           no tool calls in this window
         </p>
       ) : (
@@ -1303,18 +1211,18 @@ function ByToolPanel({
           {rows.map(([tool, count], i) => (
             <li
               key={tool}
-              className="grid grid-cols-[auto_1fr_auto] items-center gap-x-4 border-b border-hair-soft py-4 last:border-b-0 sm:gap-x-6"
+              className="grid grid-cols-[auto_1fr_auto] items-center gap-x-4 border-b border-border/60 py-4 last:border-b-0 sm:gap-x-6"
             >
-              <span className="font-mono text-[11px] text-faint">
+              <span className="font-mono text-[11px] text-muted-foreground">
                 {pad(i + 1)}
               </span>
               <span className="min-w-0">
-                <span className="block truncate font-mono text-[12.5px] text-ink">
+                <span className="block truncate font-mono text-[12.5px] text-foreground">
                   {tool}
                 </span>
                 <ShareBar share={count / max} />
               </span>
-              <span className="numeric text-right font-mono text-[11px] text-dim tabular-nums">
+              <span className="numeric text-right font-mono text-[11px] text-muted-foreground tabular-nums">
                 {count} {plural(count, "call", "calls")}
               </span>
             </li>
@@ -1340,7 +1248,7 @@ function SessionsTable({
     <section className="min-w-0">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h2 className="label">Sessions</h2>
-        <span className="numeric font-mono text-[11px] text-dim tabular-nums">
+        <span className="numeric font-mono text-[11px] text-muted-foreground tabular-nums">
           {rows.length} {plural(rows.length, "row", "rows")}
         </span>
       </div>
@@ -1349,15 +1257,15 @@ function SessionsTable({
         tabIndex={0}
         role="region"
         aria-label="Sessions"
-        className="mt-4 overflow-x-auto rounded-2xl border border-hair bg-black/70"
+        className="mt-4 overflow-x-auto rounded-xl border border-border bg-card"
       >
         <table className="w-full min-w-[880px] border-collapse text-left">
           <caption className="sr-only">
-            Every session the watcher has recorded, with message counts, tool
-            calls, token totals, duration and last activity.
+            Every session the watcher has recorded, with message counts, tool calls, token
+            totals, duration and last activity.
           </caption>
           <thead>
-            <tr className="border-b border-hair bg-white/[0.03]">
+            <tr className="border-b border-border bg-muted">
               <Th className="w-[30%]">Session</Th>
               <Th>Model</Th>
               <Th align="right">Msgs</Th>
@@ -1375,40 +1283,38 @@ function SessionsTable({
               return (
                 <tr
                   key={row.id}
-                  className="border-b border-hair-soft last:border-b-0 hover:bg-white/[0.02]"
+                  className="border-b border-border/60 last:border-b-0 hover:bg-muted/60"
                 >
                   <th scope="row" className="px-4 py-3 text-left font-normal">
-                    <span className="block font-mono text-[12px] text-ink">
+                    <span className="block font-mono text-[12px] text-foreground">
                       {shortId(row.id)}
                     </span>
                     {files.length > 0 && (
-                      <span className="mt-1 block max-w-[34ch] truncate font-mono text-[10px] text-faint">
+                      <span className="mt-1 block max-w-[34ch] truncate font-mono text-[10px] text-muted-foreground">
                         {files.join(", ")}
                       </span>
                     )}
                   </th>
-                  <td className={cn(CELL, "text-dim")}>
+                  <td className={cn(CELL, "text-muted-foreground")}>
                     {models.length > 0 ? models.join(", ") : "n/a"}
                   </td>
-                  <td className={cn(CELL, "numeric text-right text-ink/80")}>
+                  <td className={cn(CELL, "numeric text-right text-foreground/80")}>
                     {row.augment?.messageCount ?? "n/a"}
                   </td>
-                  <td className={cn(CELL, "numeric text-right text-ink/80")}>
+                  <td className={cn(CELL, "numeric text-right text-foreground/80")}>
                     {row.augment?.toolCallCount ?? "n/a"}
                   </td>
-                  <td className={cn(CELL, "numeric text-right text-ink/80")}>
+                  <td className={cn(CELL, "numeric text-right text-foreground/80")}>
                     {row.stats ? compactCount(row.stats.tokens.input) : "n/a"}
                   </td>
-                  <td className={cn(CELL, "numeric text-right text-ink")}>
+                  <td className={cn(CELL, "numeric text-right text-foreground")}>
                     {row.stats ? compactCount(row.stats.tokens.output) : "n/a"}
                   </td>
-                  <td className={cn(CELL, "numeric text-right text-dim")}>
+                  <td className={cn(CELL, "numeric text-right text-muted-foreground")}>
                     {row.stats ? formatDuration(row.stats.duration_ms) : "n/a"}
                   </td>
-                  <td className={cn(CELL, "numeric text-right text-dim")}>
-                    {row.augment
-                      ? agoFromMs(row.augment.lastActivity, now)
-                      : "n/a"}
+                  <td className={cn(CELL, "numeric text-right text-muted-foreground")}>
+                    {row.augment ? agoFromMs(row.augment.lastActivity, now) : "n/a"}
                   </td>
                 </tr>
               );
@@ -1440,7 +1346,7 @@ function ByTypePanel({
     <Panel
       title="By type"
       aside={
-        <span className="font-mono text-[10px] text-faint">
+        <span className="font-mono text-[10px] text-muted-foreground">
           click to filter the feed
         </span>
       }
@@ -1449,53 +1355,51 @@ function ByTypePanel({
         {rows.map(([type, count], i) => {
           const pressed = selected.has(type);
           return (
-            <li
-              key={type}
-              className="border-b border-hair-soft last:border-b-0"
-            >
-              <button
+            <li key={type} className="border-b border-border/60 last:border-b-0">
+              <Button
                 type="button"
+                variant="ghost"
                 aria-pressed={pressed}
                 onClick={() => onToggle(type)}
                 className={cn(
-                  "grid w-full cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-x-4 py-4 text-left transition-colors sm:gap-x-6",
-                  pressed ? "" : "hover:bg-white/[0.02]",
+                  "grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 px-0 py-4 text-left sm:gap-x-6",
+                  pressed && "bg-accent",
                 )}
               >
-                <span className="font-mono text-[11px] text-faint">
+                <span className="font-mono text-[11px] text-muted-foreground">
                   {pad(i + 1)}
                 </span>
                 <span className="min-w-0">
                   <span
                     className={cn(
                       "block truncate font-mono text-[12.5px]",
-                      pressed ? "text-ink" : "text-ink/80",
+                      pressed ? "text-foreground" : "text-foreground/80",
                     )}
                   >
                     {type}
                     {pressed && (
-                      <span aria-hidden className="ml-2 text-dim">
+                      <span aria-hidden className="ml-2 text-muted-foreground">
                         ✕
                       </span>
                     )}
                   </span>
                   <span
                     aria-hidden
-                    className="mt-2 block h-1 w-full overflow-hidden rounded-full bg-white/6"
+                    className="mt-2 block h-1 w-full overflow-hidden rounded-full bg-muted"
                   >
                     <span
                       className={cn(
                         "block h-full rounded-full transition-colors",
-                        pressed ? "bg-white/60" : "bg-white/30",
+                        pressed ? "bg-muted-foreground/70" : "bg-muted-foreground/40",
                       )}
                       style={{ width: `${((count / max) * 100).toFixed(2)}%` }}
                     />
                   </span>
                 </span>
-                <span className="numeric text-right font-mono text-[11px] text-dim tabular-nums">
+                <span className="numeric text-right font-mono text-[11px] text-muted-foreground tabular-nums">
                   {count} {plural(count, "event", "events")}
                 </span>
-              </button>
+              </Button>
             </li>
           );
         })}
@@ -1524,25 +1428,21 @@ function TimelinePanel({
       title="Events"
       aside={
         <span className="flex items-center gap-3">
-          <span className="numeric font-mono text-[11px] text-dim tabular-nums">
+          <span className="numeric font-mono text-[11px] text-muted-foreground tabular-nums">
             {filtered
               ? `${matched} of ${timeline.total} match`
               : `${timeline.total} ${plural(timeline.total, "event", "events")}`}
           </span>
           {filtered && (
-            <button
-              type="button"
-              onClick={onClear}
-              className="font-mono text-[10px] tracking-[0.1em] text-dim uppercase transition-colors hover:text-ink"
-            >
+            <Button type="button" variant="ghost" onClick={onClear}>
               clear filters
-            </button>
+            </Button>
           )}
         </span>
       }
     >
       {rows.length === 0 ? (
-        <p className="px-5 py-6 font-mono text-[11px] text-dim sm:px-6">
+        <p className="px-5 py-6 font-mono text-[11px] text-muted-foreground sm:px-6">
           no events match the filters
         </p>
       ) : (
@@ -1550,26 +1450,28 @@ function TimelinePanel({
           {rows.map((event, i) => (
             <li
               key={`${event.ts}-${i}`}
-              className="grid grid-cols-[auto_auto_minmax(0,1fr)_auto] items-baseline gap-x-4 border-b border-hair-soft py-2.5 last:border-b-0 sm:gap-x-6"
+              className="grid grid-cols-[auto_auto_minmax(0,1fr)_auto] items-baseline gap-x-4 border-b border-border/60 py-2.5 last:border-b-0 sm:gap-x-6"
             >
-              <span className="numeric font-mono text-[11px] text-faint tabular-nums">
+              <span className="numeric font-mono text-[11px] text-muted-foreground tabular-nums">
                 {isoClock(event.ts)}
               </span>
               <span
                 className={cn(
                   "font-mono text-[10px] tracking-[0.08em] uppercase",
-                  event.type === "file.edited" ? "text-ink/80" : "text-dim",
+                  event.type === "file.edited"
+                    ? "text-foreground/80"
+                    : "text-muted-foreground",
                 )}
               >
                 {event.type}
               </span>
-              <span className="min-w-0 truncate font-mono text-[11px] text-dim">
+              <span className="min-w-0 truncate font-mono text-[11px] text-muted-foreground">
                 {event.path ?? shortId(event.session_id)}
                 {event.project_id && (
-                  <span className="text-faint"> · {event.project_id}</span>
+                  <span className="text-muted-foreground"> · {event.project_id}</span>
                 )}
               </span>
-              <span className="numeric text-right font-mono text-[10px] text-faint tabular-nums">
+              <span className="numeric text-right font-mono text-[10px] text-muted-foreground tabular-nums">
                 {formatAgo(event.ts, now)}
               </span>
             </li>

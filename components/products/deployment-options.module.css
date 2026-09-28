@@ -1,0 +1,137 @@
+.section {
+  padding-block: var(--space-section);
+  scroll-margin-top: calc(var(--header-height) + 24px);
+}
+
+.heading {
+  margin-bottom: 36px;
+}
+
+.eyebrow {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  letter-spacing: var(--tracking-label);
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+.heading h2 {
+  max-width: 22ch;
+  margin-top: 16px;
+  font-size: var(--text-heading);
+  font-weight: 500;
+  letter-spacing: var(--tracking-heading);
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: stretch;
+}
+
+.option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: clamp(24px, 3vw, 36px);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 1.4);
+  scroll-margin-top: calc(var(--header-height) + 24px);
+}
+
+.cloud {
+  background: var(--card);
+}
+
+.cloudHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.trial {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--foreground);
+  font-size: var(--text-caption);
+  line-height: 1.5;
+}
+
+.logo {
+  width: 48px;
+  height: auto;
+}
+
+.option h3 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: 500;
+  letter-spacing: var(--tracking-heading);
+  line-height: 1.25;
+}
+
+.description {
+  max-width: 40ch;
+  margin-top: 16px;
+  color: var(--muted-foreground);
+  font-size: var(--text-body);
+  line-height: 1.7;
+}
+
+.install {
+  width: 100%;
+  margin-top: 28px;
+}
+
+.action {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 32px;
+  margin-top: auto;
+}
+
+.billing {
+  margin-top: 14px;
+  color: var(--muted-foreground);
+  font-size: var(--text-caption);
+  line-height: 1.6;
+}
+
+.anchor {
+  position: absolute;
+  top: 0;
+  scroll-margin-top: calc(var(--header-height) + 24px);
+}
+
+@media (max-width: 900px) {
+  .options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .description {
+    max-width: 56ch;
+  }
+}
+
+@media (max-width: 399px) {
+  .option {
+    padding: 20px;
+  }
+
+  .action > a {
+    width: 100%;
+    padding-inline: 12px;
+  }
+}

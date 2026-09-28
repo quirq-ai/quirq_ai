@@ -1,0 +1,148 @@
+.reader {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--card);
+}
+
+.toolbar {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 20px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pageControls,
+.zoomControls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pageLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pageSelect {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: var(--text-small);
+  cursor: pointer;
+}
+
+.pageSelect:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.pageCount,
+.zoomLabel {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.zoomLabel {
+  min-width: 4ch;
+  text-align: center;
+}
+
+.zoomControls > :last-child {
+  margin-left: 8px;
+}
+
+.viewport {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 20px;
+  scrollbar-gutter: stable both-edges;
+  background: var(--secondary);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.viewport:focus-visible {
+  outline-offset: -4px;
+}
+
+.document {
+  width: max-content;
+  min-width: 100%;
+}
+
+.page {
+  width: fit-content;
+  margin-inline: auto;
+  /* Paper white is part of the source document, independent of the site theme. */
+  background: white;
+  color-scheme: light;
+  box-shadow: var(--shadow-media);
+}
+
+.message {
+  display: flex;
+  min-height: 280px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  max-width: 100%;
+  padding: 24px;
+  color: var(--foreground);
+  background: var(--card);
+  font-size: var(--text-small);
+  line-height: 1.6;
+  text-align: center;
+}
+
+.errorHint {
+  max-width: 32ch;
+  color: var(--muted-foreground);
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  color: var(--muted-foreground);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 600px) {
+  .toolbar {
+    justify-content: center;
+    padding: 10px 8px;
+  }
+
+  .viewport {
+    padding: 12px 4px;
+    scrollbar-gutter: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}

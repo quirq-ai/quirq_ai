@@ -18,13 +18,13 @@ export function BodyBlock({ block }: { block: Block }) {
   switch (block.kind) {
     case "h2":
       return (
-        <h2 className="mt-14 text-[clamp(21px,2.4vw,28px)] font-semibold leading-[1.2] tracking-[-0.02em] text-ink">
+        <h2 className="mt-14 text-[length:var(--text-subheading)] font-semibold leading-[1.2] tracking-[-0.02em] text-foreground">
           {block.text}
         </h2>
       );
     case "h3":
       return (
-        <h3 className="mt-10 text-[17px] font-semibold tracking-[-0.01em] text-ink">
+        <h3 className="mt-10 text-[17px] font-semibold tracking-[-0.01em] text-foreground">
           {block.text}
         </h3>
       );
@@ -35,19 +35,15 @@ export function BodyBlock({ block }: { block: Block }) {
       const figure = figureFromChart(block.text);
       if (figure) return <FigureView figure={figure} />;
       return (
-        <p className="mt-5 text-[15.5px] leading-[1.8] text-ink/70">
+        <p className="mt-5 text-[15.5px] leading-[1.8] text-muted-foreground">
           {block.text}
         </p>
       );
     }
     case "quote":
       return (
-        <blockquote className="relative mt-7 pl-5 text-[16.5px] leading-[1.7] text-ink/90">
-          <span
-            aria-hidden
-            className="absolute inset-y-1 left-0 w-px"
-            style={{ background: "var(--spectrum)" }}
-          />
+        <blockquote className="relative mt-7 pl-5 text-[16.5px] leading-[1.7] text-foreground">
+          <span aria-hidden className="absolute inset-y-1 left-0 w-px bg-primary" />
           {block.text}
         </blockquote>
       );
@@ -59,7 +55,7 @@ export function BodyBlock({ block }: { block: Block }) {
           tabIndex={0}
           role="region"
           aria-label="Code"
-          className="mt-6 overflow-x-auto rounded-xl border border-hair-soft bg-white/[0.04] p-4 font-mono text-[12.5px] leading-[1.7] text-ink/80"
+          className="mt-6 overflow-x-auto rounded-xl border border-border bg-card p-4 font-mono text-[12.5px] leading-[1.7] text-foreground"
         >
           {block.text}
         </pre>
@@ -70,16 +66,16 @@ export function BodyBlock({ block }: { block: Block }) {
           tabIndex={0}
           role="region"
           aria-label="Table"
-          className="mt-6 overflow-x-auto rounded-xl border border-hair-soft"
+          className="mt-6 overflow-x-auto rounded-xl border border-border"
         >
           <table className="w-full min-w-[560px] border-collapse text-left">
             <thead>
-              <tr className="border-b border-hair-soft bg-white/[0.03]">
+              <tr className="border-b border-border bg-muted">
                 {block.header.map((cell, i) => (
                   <th
                     key={i}
                     scope="col"
-                    className="px-4 py-2.5 font-mono text-[9.5px] font-medium tracking-[0.14em] text-faint uppercase"
+                    className="px-4 py-3 font-mono text-xs font-medium tracking-[0.08em] text-muted-foreground uppercase"
                   >
                     {cell}
                   </th>
@@ -88,17 +84,14 @@ export function BodyBlock({ block }: { block: Block }) {
             </thead>
             <tbody>
               {block.rows.map((row, r) => (
-                <tr
-                  key={r}
-                  className="border-b border-hair-soft last:border-b-0"
-                >
+                <tr key={r} className="border-b border-border last:border-b-0">
                   {row.map((cell, c) => (
                     <td
                       key={c}
                       className={
                         c === 0
-                          ? "px-4 py-2.5 text-[13px] text-ink/85"
-                          : "numeric px-4 py-2.5 font-mono text-[12.5px] text-ink/70 tabular-nums"
+                          ? "px-4 py-2.5 text-[13px] text-foreground"
+                          : "numeric px-4 py-2.5 font-mono text-[12.5px] text-muted-foreground tabular-nums"
                       }
                     >
                       {cell}
@@ -116,12 +109,11 @@ export function BodyBlock({ block }: { block: Block }) {
           {block.items.map((item, i) => (
             <li
               key={i}
-              className="flex gap-3 text-[15.5px] leading-[1.7] text-ink/70"
+              className="flex gap-3 text-[15.5px] leading-[1.7] text-muted-foreground"
             >
               <span
                 aria-hidden
-                className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-[2px]"
-                style={{ background: "var(--spectrum)" }}
+                className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-sm bg-primary"
               />
               <span>{item}</span>
             </li>

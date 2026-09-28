@@ -1,4 +1,5 @@
 <!-- BEGIN:nextjs-agent-rules -->
+
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
@@ -8,11 +9,19 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 This file is the source of truth for agents creating, generating, or changing pages in this repository. It applies to the entire repository.
 
-The site is a narrative and rendering engine, not a collection of unrelated landing-page sections. Preserve that distinction. A good change adds content or a rule to the existing system. It does not fork the system for one page.
+The site contains static product marketing, research, interactive tools and a shared staged-story engine. Choose the page's actual purpose before choosing its renderer. The homepage uses real product screenshots and normal DOM sections; it does not mount the WebGL stage. Staged narratives reuse the existing story, registry and choreography system.
 
 ## Mission
 
-When asked to create a page, first produce the smallest valid page description, then let the existing shell, story renderer, registry, and choreography perform it.
+For product positioning and page planning, also read
+[`docs/brand-strategy.md`](./docs/brand-strategy.md). It records the owner's
+Space-first homepage and separate XO computer/platform direction alongside
+recommended strategy and key decisions. Respect those status distinctions: a recommendation is not an
+implemented feature, approved page redesign or verified price. Keep the strategy
+and [`docs/product-evidence.md`](./docs/product-evidence.md) current as decisions
+are made, instead of treating each page change as an independent brief.
+
+Build the smallest page that communicates its purpose. For marketing, favor short, specific copy and real product media. For a staged narrative, express content through the existing story or journey contracts. Share the interface system across both.
 
 Optimize for:
 
@@ -21,7 +30,7 @@ Optimize for:
 3. deterministic rules that can be validated before rendering;
 4. static server-rendered content with narrow client boundaries;
 5. accessibility and graceful degradation;
-6. exact choreography behavior, protected by golden captures; and
+6. exact choreography behavior on staged pages, protected by golden captures; and
 7. page creation that is easy for the next agent or human to understand.
 
 Do not optimize for one-off cleverness.
@@ -35,7 +44,7 @@ Before editing:
 3. Read this entire file.
 4. Read the relevant current documentation under `node_modules/next/dist/docs/`.
 5. Inspect the nearest existing page of the same authoring mode.
-6. Inspect the canonical types instead of inferring a schema from one example:
+6. Read `docs/design-system.md` for interface work. For staged-story or journey work, inspect the relevant canonical types instead of inferring a schema from one example:
    - `components/story/types.ts`
    - `app/journey/defs.tsx`
    - `components/stage/choreo-tree.ts`
@@ -60,19 +69,18 @@ Also read:
 Use this decision tree:
 
 ```text
-Does the visitor's choice change which section appears next?
-├─ Yes → create or extend a .quirq JourneyDefinition.
-└─ No
-   ├─ Does any section need bespoke markup or interaction?
-   │  ├─ Yes → compose custom React beat components.
-   │  └─ No → create a plain BeatData[] story and render StoryBeat.
-   └─ Is this one item in a content catalog with one stable URL per item?
-      └─ Yes → use a Next.js [slug] route and generateStaticParams.
+Does this page need a scroll-driven narrative scene?
+├─ No → compose a server-rendered page with shared UI and focused client islands.
+│  └─ A catalog item with its own URL → use a [slug] route and generateStaticParams.
+└─ Yes
+   ├─ Visitor choices change the next section → use a .quirq JourneyDefinition.
+   ├─ Plain linear narrative → use BeatData[] and StoryBeat.
+   └─ Bespoke staged interaction → compose custom React beats inside StagePage.
 ```
 
 ### Preferred order
 
-Prefer, in order:
+For staged narratives, prefer, in order:
 
 1. **Plain `BeatData[]`** for a normal linear narrative.
 2. **A `.quirq` journey JSON** for a branching or transferable narrative.
@@ -81,18 +89,112 @@ Prefer, in order:
 
 Do not create a custom component merely to change copy, alignment, rows, tiles, code, captions, links, or a glass pose. Those are already data.
 
+## Page authoring mode 0: static marketing and product media
+
+The current homepage is the canonical example: `app/page.tsx` exports metadata
+and renders `components/home/home-page.tsx`. Preserve the original Space-first
+split layout with “Give your agents a place to work” beside a real product
+capture. Its flow is hero → Trusted by → projects/agents/sharing benefits →
+Machine Speed → trial and open-source entry. This is a static composition,
+without a product carousel or WebGL stage.
+
+`/products` has a separate job: Projects, Sessions and Git-backed Sharing, then
+cloud or local deployment. `/xo`, labeled **Cloud** in navigation,
+retains the XO brand and follows the reviewed app: catalog → configure a Space
+→ connect tools → monitor usage → subscription pricing → custom Enterprise. Keep that
+detail on `/xo`. Use the shared `ProductCapture` and `lib/product-media.ts`
+manifest on `/products` and `/xo`. Screenshots have truthful
+source/date labels, a native full-size link and internal mobile scrolling.
+The header groups Products (Space `/products`, Cloud `/xo`) and Resources
+(Docs `/docs`, Research `/research`, Writing `/writing`), followed by Enterprise
+and `TryOnXo`. Cloud is a navigation label; XO remains the product brand. Keep
+direct XO pricing access in the footer and page links; preserve existing routes.
+Static sections do not need registry IDs, a choreography track or `StagePage`.
+
+- State the two-product model consistently: **Space** is the open-source
+  workspace for projects, files, agents and tools. **XO** is Quirq's managed cloud
+  platform and can host Space; open source runs Space on the user's machine.
+  **Machine Speed** is the custom enterprise implementation offering.
+- The owner confirms that XO supports any agent harness and configurable
+  runtime/policies. XO Enterprise offers self-hosting, connection to the
+  customer's cloud and white-label deployment across multiple clouds. Present
+  these as XO deployment options; do not imply that the open-source Space
+  installer deploys the enterprise XO platform. One-click provisioning still
+  involves choosing configuration and connecting model credentials.
+- The owner also confirms XO as cloud computers for agents with preconfigured
+  templates, task delegation, parallel execution and autonomous scaling. Do not
+  limit its product story to hosting Space. Distinguish these capabilities from
+  their unverified implementation details: the delegation layer, worker-to-machine
+  mapping, scaling triggers, concurrency limits and charges. Show actual product
+  behavior; do not fabricate a fleet dashboard or universal orchestration layer.
+- Use the shared `TryOnXo` control from `components/ui/try-on-xo.tsx` for the
+  primary action, linked directly to `APP_URL` from `lib/products.ts`. It combines
+  visible “Try on” text with the authentic XO logo and has the accessible name
+  “Try on XO” with a new-tab announcement. The reviewed app offers a **30-day
+  trial for eligible Starter and Pro accounts**, not Business. The owner's
+  22 September instruction supersedes the generic Free trial / XO Cloud pricing
+  cards: show Starter **$10/month or $100/year**, Pro **$50/month or $500/year**,
+  and Business **$500/month or $5,000/year**, with annual totals clearly labeled.
+  Enterprise is a separate custom deployment offer. These amounts were verified
+  in the local authenticated runtime at `3be532f` and are used in the local
+  website preview; production billing is unverified. They are subscriptions,
+  not hourly compute rates. Do not invent numerical allowances, card
+  requirements, automatic charging or discounts.
+- Always retain the homepage's **Trusted by** section with its original eight
+  brands: OpenAI, Google, AWS, OKX, Shopify, Nevermined, Shodai and MagicPath.
+  Their source is the original `FrameOneHome` in repository `HEAD`, separate from
+  the supported-agent rail. Use the canonical assets and do not add brands or
+  relationship claims. See `docs/product-evidence.md` for provenance.
+- Use actual captures from `public/assets/space-ui` and `public/assets/xo-ui`.
+  Current XO media comes from the running app captured on 22 September 2026 in
+  `public/assets/xo-ui/review-2026-09-22/`; older beta-guide captures retain their
+  historical attribution. Tours encoded at 4 fps from real CUA frames are edited
+  step-through tours, not continuous recordings. Preserve provenance and encoding
+  status in `docs/product-evidence.md` and the review report. No live provisioning
+  or billing transaction was performed. Keep the original homepage and Quirq's
+  gray/white style; this task does not adopt the separate visual draft.
+  Keep captions truthful about the visible screen; do not fabricate app
+  interfaces, data, video, logos, testimonials or customer relationships.
+- `public/assets/quirq-logo.svg` and `components/ui/quirq-logo.tsx` own the Quirq
+  mark. `components/ui/xo-logo.tsx` preserves the canonical XO logo geometry,
+  with a monochrome X and the original green O. Use this mark for XO; Space stays
+  text unless an approved Space mark exists. Existing source-attributed agent
+  icons represent supported tools, not customers.
+- Keep copy brief and specific. Use native `details`/`summary` for supporting
+  setup, sharing, plan and transcript detail. Keep trial eligibility, prices and
+  material product boundaries visible beside their claims. Screenshots and real
+  tours carry the product flow, with readable framing and narrow-screen access.
+- `/products` and `/xo` use `ProductMotion` from
+  `components/products/product-motion.tsx` for optional entry motion and native
+  smooth hash scrolling. Pass server content as children; all content remains
+  visible before hydration and without JavaScript. Respect reduced motion,
+  preserve native anchors and header scroll margins, and clean up observers and
+  animations. Keep this separate from the staged-story runtime and leave the
+  original homepage composition unchanged.
+- Reuse `Button`, `Sheet`, `DropdownMenu` and `Input` from `components/ui`.
+  Radix owns interaction, focus and keyboard behavior; Lucide supplies interface
+  icons. Avoid hand-built portal or focus-management substitutes.
+- `styles/theme.css` owns semantic colors, fonts, radius, spacing and motion.
+  CSS modules compose layouts and consume these tokens. Use `lib/utils.ts` for
+  class merging. See [docs/design-system.md](./docs/design-system.md).
+- The warm light product stage uses `--surface-contrast`,
+  `--surface-contrast-foreground`, `--border-subtle` and `--shadow-media` within
+  the shared dark system. Quirq's warm white actions remain unchanged.
+- Keep native links for navigation, buttons for actions and visible keyboard
+  focus. Preserve a readable no-JavaScript path for the content.
+
 ## What “dynamic” means in this repository
 
 Do not use the word “dynamic” without identifying which mechanism is intended.
 
-| Mechanism | What changes | When it changes | Canonical example |
-|---|---|---|---|
-| Data-driven static page | The `BeatData[]` content | At edit/build time | `app/dynamic` |
-| Branching journey | The visited node path and active choreography track | In the browser after a choice | `app/journey` |
-| Dynamic route segment | The route param chooses one content record | At build time or request time | `app/research/[slug]` |
-| Journey route handler | A slug loads a JSON document from `.quirq` | At request time | `app/api/journeys/[slug]` |
-| Live editor override | Draft beats and keyframes replace the active track | In the browser while editing | `app/editor` |
-| Responsive choreography rule | A tree branch is included or pruned | On mount and resize | `ChoreoNode.when` |
+| Mechanism                    | What changes                                        | When it changes               | Canonical example         |
+| ---------------------------- | --------------------------------------------------- | ----------------------------- | ------------------------- |
+| Data-driven static page      | The `BeatData[]` content                            | At edit/build time            | `app/dynamic`             |
+| Branching journey            | The visited node path and active choreography track | In the browser after a choice | `app/journey`             |
+| Dynamic route segment        | The route param chooses one content record          | At build time or request time | `app/research/[slug]`     |
+| Journey route handler        | A slug loads a JSON document from `.quirq`          | At request time               | `app/api/journeys/[slug]` |
+| Live editor override         | Draft beats and keyframes replace the active track  | In the browser while editing  | `app/editor`              |
+| Responsive choreography rule | A tree branch is included or pruned                 | On mount and resize           | `ChoreoNode.when`         |
 
 These mechanisms may cooperate, but they are not interchangeable.
 
@@ -105,7 +207,7 @@ In particular:
 
 ## Architecture at a glance
 
-### One persistent shot
+### Staged pages: one persistent shot
 
 The stage shell is:
 
@@ -119,12 +221,15 @@ StagePage
 │       └── GlassForm
 ├── vignette
 ├── grain
-├── Nav
 └── main
     └── page beats
 ```
 
-`StagePage` is shared. Pages provide the middle; they do not configure or duplicate the shell.
+`StagePage` is shared by staged pages. Its `lit` and `film` props control the scene
+and overlays; the scroll runtime still runs when unlit. The single global `Nav`
+lives in `app/layout.tsx`, outside the stage shell. Pages supply the content and
+reuse this shell. The glass stays mounted across beats within a staged page,
+not across unrelated route lifetimes.
 
 ### Content-to-frame pipeline
 
@@ -155,22 +260,23 @@ content object or custom component
 
 ### Ownership boundaries
 
-| Layer | Owns | Must not own |
-|---|---|---|
-| Page or story file | Narrative content, metadata, beat order | Frame-loop state or Three.js implementation |
-| `StoryBeat` | Generic content presentation | Page-specific business rules |
-| Beat registry | Mounted section identity and order | Copy or choreography values |
-| Scroll runtime | DOM measurement and scroll-to-beat mapping | React rendering |
-| Choreography tree | Authored pose inheritance and conditional leaves | Per-frame DOM work |
-| Choreography sampler | Smooth numeric interpolation | Content decisions |
-| Journey definition | Branching content, legal edges, walk rules, poses | Executable code from JSON |
-| Journey runtime | Active path, trace, replay, restore | Ad hoc schema changes |
-| Stage | WebGL capability and quality selection | Narrative branching |
-| Glass and burst | Per-frame visual application | React state or page loading |
+| Layer                | Owns                                              | Must not own                                |
+| -------------------- | ------------------------------------------------- | ------------------------------------------- |
+| Page or story file   | Narrative content, metadata, beat order           | Frame-loop state or Three.js implementation |
+| `StoryBeat`          | Generic content presentation                      | Page-specific business rules                |
+| Beat registry        | Mounted section identity and order                | Copy or choreography values                 |
+| Scroll runtime       | DOM measurement and scroll-to-beat mapping        | React rendering                             |
+| Choreography tree    | Authored pose inheritance and conditional leaves  | Per-frame DOM work                          |
+| Choreography sampler | Smooth numeric interpolation                      | Content decisions                           |
+| Journey definition   | Branching content, legal edges, walk rules, poses | Executable code from JSON                   |
+| Journey runtime      | Active path, trace, replay, restore               | Ad hoc schema changes                       |
+| Stage                | WebGL capability and quality selection            | Narrative branching                         |
+| Glass and burst      | Per-frame visual application                      | React state or page loading                 |
 
-## Core invariants
+## Staged-engine invariants
 
-These are stronger than local convenience:
+These apply when working on the story, journey or scene engine. Static marketing
+sections do not need beat registration or a glass track:
 
 1. **One glass object remains mounted across beats.**
 2. **Every staged section registers.** Use `Beat` or deliberately call `registerBeat`.
@@ -276,7 +382,7 @@ export default function Page() {
 - Export route metadata from the server `page.tsx`.
 - Keep the page component a Server Component.
 - Let the existing client `StoryBeat` boundary own animation and registration.
-- Add the route to `Nav`’s `onStage` detection if navigation treatment depends on the stage.
+- Reuse the global navigation; staged pages do not need separate route detection.
 - Add the footer base fade when the final pose would reduce footer contrast.
 
 ## Page authoring mode 2: custom composed React beats
@@ -310,7 +416,7 @@ Bad reasons:
 6. If the section is deliberately an interlude, do not give it a beat index and document why the glass should glide through it.
 7. If a custom section cannot use `Beat`, register and unregister its element directly with `registerBeat`.
 
-The home page and `components/beats/*` are the canonical examples.
+`app/what-is-quirq/beats.tsx` and `app/beats/beats.tsx` are active examples.
 
 ## Page authoring mode 3: `.quirq` journey JSON
 
@@ -455,7 +561,7 @@ derives one from a research note: the note's `h2` headings become chapters, and
 each chapter becomes a beat with a two-line title, a compact lede, and at most
 one detail structure taken from what the chapter contains.
 
-**Shape follows length.** Six sections or fewer derive a *scroll* document:
+**Shape follows length.** Six sections or fewer derive a _scroll_ document:
 beats in order, no prompts, no choices, `rules: { start }` and nothing else.
 That is the same shape `app/how-it-works/story.ts` ships by hand, expressed as
 JSON. Only a note longer than six sections earns a graph, with entry points at
@@ -608,16 +714,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const item = getItem((await params).slug);
-  return item
-    ? { title: item.title, description: item.description }
-    : {};
+  return item ? { title: item.title, description: item.description } : {};
 }
 
-export default async function Page({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const item = getItem((await params).slug);
   if (!item) notFound();
   return <Article item={item} />;
@@ -669,21 +769,21 @@ Rules:
 
 `StoryBeat` understands this vocabulary:
 
-| Field | Requirement | Generation rule |
-|---|---|---|
-| `index` | Runtime page only | Contiguous render order. Omitted inside journey JSON. |
-| `id` | Runtime page only | Unique, stable, semantic. Omitted inside journey JSON. |
-| `layout` | Required | `center`, `left`, or `right`. |
-| `title` | Required | Exactly two intentional lines. |
-| `glass` | Optional | `0` for first title line or `1` for second. |
-| `marker` | Optional | Short mono chapter label, usually `01 · phrase`. |
-| `lede` | Optional | One compact supporting paragraph. |
-| `rows` | Optional | Open numbered title/note rows. |
-| `panelRows` | Optional | Numbered title/note rows in one panel. |
-| `tiles` | Optional | Label/body tiles. |
-| `code` | Optional | One preformatted string. |
-| `caption` | Optional | Small mono qualifier or source note. |
-| `links` | Optional | Calls to action with `solid` or `ghost` tone. |
+| Field       | Requirement       | Generation rule                                        |
+| ----------- | ----------------- | ------------------------------------------------------ |
+| `index`     | Runtime page only | Contiguous render order. Omitted inside journey JSON.  |
+| `id`        | Runtime page only | Unique, stable, semantic. Omitted inside journey JSON. |
+| `layout`    | Required          | `center`, `left`, or `right`.                          |
+| `title`     | Required          | Exactly two intentional lines.                         |
+| `glass`     | Optional          | `0` for first title line or `1` for second.            |
+| `marker`    | Optional          | Short mono chapter label, usually `01 · phrase`.       |
+| `lede`      | Optional          | One compact supporting paragraph.                      |
+| `rows`      | Optional          | Open numbered title/note rows.                         |
+| `panelRows` | Optional          | Numbered title/note rows in one panel.                 |
+| `tiles`     | Optional          | Label/body tiles.                                      |
+| `code`      | Optional          | One preformatted string.                               |
+| `caption`   | Optional          | Small mono qualifier or source note.                   |
+| `links`     | Optional          | Calls to action with `solid` or `ghost` tone.          |
 
 ### Content-generation rules
 
@@ -717,13 +817,13 @@ When generating copy:
 
 ### Pose presets
 
-| Preset | Narrative use |
-|---|---|
-| `centre` | Neutral opening or reset |
-| `drained` | Cost, failure, doubt, constraint |
-| `flooded` | Value, proof, color, breakthrough |
-| `recede` | Data-heavy beat where copy must dominate |
-| `finale` | Closing synthesis and action |
+| Preset    | Narrative use                            |
+| --------- | ---------------------------------------- |
+| `centre`  | Neutral opening or reset                 |
+| `drained` | Cost, failure, doubt, constraint         |
+| `flooded` | Value, proof, color, breakthrough        |
+| `recede`  | Data-heavy beat where copy must dominate |
+| `finale`  | Closing synthesis and action             |
 
 Use a preset first. Add `tweaks` only for a narrative reason.
 
@@ -987,13 +1087,20 @@ The current `/journey` route intentionally restores `?j=` and `?t=` after hydrat
 
 ## Navigation and metadata rules
 
+The shared header uses Products (Space and Cloud), Resources (Docs, Research and
+Writing), Enterprise and the direct `TryOnXo` action. Keep these groups consistent
+in the desktop dropdowns and mobile sheet. Use shared Radix controls for keyboard
+and focus behavior; preserve route-current state, Escape dismissal and sensible
+focus after navigation or a responsive breakpoint change. Cloud maps to `/xo`;
+this label does not rename the XO product. Whitepaper remains within Research.
+
 For every new route:
 
 1. Add specific `Metadata` in its server page.
 2. Use the root title template; do not repeat `· quirq` manually.
 3. Write a real description, not a copy of the title.
 4. Add the route to navigation only when it belongs in the global information architecture.
-5. If it mounts `StagePage`, update `Nav`’s `onStage` route detection.
+5. Reuse the global navigation from the root layout; do not mount a second navbar.
 6. Use `Link` for internal navigation unless journey behavior intentionally opens away from the walk.
 7. Preserve PDF new-tab behavior.
 8. Do not claim a page is indexable if it is an internal tool; the editor sets `robots.index` to false.
@@ -1033,11 +1140,42 @@ Match verification to the change.
 
 - Check the route loads.
 - Check metadata.
-- Check every beat registers.
+- On staged pages, check every beat registers.
 - Check title wrapping at narrow and wide widths.
-- Check copy contrast over the live pose.
+- Check copy and media contrast; on staged pages, inspect the live pose.
 - Check CTA destinations.
-- Run `pnpm build`.
+- Run `pnpm check` and `pnpm build` before delivery.
+
+### Shared UI and static product pages
+
+- Check the real screenshot sequence and every product/action destination.
+- Exercise dropdowns, sheets and copy controls with keyboard and pointer.
+- Check narrow and wide layouts, visible focus, reduced motion and the readable
+  no-JavaScript path.
+- Use the shared tokens and component variants; do not introduce a route-local
+  design system.
+
+### Maintenance checks
+
+`pnpm check` runs `lint`, `typecheck`, `test`, `check:unused` and `format:check`.
+Run the relevant focused check while editing, then the full check and production
+build before delivery. `pnpm format` writes formatting; in a shared dirty checkout,
+format only the files you own with `pnpm exec prettier --write <paths>`.
+
+Knip reads `knip.json` and detects ordinary unreachable source and dependencies.
+Before deleting reported files, inspect all App Router entries, package scripts,
+CLI/test entries, dynamic imports, filesystem registries, docs and public paths.
+An unlinked route or public download is still an entrypoint. Preserve runtime
+journeys, published installer/PDF/text endpoints and engine contracts. Record
+justified removals and retained exceptions in `docs/dead-code-audit.md`.
+
+Use Node >=22.13.0 and pnpm 9.12.3. ESLint 9.39.5 is pinned because the Next.js
+16.2.11 lint stack's plugin peer dependencies do not support ESLint 10. Keep this
+specific compatibility exception documented; do not disable rules broadly or
+upgrade the framework as a side effect of cleanup.
+
+`.github/workflows/quality.yml` performs the frozen install, `pnpm check` and
+`pnpm build` on pushes and pull requests. It does not publish the site.
 
 ### Data-driven story
 
@@ -1088,14 +1226,14 @@ A generated or new page is complete only when:
 
 - the correct authoring mode was used;
 - route and metadata are present;
-- content is expressed in canonical types;
-- IDs and indices are stable and valid;
-- the stage track matches the rendered beats;
-- rules are normalized, validated, and deterministic;
+- content uses the relevant shared components and canonical types;
+- staged beat IDs and indices are stable and valid when present;
+- the stage track matches the rendered beats when a stage is used;
+- journey or generation rules are normalized, validated, and deterministic;
 - navigation changes are intentional;
 - accessibility fallbacks remain intact;
 - local links and JSON parse;
-- `pnpm build` passes; and
+- `pnpm check` and `pnpm build` pass; and
 - the handoff states which files define content, rules, and visuals.
 
 ## Common failure modes
@@ -1123,30 +1261,34 @@ Avoid these:
 
 Use these before inventing a pattern:
 
-| Need | Example |
-|---|---|
-| Data-driven stage page | `app/dynamic` |
-| Scene-control documentation | `app/scenes` |
-| Journey-authoring documentation | `app/how-it-works` |
-| Custom composed beats | `app/page.tsx`, `components/beats` |
-| Branching generated page | `app/journey`, `.quirq/journeys/default.json` |
-| Live track override | `app/editor/editor.tsx` |
-| Static generated route | `app/research/[slug]/page.tsx` |
-| Paginated, filtered listing | `app/research/page.tsx`, `app/research/page/[page]`, `app/research/topic/[topic]`, `components/research/index-view.tsx` |
-| Journey derived from content | `lib/research-journey.ts`, `app/journey/read/[slug]/page.tsx` |
-| Measured visual as data | `components/story/figure.tsx`, `components/story/types.ts` |
-| Figure generated from prose | `lib/chart-figure.ts` |
-| Any dataset as a journey | `scripts/build-git-journey.mjs` |
-| Walking any journey document | `components/journey/engine.tsx`, `app/journey/load/page.tsx` |
-| Catalog resolver and pagination rules | `lib/research.ts` (`resolveIndex`) |
-| Framed content image | `components/research/banner.tsx` |
-| Generic renderer contract | `components/story/types.ts`, `components/story/story-beat.tsx` |
-| Beat registration | `components/ui/primitives.tsx`, `lib/beat-registry.ts` |
-| Scroll mapping | `components/scroll-runtime.tsx` |
-| Rule-based track authoring | `components/stage/choreo-tree.ts` |
-| Runtime sampling | `components/stage/choreography.ts` |
-| Pose and journey validation | `app/journey/defs.tsx` |
-| Filesystem API guards | `app/api/journeys/guards.ts` |
-| Visual regression data | `lib/golden.ts`, `docs/goldens` |
+| Need                                  | Example                                                                                                                 |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Data-driven stage page                | `app/dynamic`                                                                                                           |
+| Scene-control documentation           | `app/scenes`                                                                                                            |
+| Journey-authoring documentation       | `app/how-it-works`                                                                                                      |
+| Static product homepage               | `app/page.tsx`, `components/home/home-page.tsx`, `components/home/trusted-by.tsx`                                       |
+| Space product walkthrough             | `app/products/page.tsx`, `components/products/products-page.tsx`, `components/products/deployment-options.tsx`          |
+| XO managed cloud product              | `app/xo/page.tsx`, `components/ui/try-on-xo.tsx`, `components/ui/xo-logo.tsx`                                           |
+| Shared interface system               | `styles/theme.css`, `components/ui`, `docs/design-system.md`                                                            |
+| Custom composed beats                 | `app/what-is-quirq/beats.tsx`, `app/beats/beats.tsx`                                                                    |
+| Branching generated page              | `app/journey`, `.quirq/journeys/default.json`                                                                           |
+| Live track override                   | `app/editor/editor.tsx`                                                                                                 |
+| Static generated route                | `app/research/[slug]/page.tsx`                                                                                          |
+| Paginated, filtered listing           | `app/research/page.tsx`, `app/research/page/[page]`, `app/research/topic/[topic]`, `components/research/index-view.tsx` |
+| Journey derived from content          | `lib/research-journey.ts`, `app/journey/read/[slug]/page.tsx`                                                           |
+| Measured visual as data               | `components/story/figure.tsx`, `components/story/types.ts`                                                              |
+| Figure generated from prose           | `lib/chart-figure.ts`                                                                                                   |
+| Any dataset as a journey              | `scripts/build-git-journey.mjs`                                                                                         |
+| Walking any journey document          | `components/journey/engine.tsx`, `app/journey/load/page.tsx`                                                            |
+| Catalog resolver and pagination rules | `lib/research.ts` (`resolveIndex`)                                                                                      |
+| Framed content image                  | `components/research/banner.tsx`                                                                                        |
+| Generic renderer contract             | `components/story/types.ts`, `components/story/story-beat.tsx`                                                          |
+| Beat registration                     | `components/ui/primitives.tsx`, `lib/beat-registry.ts`                                                                  |
+| Scroll mapping                        | `components/scroll-runtime.tsx`                                                                                         |
+| Rule-based track authoring            | `components/stage/choreo-tree.ts`                                                                                       |
+| Runtime sampling                      | `components/stage/choreography.ts`                                                                                      |
+| Pose and journey validation           | `app/journey/defs.tsx`                                                                                                  |
+| Filesystem API guards                 | `app/api/journeys/guards.ts`                                                                                            |
+| Visual regression data                | `lib/golden.ts`, `docs/goldens`                                                                                         |
 
 When an existing example and this guide appear to disagree, inspect the current canonical type and runtime code. Update this guide in the same change if the architecture has intentionally evolved.

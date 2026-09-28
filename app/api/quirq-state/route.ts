@@ -24,9 +24,8 @@ import type {
  * because a dashboard that renders credentials once is a dashboard that has
  * leaked them.
  *
- * The folder sits beside the app, not inside it: this repository keeps the
- * web app in `web/` and the watcher state in `../.quirq`. `QUIRQ_DIR`
- * overrides the guess for anyone running the dashboard against another
+ * By default the folder is resolved as `../.quirq` from the app's working
+ * directory. `QUIRQ_DIR` overrides that location for dashboards using another
  * workspace. A missing folder is a state worth showing, not an error, so it
  * comes back 200 with `root.present: false`.
  *
@@ -39,8 +38,7 @@ import type {
  */
 export const dynamic = "force-dynamic";
 
-const SERVES =
-  process.env.NODE_ENV === "development" || Boolean(process.env.QUIRQ_DIR);
+const SERVES = process.env.NODE_ENV === "development" || Boolean(process.env.QUIRQ_DIR);
 
 const ROOT = process.env.QUIRQ_DIR
   ? resolve(process.env.QUIRQ_DIR)
@@ -69,8 +67,7 @@ const NOTES: Record<string, string> = {
   "watcher/workspace/timeline.jsonl": "Append-only event log.",
   "watcher/workspace/sessions": "Session index and derived counters.",
   "watcher/workspace/sessions/sessionslist.json": "Adapter-owned session index.",
-  "watcher/workspace/sessions/sessions-augment.json":
-    "Watcher counters per session.",
+  "watcher/workspace/sessions/sessions-augment.json": "Watcher counters per session.",
 };
 
 const noteFor = (path: string, name: string): string => {
@@ -135,7 +132,13 @@ function walk(
     return 0;
   }
 
-  type Entry = { name: string; full: string; isDirectory: boolean; size: number; mtime: string };
+  type Entry = {
+    name: string;
+    full: string;
+    isDirectory: boolean;
+    size: number;
+    mtime: string;
+  };
   const entries: Entry[] = [];
   for (const name of names) {
     const full = join(dir, name);
@@ -261,9 +264,7 @@ function parseXo(root: string): XoSummary | null {
     agent: typeof raw.agent === "string" ? raw.agent : null,
     default_model: typeof status.default === "string" ? status.default : null,
     models: list.flatMap((entry) =>
-      isRecord(entry) &&
-      typeof entry.id === "string" &&
-      typeof entry.status === "string"
+      isRecord(entry) && typeof entry.id === "string" && typeof entry.status === "string"
         ? [{ id: entry.id, status: entry.status }]
         : [],
     ),
@@ -335,9 +336,7 @@ function parseProjects(
     .sort()
     .flatMap((name) => {
       const snapshot = parseActivity(join(dir, name));
-      return snapshot
-        ? [{ project_id: name.slice(0, -5), snapshot }]
-        : [];
+      return snapshot ? [{ project_id: name.slice(0, -5), snapshot }] : [];
     });
 }
 
@@ -347,8 +346,7 @@ function parseWorkspace(root: string): FolderPayload["workspace"] {
   return {
     schema: typeof raw.schema === "number" ? raw.schema : 0,
     updated_at: typeof raw.updated_at === "string" ? raw.updated_at : "",
-    projects_root:
-      typeof raw.projects_root === "string" ? raw.projects_root : "",
+    projects_root: typeof raw.projects_root === "string" ? raw.projects_root : "",
     projects: Array.isArray(raw.projects)
       ? raw.projects.filter((p): p is string => typeof p === "string")
       : [],
@@ -482,10 +480,7 @@ const TIMELINE_SLICE = 200;
 function parseTimeline(root: string): FolderPayload["timeline"] {
   let text: string;
   try {
-    text = readFileSync(
-      join(root, "watcher", "workspace", "timeline.jsonl"),
-      "utf8",
-    );
+    text = readFileSync(join(root, "watcher", "workspace", "timeline.jsonl"), "utf8");
   } catch {
     return null;
   }
@@ -502,9 +497,7 @@ function parseTimeline(root: string): FolderPayload["timeline"] {
         type: event.type,
         session_id: String(event.session_id ?? ""),
         runtime: String(event.runtime ?? ""),
-        ...(typeof event.project_id === "string"
-          ? { project_id: event.project_id }
-          : {}),
+        ...(typeof event.project_id === "string" ? { project_id: event.project_id } : {}),
         ...(typeof event.path === "string" ? { path: event.path } : {}),
       });
     } catch {
@@ -520,9 +513,7 @@ function parseTimeline(root: string): FolderPayload["timeline"] {
 
 function coerceAugment(value: unknown): SessionAugment {
   const record = isRecord(value) ? value : {};
-  const roles = isRecord(record.messageCountByRole)
-    ? record.messageCountByRole
-    : {};
+  const roles = isRecord(record.messageCountByRole) ? record.messageCountByRole : {};
   const tasks = isRecord(record.taskCount) ? record.taskCount : {};
   return {
     messageCount: num(record.messageCount),

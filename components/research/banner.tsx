@@ -31,7 +31,7 @@ export function PostBanner({
 }) {
   return (
     <span
-      className={`relative block overflow-hidden rounded-2xl border border-hair bg-black ${className}`}
+      className={`relative block overflow-hidden rounded-xl border border-border bg-background ${className}`}
     >
       <Image
         src={banner.src}
@@ -49,13 +49,13 @@ export function PostBanner({
 
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/55 via-transparent to-transparent"
+        className="pointer-events-none absolute inset-0 bg-linear-to-t from-background/55 via-transparent to-transparent"
       />
-      {/* The one piece of chrome: the spectrum, on the sill. */}
+      {/* A quiet accent along the image edge. */}
       <span
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0 h-px opacity-55"
-        style={{ background: "var(--spectrum)" }}
+        style={{ background: "var(--primary)" }}
       />
     </span>
   );

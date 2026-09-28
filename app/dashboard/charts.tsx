@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { cn } from "@/components/ui/primitives";
+import { useMemo, useState, type ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { compactCount, type FolderNode } from "@/lib/quirq/folder";
 import { formatBytes } from "@/lib/quirq/instance";
 
@@ -72,7 +74,7 @@ export function Columns({
     const body = (
       <>
         {hover === i && (
-          <span className="pointer-events-none absolute top-0 left-1/2 z-10 -translate-x-1/2 rounded-md border border-hair bg-black/90 px-2.5 py-1.5 font-mono text-[10px] whitespace-nowrap text-ink">
+          <span className="pointer-events-none absolute top-0 left-1/2 z-10 -translate-x-1/2 rounded-md border border-border bg-popover px-2.5 py-1.5 font-mono text-[10px] whitespace-nowrap text-foreground">
             {p.label} · {format(p.value)}
             {unit ? ` ${unit}` : ""}
           </span>
@@ -80,7 +82,7 @@ export function Columns({
         {showValues && p.value > 0 && (
           <span
             aria-hidden
-            className="mb-1.5 truncate text-center font-mono text-[9.5px] text-dim tabular-nums"
+            className="mb-1.5 truncate text-center font-mono text-[9.5px] text-muted-foreground tabular-nums"
           >
             {format(p.value)}
           </span>
@@ -91,7 +93,7 @@ export function Columns({
             className={cn(
               "block w-full rounded-t-[3px] transition-colors",
               selected
-                ? "bg-white/60"
+                ? "bg-muted-foreground/70"
                 : hover === i
                   ? "bg-white/45"
                   : anySelected
@@ -108,32 +110,31 @@ export function Columns({
     );
 
     // Capped so a one-point chart reads as a bar, not a slab.
-    const shape =
-      "relative flex h-full min-w-0 max-w-[72px] flex-1 flex-col justify-end";
+    const shape = "relative flex h-full min-w-0 max-w-[72px] flex-1 flex-col justify-end";
 
     return onSelect ? (
-      <button
+      <Button
         key={`${p.label}-${i}`}
         type="button"
+        variant="ghost"
         aria-pressed={selected}
         onClick={() => onSelect(i)}
         onMouseEnter={() => setHover(i)}
         onFocus={() => setHover(i)}
         onBlur={() => setHover(null)}
-        className={cn(shape, "cursor-pointer")}
+        className={cn(
+          shape,
+          "min-h-0 gap-0 rounded-none border-0 p-0 hover:bg-transparent focus-visible:ring-inset focus-visible:ring-offset-0",
+        )}
       >
         <span className="sr-only">
           {p.label}: {format(p.value)}
           {unit ? ` ${unit}` : ""}
         </span>
         {body}
-      </button>
+      </Button>
     ) : (
-      <div
-        key={`${p.label}-${i}`}
-        onMouseEnter={() => setHover(i)}
-        className={shape}
-      >
+      <div key={`${p.label}-${i}`} onMouseEnter={() => setHover(i)} className={shape}>
         {body}
       </div>
     );
@@ -149,14 +150,11 @@ export function Columns({
         {columns}
       </div>
 
-      <div
-        aria-hidden
-        className="mt-2 flex gap-[2px] border-t border-hair-soft pt-2"
-      >
+      <div aria-hidden className="mt-2 flex gap-[2px] border-t border-border/60 pt-2">
         {points.map((p, i) => (
           <span
             key={`${p.label}-${i}`}
-            className="min-w-0 max-w-[72px] flex-1 truncate text-center font-mono text-[9px] text-faint"
+            className="min-w-0 max-w-[72px] flex-1 truncate text-center font-mono text-[9px] text-muted-foreground"
           >
             {p.showLabel === false ? "" : p.label}
           </span>
@@ -216,15 +214,16 @@ export function CalendarFilter({
     return keys[keys.length - 1] ?? null;
   }, [counts]);
 
-  const [view, setView] = useState(() =>
-    (selected ?? latest ?? "1970-01").slice(0, 7),
-  );
+  const [view, setView] = useState(() => (selected ?? latest ?? "1970-01").slice(0, 7));
+  const [previousSelection, setPreviousSelection] = useState(selected);
 
   // An outside selection (the overview chart drilling in) pulls the view to
-  // its month; paging past it stays local state.
-  useEffect(() => {
+  // its month; paging past it stays local state. Adjust before committing the
+  // render so the calendar never paints the previous selection's month.
+  if (selected !== previousSelection) {
+    setPreviousSelection(selected);
     if (selected) setView(selected.slice(0, 7));
-  }, [selected]);
+  }
 
   const [year, month] = view.split("-").map(Number);
   const firstWeekday = (new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7;
@@ -239,32 +238,34 @@ export function CalendarFilter({
   return (
     <div className="min-w-0">
       <div className="flex items-center justify-between gap-3">
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="icon"
           onClick={() => shift(-1)}
           aria-label="Previous month"
-          className="rounded-full border border-hair px-2.5 py-1 font-mono text-[11px] text-dim transition-colors hover:border-ink/30 hover:text-ink"
         >
-          ‹
-        </button>
-        <span className="font-mono text-[11px] tracking-[0.1em] text-ink/85 uppercase">
+          <ChevronLeftIcon aria-hidden="true" />
+        </Button>
+        <span className="font-mono text-[11px] tracking-[0.1em] text-foreground/85 uppercase">
           {MONTH_NAMES[month - 1]} {year}
         </span>
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="icon"
           onClick={() => shift(1)}
           aria-label="Next month"
-          className="rounded-full border border-hair px-2.5 py-1 font-mono text-[11px] text-dim transition-colors hover:border-ink/30 hover:text-ink"
         >
-          ›
-        </button>
+          <ChevronRightIcon aria-hidden="true" />
+        </Button>
       </div>
 
       <div aria-hidden className="mt-3 grid grid-cols-7 gap-1">
         {WEEKDAYS.map((d) => (
           <span
             key={d}
-            className="py-1 text-center font-mono text-[9px] tracking-[0.1em] text-faint uppercase"
+            className="py-1 text-center font-mono text-[9px] tracking-[0.1em] text-muted-foreground uppercase"
           >
             {d}
           </span>
@@ -280,19 +281,21 @@ export function CalendarFilter({
           const count = counts[day] ?? 0;
           const isSelected = selected === day;
           return (
-            <button
+            <Button
               key={day}
               type="button"
+              variant="ghost"
               disabled={count === 0 && !isSelected}
               aria-pressed={isSelected}
+              aria-label={`${day}: ${count} ${count === 1 ? "event" : "events"}`}
               onClick={() => onSelect(isSelected ? null : day)}
               title={count > 0 ? `${day} · ${count} events` : day}
               className={cn(
-                "flex aspect-square items-center justify-center rounded-md border font-mono text-[11px] tabular-nums transition-colors",
-                isSelected ? "border-ink text-ink" : "border-transparent",
+                "w-full min-w-0 px-0 py-2 font-mono text-xs tabular-nums focus-visible:ring-inset focus-visible:ring-offset-0",
+                isSelected ? "border-primary text-foreground" : "border-transparent",
                 count > 0
-                  ? "text-ink/85 hover:border-ink/40"
-                  : "cursor-default text-faint/60",
+                  ? "text-foreground/85 hover:border-foreground/40"
+                  : "cursor-default text-muted-foreground/60",
               )}
               style={
                 count > 0
@@ -309,7 +312,7 @@ export function CalendarFilter({
               <span className="sr-only">
                 {count > 0 ? `, ${count} events` : ", no events"}
               </span>
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -371,25 +374,24 @@ function MapLevel({
             style={{ width: `${((node.bytes / parentBytes) * 100).toFixed(3)}%` }}
             className="min-w-0"
           >
-            <button
+            <Button
               type="button"
+              variant="ghost"
               aria-pressed={isSelected}
               onClick={() => onSelect(isSelected ? null : node.path)}
               title={`${node.path} · ${formatBytes(node.bytes)} · ${(share * 100).toFixed(1)}%`}
               className={cn(
-                "block h-9 w-full truncate rounded-[3px] px-1.5 text-left font-mono text-[9.5px] leading-9 transition-colors hover:bg-white/40",
+                "block w-full truncate rounded-sm border-0 px-1.5 py-2 text-left font-mono text-xs hover:bg-foreground/40 focus-visible:ring-inset focus-visible:ring-offset-0",
                 DEPTH_BG[Math.min(depth, DEPTH_BG.length - 1)],
-                isSelected ? "text-ink ring-1 ring-ink ring-inset" : "text-dim",
+                isSelected
+                  ? "text-foreground ring-1 ring-ring ring-inset"
+                  : "text-muted-foreground",
               )}
             >
               {/* A sliver has no room for text; its name still reaches
                   hover and assistive tech. */}
-              {share >= 0.06 ? (
-                name
-              ) : (
-                <span className="sr-only">{name}</span>
-              )}
-            </button>
+              {share >= 0.06 ? name : <span className="sr-only">{name}</span>}
+            </Button>
             {children.length > 0 && (
               <div className="mt-px">
                 <MapLevel
@@ -440,7 +442,7 @@ export function FolderMap({
         selected={selected}
         onSelect={onSelect}
       />
-      <figcaption className="mt-2 flex items-baseline justify-between gap-3 font-mono text-[9.5px] text-faint">
+      <figcaption className="mt-2 flex items-baseline justify-between gap-3 font-mono text-[9.5px] text-muted-foreground">
         <span>width is bytes · rows are depth</span>
         {footer}
       </figcaption>

@@ -88,7 +88,9 @@ export type PortfolioMetrics = {
   failingChecks: Array<{ id: string; count: number; weight: number }>;
 };
 
-export function scoreUnit(checks: Array<{ id: string; weight: number; passed: boolean }>): {
+export function scoreUnit(
+  checks: Array<{ id: string; weight: number; passed: boolean }>,
+): {
   V: number;
   weightSum: number;
   passedWeight: number;

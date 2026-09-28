@@ -28,7 +28,6 @@ export type AgentMode = "diligent" | "shortcut";
 
 export const INITIAL_FILES: Files;
 export const GUARDED_PATH: string;
-export const WORK_STEPS: readonly string[];
 
 export function snapshotFiles(files: Files): Promise<Snapshot>;
 export function diffSnapshots(before: Snapshot, after: Snapshot): Diff;

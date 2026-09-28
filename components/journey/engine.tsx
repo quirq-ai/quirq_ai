@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { StoryBeat } from "@/components/story/story-beat";
 import type { BeatData } from "@/components/story/types";
-import { Rise, TextScrim, cn } from "@/components/ui/primitives";
+import { Rise, TextScrim } from "@/components/ui/primitives";
+import { Button } from "@/components/ui/button";
 import { overrideLeaves } from "@/components/stage/choreography";
 import {
   resolveDefinition,
@@ -29,8 +30,7 @@ import {
  */
 
 export type Loaded =
-  | { journey: ResolvedJourney; problem: null }
-  | { journey: null; problem: string };
+  { journey: ResolvedJourney; problem: null } | { journey: null; problem: string };
 
 /**
  * Parse if needed, validate, resolve. The one door into the engine, so every
@@ -73,20 +73,16 @@ function Chip({
   active?: boolean;
 }) {
   return (
-    <button
+    <Button
       type="button"
+      variant={active ? "secondary" : "outline"}
+      size="sm"
       onClick={onClick}
       disabled={disabled}
-      className={cn(
-        "rounded-full border px-3 py-1.5 font-mono text-[9.5px] tracking-[0.08em] uppercase transition-colors",
-        active
-          ? "border-ink/40 bg-white/[0.1] text-ink"
-          : "border-hair-soft bg-white/[0.03] text-dim hover:border-ink/30 hover:text-ink",
-        disabled && "cursor-not-allowed opacity-40 hover:border-hair-soft hover:text-dim",
-      )}
+      aria-pressed={active}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -99,11 +95,7 @@ const isScroll = (journey: ResolvedJourney) =>
   Object.values(journey.nodes).every((node) => !node.choices?.length);
 
 /** A node's beat, staged. Only journey pages stay in this tab. */
-const stagedBeat = (
-  journey: ResolvedJourney,
-  id: string,
-  index: number,
-): BeatData => {
+const stagedBeat = (journey: ResolvedJourney, id: string, index: number): BeatData => {
   const beat = journey.nodes[id].beat;
   return {
     ...beat,
@@ -204,7 +196,7 @@ function Walk({
             <TextScrim />
 
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <span className="font-mono text-[9.5px] tracking-[0.22em] text-faint uppercase">
+              <span className="font-mono text-[9.5px] tracking-[0.22em] text-muted-foreground uppercase">
                 Your path
               </span>
               {path.map((id, i) => (
@@ -224,11 +216,12 @@ function Walk({
                 <p className="display-sm mt-8 max-w-[18ch]">{tip.prompt}</p>
                 <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                   {tip.choices.map((choice) => (
-                    <button
+                    <Button
                       key={`${choice.to}-${choice.label}`}
                       type="button"
+                      variant="outline"
                       onClick={() => setPath([...path, choice.to])}
-                      className="group inline-flex items-center gap-2.5 rounded-full border border-hair bg-black/40 px-6 py-3.5 font-mono text-[11.5px] tracking-[0.14em] text-ink/85 uppercase backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-ink/30 hover:text-ink"
+                      className="group max-w-full whitespace-normal text-left"
                     >
                       {choice.label}
                       <svg
@@ -237,7 +230,7 @@ function Walk({
                         viewBox="0 0 12 12"
                         fill="none"
                         aria-hidden
-                        className="transition-transform duration-300 group-hover:translate-x-0.5"
+                        className="transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
                       >
                         <path
                           d="M2 6H10M10 6L6.5 2.5M10 6L6.5 9.5"
@@ -247,12 +240,12 @@ function Walk({
                           strokeLinejoin="round"
                         />
                       </svg>
-                    </button>
+                    </Button>
                   ))}
                 </div>
-                <p className="mt-7 font-mono text-[10px] leading-relaxed tracking-[0.1em] text-faint">
-                  {path.length} of {journey.rules.maxDepth} beats walked · the
-                  glass is on your branch
+                <p className="mt-7 font-mono text-[10px] leading-relaxed tracking-[0.1em] text-muted-foreground">
+                  {path.length} of {journey.rules.maxDepth} beats walked · the glass is on
+                  your branch
                 </p>
               </>
             ) : (
@@ -263,21 +256,17 @@ function Walk({
                     : "End of this branch."}
                 </p>
                 <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setPath([journey.rules.start])}
-                    className="inline-flex items-center gap-2.5 rounded-full bg-ink px-6 py-3.5 font-mono text-[11.5px] tracking-[0.14em] text-void uppercase transition-transform duration-300 hover:-translate-y-0.5"
-                  >
+                  <Button type="button" onClick={() => setPath([journey.rules.start])}>
                     Walk it again
-                  </button>
+                  </Button>
                   {path.length > 1 && journey.rules.allowRewind && (
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
                       onClick={() => setPath(path.slice(0, -1))}
-                      className="inline-flex items-center gap-2.5 rounded-full border border-hair bg-black/40 px-6 py-3.5 font-mono text-[11.5px] tracking-[0.14em] text-ink/85 uppercase backdrop-blur-md transition-colors hover:border-ink/30 hover:text-ink"
                     >
                       One step back
-                    </button>
+                    </Button>
                   )}
                 </div>
               </>
@@ -294,13 +283,7 @@ function Walk({
 /* -------------------------------- the engine ------------------------------- */
 
 /** A panel for anything the engine has to say before it can walk. */
-function Panel({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="relative flex min-h-[80svh] items-center overflow-hidden pt-24 pb-20">
       <div className="mx-auto w-full max-w-[1180px] px-5 sm:px-8 lg:px-11">
@@ -360,8 +343,9 @@ export function JourneyEngine({
   useEffect(() => {
     if (!accept) return;
     const src = new URLSearchParams(window.location.search).get("src");
+    // Restore the browser URL after hydration so the route retains its static default render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (src && /^[a-z0-9-]{1,64}$/.test(src)) loadSlug(src);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accept]);
 
   const onFile = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -382,7 +366,7 @@ export function JourneyEngine({
         footer={
           accept ? (
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <span className="font-mono text-[9.5px] tracking-[0.22em] text-faint uppercase">
+              <span className="font-mono text-[9.5px] tracking-[0.22em] text-muted-foreground uppercase">
                 Loaded
               </span>
               <Chip active onClick={() => {}} disabled>
@@ -409,26 +393,20 @@ export function JourneyEngine({
   // still performs while the reader is at the loader.
   return (
     <Panel
-      title={
-        accept ? "Paste a journey, watch it walk." : "This document cannot walk."
-      }
+      title={accept ? "Paste a journey, watch it walk." : "This document cannot walk."}
     >
       {accept ? (
         <>
-          <p className="mt-6 text-[15px] leading-[1.7] text-dim">
+          <p className="mt-6 text-[15px] leading-[1.7] text-muted-foreground">
             Any JourneyDefinition works: a file from{" "}
-            <code className="font-mono text-[13px] text-ink/80">
+            <code className="font-mono text-[13px] text-foreground/80">
               .quirq/journeys
             </code>
-            , one derived from a research note, or one you wrote by hand. It is
-            checked before it renders, and refused with a reason if it cannot
-            be walked.
+            , one derived from a research note, or one you wrote by hand. It is checked
+            before it renders, and refused with a reason if it cannot be walked.
           </p>
 
-          <label
-            htmlFor="journey-json"
-            className="label mt-8 block text-[9.5px]"
-          >
+          <label htmlFor="journey-json" className="label mt-8 block text-[9.5px]">
             The document
           </label>
           <textarea
@@ -437,31 +415,26 @@ export function JourneyEngine({
             onChange={(event) => setText(event.target.value)}
             spellCheck={false}
             rows={10}
-            placeholder={'{\n  "slug": "my-journey",\n  "name": "My journey",\n  "rules": { "start": "open" },\n  "nodes": { "open": { "short": "start", "pose": { "base": "centre" }, "beat": { "layout": "center", "title": ["One document,", "one walk."] } } }\n}'}
-            className="mt-2 w-full resize-y rounded-2xl border border-hair bg-black/50 p-4 font-mono text-[12px] leading-[1.7] text-ink/85 backdrop-blur-md placeholder:text-faint/70"
+            placeholder={
+              '{\n  "slug": "my-journey",\n  "name": "My journey",\n  "rules": { "start": "open" },\n  "nodes": { "open": { "short": "start", "pose": { "base": "centre" }, "beat": { "layout": "center", "title": ["One document,", "one walk."] } } }\n}'
+            }
+            className="mt-2 w-full resize-y rounded-md border border-input bg-background p-4 font-mono text-base leading-relaxed text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:text-sm"
           />
 
           <div className="mt-5 flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setState(loadDefinition(text))}
-              className="focus-on-ink inline-flex items-center gap-2.5 rounded-full bg-ink px-6 py-3.5 font-mono text-[11.5px] tracking-[0.14em] text-void uppercase transition-transform duration-300 hover:-translate-y-0.5"
-            >
+            <Button type="button" onClick={() => setState(loadDefinition(text))}>
               Load the journey
-            </button>
-            <button
-              type="button"
-              onClick={() => file.current?.click()}
-              className="inline-flex items-center gap-2.5 rounded-full border border-hair bg-black/40 px-6 py-3.5 font-mono text-[11.5px] tracking-[0.14em] text-ink/85 uppercase backdrop-blur-md transition-colors hover:border-ink/30 hover:text-ink"
-            >
+            </Button>
+            <Button type="button" variant="outline" onClick={() => file.current?.click()}>
               Open a .json file
-            </button>
+            </Button>
             <input
               ref={file}
               id="journey-file"
               type="file"
               accept="application/json,.json"
               onChange={onFile}
+              tabIndex={-1}
               className="sr-only"
             />
             <label htmlFor="journey-file" className="sr-only">
@@ -470,15 +443,11 @@ export function JourneyEngine({
           </div>
 
           <div className="mt-7 flex flex-wrap items-center gap-2">
-            <span className="font-mono text-[9.5px] tracking-[0.22em] text-faint uppercase">
+            <span className="font-mono text-[9.5px] tracking-[0.22em] text-muted-foreground uppercase">
               Or fetch
             </span>
             {["default", "research-the-quirq"].map((slug) => (
-              <Chip
-                key={slug}
-                onClick={() => loadSlug(slug)}
-                disabled={pending !== null}
-              >
+              <Chip key={slug} onClick={() => loadSlug(slug)} disabled={pending !== null}>
                 {pending === slug ? "Fetching" : slug}
               </Chip>
             ))}

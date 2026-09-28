@@ -1,19 +1,28 @@
 import type { Metadata } from "next";
-import { FrameOneHome } from "@/components/home/frame-one-home";
+import { HomePage } from "@/components/home/home-page";
 
-/** Assembled from two strings the page itself says out loud. */
 const DESCRIPTION =
-  "Secure environments for agentic workforces. Any model. Any harness. Any cloud. Deploy, manage and meter the agents your team already runs.";
+  "Your projects, AI agents and tools in one working environment. Explore Space, try it free for 30 days on XO, or build custom workflows with Quirq.";
+const TITLE = "quirq — Space for agentic work";
 
 export const metadata: Metadata = {
-  // No `title`. The root default ("quirq · work at light speed") is already
-  // written for this route, and anything set here would run through the
-  // "%s · quirq" template and print the brand twice.
+  title: { absolute: TITLE },
   description: DESCRIPTION,
-  openGraph: { description: DESCRIPTION },
-  twitter: { description: DESCRIPTION },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: "https://quirq.ai",
+    type: "website",
+    images: [{ url: "/assets/og.jpg", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ["/assets/og.jpg"],
+  },
 };
 
 export default function Page() {
-  return <FrameOneHome />;
+  return <HomePage />;
 }

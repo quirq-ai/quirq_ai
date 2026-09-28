@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ActionLink, Beat, Marker, Reveal, Rise, TextScrim } from "@/components/ui/primitives";
+import {
+  ActionLink,
+  Beat,
+  Marker,
+  Reveal,
+  Rise,
+  TextScrim,
+} from "@/components/ui/primitives";
 import { GlassPool, GlassText } from "@/components/ui/glass";
 import { KEYFRAMES } from "@/components/stage/choreography";
 import { stage } from "@/lib/stage-store";
@@ -33,9 +40,9 @@ export function BeatsHero() {
 
           <Rise delay={0.3}>
             <p className="lede mx-auto mt-7 text-center">
-              {KEYFRAMES.length} keyframes, {KEYFRAMES.length} sections, one
-              continuous traversal. You are scrolling the array right now; this
-              page is section by section how it works.
+              {KEYFRAMES.length} keyframes, {KEYFRAMES.length} sections, one continuous
+              traversal. You are scrolling the array right now; this page is section by
+              section how it works.
             </p>
           </Rise>
         </GlassPool>
@@ -80,9 +87,7 @@ export function BeatsMechanics() {
           {MECHANICS.map((item, i) => (
             <Rise key={item.title} delay={0.28 + i * 0.07}>
               <div className="flex gap-5 border-t border-hair py-4.5 sm:gap-7">
-                <span className="font-mono text-[11px] text-faint">
-                  0{i + 1}
-                </span>
+                <span className="font-mono text-[11px] text-faint">0{i + 1}</span>
                 <div>
                   <p className="over-stage text-[15.5px] font-medium text-ink">
                     {item.title}
@@ -192,9 +197,9 @@ export function BeatsLive() {
 
           <Rise delay={0.34} className="relative mt-5">
             <p className="over-stage font-mono text-[10.5px] leading-relaxed text-dim">
-              Park this panel mid-screen and the number reads close to 2.00:
-              this section is the third element, and you are standing on it.
-              Scroll a hair and the blend moves; there is no notch to land in.
+              Park this panel mid-screen and the number reads close to 2.00: this section
+              is the third element, and you are standing on it. Scroll a hair and the
+              blend moves; there is no notch to land in.
             </p>
           </Rise>
         </GlassPool>
@@ -254,12 +259,8 @@ export function BeatsLimits() {
                 0{i + 1}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[14.5px] font-medium text-ink">
-                  {limit.title}
-                </p>
-                <p className="mt-1 text-[13px] leading-relaxed text-dim">
-                  {limit.note}
-                </p>
+                <p className="text-[14.5px] font-medium text-ink">{limit.title}</p>
+                <p className="mt-1 text-[13px] leading-relaxed text-dim">{limit.note}</p>
               </div>
             </div>
           ))}
@@ -284,9 +285,9 @@ export function BeatsDynamic() {
 
           <Rise delay={0.24}>
             <p className="lede mx-auto mt-7 text-center">
-              Today you can already reorder sections, use fewer beats, and drop
-              interludes anywhere. Per-page tracks, sub-beats, and branching
-              walks are what the migration phases unlock.
+              Today you can already reorder sections, use fewer beats, and drop interludes
+              anywhere. Per-page tracks, sub-beats, and branching walks are what the
+              migration phases unlock.
             </p>
           </Rise>
 

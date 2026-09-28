@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
 import {
   CATEGORIES,
   COUNTS,
@@ -51,23 +53,12 @@ function Go() {
  * card that looks clickable and goes nowhere is worse than a card. Off-site
  * destinations open beside us and say so.
  */
-function CardShell({
-  href,
-  children,
-}: {
-  href?: string;
-  children: React.ReactNode;
-}) {
+function CardShell({ href, children }: { href?: string; children: React.ReactNode }) {
   if (!href) return <article className={styles.card}>{children}</article>;
 
   if (href.startsWith("http")) {
     return (
-      <a
-        className={styles.card}
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a className={styles.card} href={href} target="_blank" rel="noopener noreferrer">
         {children}
         <span className="sr-only">(opens in a new tab)</span>
       </a>
@@ -82,13 +73,7 @@ function CardShell({
 }
 
 /** A guide points at material that lives elsewhere; the row links when it does. */
-function GuideRow({
-  href,
-  children,
-}: {
-  href?: string;
-  children: React.ReactNode;
-}) {
+function GuideRow({ href, children }: { href?: string; children: React.ReactNode }) {
   return href ? (
     <Link className={styles.rrow} href={href}>
       {children}
@@ -106,17 +91,18 @@ function PostCard({ card, tag }: { card: Card; tag: string }) {
   return (
     <CardShell href={to}>
       <div className={styles.thumb}>
-        <img src={src(card.img)} alt="" loading="lazy" />
+        <Image
+          src={src(card.img)}
+          alt=""
+          fill
+          sizes="(max-width: 640px) 92vw, (max-width: 960px) 46vw, 360px"
+        />
       </div>
       <div className={styles.cbody}>
         <div className={styles.crow}>
           <span className={styles.tag}>{tag}</span>
           <span>
-            {card.sample ? (
-              <span className={styles.sample}>sample</span>
-            ) : (
-              card.num
-            )}
+            {card.sample ? <span className={styles.sample}>sample</span> : card.num}
           </span>
         </div>
         <h3>{card.title}</h3>
@@ -150,7 +136,12 @@ function PartnerCard({
     <CardShell href={href}>
       <div className={styles.thumb}>
         {art ? (
-          <img src={src(art)} alt="" loading="lazy" />
+          <Image
+            src={src(art)}
+            alt=""
+            fill
+            sizes="(max-width: 640px) 92vw, (max-width: 960px) 46vw, 360px"
+          />
         ) : (
           // No plate for this one yet, so the mark is set in type rather than
           // pointing at a file that does not exist.
@@ -176,7 +167,7 @@ function PartnerCard({
 function SeriesHead({ title, sub }: { title: string; sub: string }) {
   return (
     <div className={styles.seriesHead}>
-      <h2>{title}</h2>
+      <h2 id={`${title.toLowerCase().replace(/\s+/g, "-")}-heading`}>{title}</h2>
       <div className={styles.sub}>{sub}</div>
     </div>
   );
@@ -191,80 +182,62 @@ export function WritingView() {
 
   // News is one editorial card followed by the partner run, as in the mock.
   const newsCards = [
-    ...NEWS.map((card) => (
-      <PostCard key={card.title} card={card} tag="News" />
-    )),
-    ...PARTNERS.map((partner) => (
-      <PartnerCard key={partner.title} {...partner} />
-    )),
+    ...NEWS.map((card) => <PostCard key={card.title} card={card} tag="News" />),
+    ...PARTNERS.map((partner) => <PartnerCard key={partner.title} {...partner} />),
   ];
 
   // Only the everything view collapses: picking News means you want them all.
   const collapsed = tab === "all" && !newsExpanded;
-  const visibleNews = collapsed
-    ? newsCards.slice(0, NEWS_COLLAPSED)
-    : newsCards;
+  const visibleNews = collapsed ? newsCards.slice(0, NEWS_COLLAPSED) : newsCards;
 
   return (
     <>
       <header className={styles.header}>
         <h1>Writings</h1>
 
-        {/* The row holds the tablist and the docs signpost side by side. They
-            are separated because only the first three filter this page: a
-            tablist may contain tabs and nothing else, and this is a link to
-            another route rather than a fourth tab that never selects. */}
+        {/* These buttons filter the feed; the adjacent link opens the docs. */}
         <div className={styles.tabRow}>
-          <div
-            className={styles.tabs}
-            role="tablist"
-            aria-label="Post categories"
-          >
-            <button
+          <div className={styles.tabs} role="group" aria-label="Post categories">
+            <Button
               type="button"
-              role="tab"
-              aria-selected={tab === "all"}
+              aria-pressed={tab === "all"}
               onClick={() => setTab("all")}
-              className={
-                tab === "all" ? `${styles.tab} ${styles.tabOn}` : styles.tab
-              }
+              variant={tab === "all" ? "default" : "outline"}
             >
               All Posts<span className={styles.tabCount}>{COUNTS.all}</span>
-            </button>
+            </Button>
 
             {CATEGORIES.map((category) => (
-              <button
+              <Button
                 key={category.key}
                 type="button"
-                role="tab"
-                aria-selected={tab === category.key}
+                aria-pressed={tab === category.key}
                 onClick={() => setTab(category.key)}
-                className={
-                  tab === category.key
-                    ? `${styles.tab} ${styles.tabOn}`
-                    : styles.tab
-                }
+                variant={tab === category.key ? "default" : "outline"}
               >
                 {category.label}
                 <span className={styles.tabCount}>{COUNTS[category.key]}</span>
-              </button>
+              </Button>
             ))}
           </div>
 
-          <Link
-            href={DOCS_URL}
-            className={`${styles.tab} ${styles.tabMuted}`}
-            title="Release notes and the rest of the documentation"
-          >
-            Changelog → Docs
-          </Link>
+          <Button asChild variant="ghost">
+            <Link href={DOCS_URL} title="Release notes and the rest of the documentation">
+              Changelog → Docs
+            </Link>
+          </Button>
         </div>
       </header>
 
       {showNews && (
         <section className={styles.featured} aria-labelledby="featured-heading">
           <div className={styles.art}>
-            <img src={src(FEATURED.img)} alt="" />
+            <Image
+              src={src(FEATURED.img)}
+              alt=""
+              fill
+              sizes="(max-width: 960px) 92vw, 580px"
+            />
           </div>
           <div>
             <div className={styles.kicker}>
@@ -291,13 +264,13 @@ export function WritingView() {
           <div className={styles.grid}>{visibleNews}</div>
           {collapsed && newsCards.length > NEWS_COLLAPSED && (
             <div className={styles.moreRow}>
-              <button
+              <Button
                 type="button"
-                className={styles.tab}
+                variant="outline"
                 onClick={() => setNewsExpanded(true)}
               >
                 Read more news ↓
-              </button>
+              </Button>
             </div>
           )}
         </section>
@@ -335,9 +308,7 @@ export function WritingView() {
                 <div className={styles.num}>{guide.num}</div>
                 <div>
                   <h3>{guide.title}</h3>
-                  {guide.start && (
-                    <span className={styles.start}>Start here</span>
-                  )}
+                  {guide.start && <span className={styles.start}>Start here</span>}
                   <div className={styles.desc}>{guide.desc}</div>
                 </div>
                 <div className={styles.rmeta}>{guide.read}</div>

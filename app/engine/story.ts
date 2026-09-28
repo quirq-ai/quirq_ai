@@ -82,7 +82,8 @@ export const STORY: BeatData[] = [
         note: "A GlassPool cuts real letterform holes in its scrim, so the burst shines through the glyphs it stands behind.",
       },
     ],
-    caption: "Scrim strength travels with the lighting preset: light and shadow retune together, one switch.",
+    caption:
+      "Scrim strength travels with the lighting preset: light and shadow retune together, one switch.",
   },
   {
     index: 4,

@@ -6,7 +6,7 @@ import {
 } from "@/app/journey/defs";
 import type { Figure } from "@/components/story/types";
 import { figureFromChart } from "./chart-figure";
-import { POSTS, getPost, type Block, type Post } from "./research";
+import { getPost, type Block, type Post } from "./research";
 
 /**
  * Interactive reading: one research note in, one journey document out.
@@ -116,11 +116,7 @@ function bestSplit(text: string, tail: string): Split {
 
   for (const mark of PUNCTUATION_BREAKS) {
     for (let at = text.indexOf(mark); at !== -1; at = text.indexOf(mark, at + 1)) {
-      consider(
-        text.slice(0, at + mark.length - 1),
-        text.slice(at + mark.length),
-        true,
-      );
+      consider(text.slice(0, at + mark.length - 1), text.slice(at + mark.length), true);
     }
   }
   for (const mark of CONNECTOR_BREAKS) {
@@ -147,11 +143,11 @@ function bestSplit(text: string, tail: string): Split {
   );
 }
 
-export const splitTitle = (text: string, tail: string): [string, string] =>
-  bestSplit(text, tail).lines;
-
 const tidy = (text: string) =>
-  text.trim().replace(/[.?!:;,]$/, "").replace(DANGLING, "");
+  text
+    .trim()
+    .replace(/[.?!:;,]$/, "")
+    .replace(DANGLING, "");
 
 /**
  * The strings a title could be made from, in decreasing fidelity to the note:
@@ -361,9 +357,7 @@ const isChart = (block: Block): block is TextBlock =>
   block.kind === "p" && "text" in block && block.text.startsWith("Chart: ");
 
 const firstText = (blocks: Block[], kind: TextBlock["kind"]) =>
-  blocks.find(
-    (block): block is TextBlock => "text" in block && block.kind === kind,
-  );
+  blocks.find((block): block is TextBlock => "text" in block && block.kind === kind);
 
 const firstList = (blocks: Block[]) =>
   blocks.find((block): block is ListBlock => block.kind === "list");
@@ -404,8 +398,7 @@ function chapterNode(
   // numbers. Where one parses it is the beat's visual and its strongest
   // detail, so the other structures stand down and say so in the caption.
   const figure = chapter.blocks.reduce<Figure | null>(
-    (found, block) =>
-      found ?? (isChart(block) ? figureFromChart(block.text) : null),
+    (found, block) => found ?? (isChart(block) ? figureFromChart(block.text) : null),
     null,
   );
 
@@ -435,15 +428,16 @@ function chapterNode(
     : (paragraph?.text ?? post.title);
 
   const rows = !figure && list ? list.items.slice(0, 4).map(asRow) : undefined;
-  const panelRows = !figure && !list && table
-    ? table.rows.slice(0, 4).map((row) => ({
-        title: row[0] ?? "",
-        note: table.header
-          .slice(1, 5)
-          .map((head, i) => `${head} ${row[i + 1] ?? ""}`)
-          .join(" · "),
-      }))
-    : undefined;
+  const panelRows =
+    !figure && !list && table
+      ? table.rows.slice(0, 4).map((row) => ({
+          title: row[0] ?? "",
+          note: table.header
+            .slice(1, 5)
+            .map((head, i) => `${head} ${row[i + 1] ?? ""}`)
+            .join(" · "),
+        }))
+      : undefined;
 
   // Anything trimmed is said out loud rather than silently dropped.
   const trimmed: string[] = [];
@@ -472,9 +466,7 @@ function chapterNode(
         ? `Condensed from the note, which carries ${trimmed.join(" and ")}.`
         : "Condensed from the note.",
     },
-    ...(choices?.length
-      ? { prompt: PROMPTS[index % PROMPTS.length], choices }
-      : {}),
+    ...(choices?.length ? { prompt: PROMPTS[index % PROMPTS.length], choices } : {}),
   };
 }
 
@@ -524,7 +516,10 @@ export function buildResearchJourney(post: Post): JourneyDefinition {
   }
   if (chapters.length > 2) {
     const middle = chapters[Math.floor(chapters.length / 2)];
-    entries.push({ label: middle.heading ? shortOf(middle.heading) : "the premise", to: middle.id });
+    entries.push({
+      label: middle.heading ? shortOf(middle.heading) : "the premise",
+      to: middle.id,
+    });
   }
   entries.push({ label: "Straight to the end", to: "close" });
 
@@ -543,9 +538,7 @@ export function buildResearchJourney(post: Post): JourneyDefinition {
         lede: post.dek,
         caption: `${chapters.length + 2} beats · ${post.readingMinutes} min to read in full`,
       },
-      ...(branching
-        ? { prompt: "Where do you want to start?", choices: entries }
-        : {}),
+      ...(branching ? { prompt: "Where do you want to start?", choices: entries } : {}),
     },
     ...walked,
     close: {
@@ -593,9 +586,6 @@ export function buildResearchJourney(post: Post): JourneyDefinition {
   return definition;
 }
 
-/** Every note's journey, in reading order. */
-export const researchJourneys = () => POSTS.map(buildResearchJourney);
-
 /** The derived journey behind a journeys-API slug, or null if it names none. */
 export function researchJourneyBySlug(slug: string): JourneyDefinition | null {
   if (!slug.startsWith(DERIVED_PREFIX)) return null;
@@ -604,5 +594,4 @@ export function researchJourneyBySlug(slug: string): JourneyDefinition | null {
 }
 
 /** True for any slug the .quirq folder must not own. */
-export const isDerivedSlug = (slug: string) =>
-  researchJourneyBySlug(slug) !== null;
+export const isDerivedSlug = (slug: string) => researchJourneyBySlug(slug) !== null;

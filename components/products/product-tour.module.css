@@ -1,0 +1,78 @@
+.frame {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  background: var(--card);
+}
+.heading,
+.caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+.heading > span:last-child {
+  color: var(--muted-foreground);
+  white-space: nowrap;
+}
+.video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1392 / 940;
+  object-fit: contain;
+  background: var(--background);
+  border-block: 1px solid var(--border-subtle);
+}
+.caption {
+  color: var(--muted-foreground);
+  font-size: var(--text-caption);
+}
+.caption a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-height: 32px;
+  color: var(--foreground);
+  text-underline-offset: 4px;
+}
+.caption a:hover {
+  text-decoration: underline;
+}
+.caption svg {
+  width: 14px;
+  height: 14px;
+}
+.transcript {
+  padding: 0 20px 16px;
+  font-size: var(--text-caption);
+  color: var(--muted-foreground);
+  line-height: 1.7;
+}
+.transcript summary {
+  cursor: pointer;
+  width: fit-content;
+}
+.transcript p {
+  margin-top: 12px;
+  max-width: 85ch;
+}
+@media (max-width: 600px) {
+  .heading,
+  .caption {
+    padding: 12px;
+  }
+  .caption {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .transcript {
+    padding: 0 12px 12px;
+  }
+}

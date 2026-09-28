@@ -1,45 +1,47 @@
 # The quirq kit
 
-The engine, the CLI, and the installer behind `curl -fsSL quirq.ai/install | sh`.
-
-This is a reference implementation of the whitepaper's calculus, built so the
-site can demonstrate a real mint rather than an animation. It is not the
-product runtime.
+The repository contains a reference measurement engine, a CLI, a browser demo
+and local workspace telemetry. It also serves the xo-space product installer.
+These have distinct data sources and responsibilities; the reference engine is
+not the xo-space product runtime.
 
 ## Layout
 
-| File | Environment | What it is |
-|---|---|---|
-| `lib/quirq/engine.mjs` | isomorphic | The calculus: scoring, the mint rule, the cost model, unit and portfolio metrics |
-| `lib/quirq/ledger.mjs` | isomorphic | The hash chain: canonical JSON, linking, verification |
-| `lib/quirq/snapshot.mjs` | node only | Filesystem snapshots, the diff, and the check predicates |
-| `lib/quirq/cli.mjs` | node only | The `quirq` command |
-| `lib/quirq/*.d.ts` | types | Hand-written declarations for the site |
-| `lib/quirq/sample-ledger.json` | data | 34 entries from a real run, read by `/dashboard` |
-| `scripts/build-sample-ledger.mjs` | node only | Regenerates that ledger |
-| `app/install/route.ts` | build time | Serves a shim that fetches and runs xo-space's `install.sh` |
+| File                              | Environment | What it is                                                                                |
+| --------------------------------- | ----------- | ----------------------------------------------------------------------------------------- |
+| `lib/quirq/engine.mjs`            | isomorphic  | The calculus: scoring, the mint rule, the cost model, unit and portfolio metrics          |
+| `lib/quirq/ledger.mjs`            | isomorphic  | The hash chain: canonical JSON, linking, verification                                     |
+| `lib/quirq/snapshot.mjs`          | node only   | Filesystem snapshots, the diff, and the check predicates                                  |
+| `lib/quirq/cli.mjs`               | node only   | The `quirq` command                                                                       |
+| `lib/quirq/*.d.mts`               | types       | Declarations for the ESM engine modules                                                   |
+| `lib/quirq/workspace.mjs`         | isomorphic  | In-memory demo workspace with real hashing and check evaluation                           |
+| `lib/quirq/session.mjs`           | browser     | Visitor demo ledger persistence in localStorage                                           |
+| `app/demo/mint.tsx`               | browser     | Scripted work demo using the shared measurement engine                                    |
+| `lib/quirq/sample-ledger.json`    | data        | Generated reference ledger from scripted scratch-workspace runs                           |
+| `scripts/build-sample-ledger.mjs` | node only   | Regenerates that ledger                                                                   |
+| `app/install/route.ts`            | server      | Serves a POSIX bootstrap that downloads xo-space's native installer and runs it with Bash |
+| `app/api/quirq-state/route.ts`    | server      | Read-only workspace telemetry for `/dashboard`                                            |
+| `app/api/instance/route.ts`       | server      | Retained HTTP proxy to a locally hosted instance                                          |
 
 ### Why `.mjs` and not TypeScript
 
-One file has to run under bare `node` for the CLI and be imported by the Next
-app. This repo has no `tsx` or `ts-node` and deliberately carries almost no
-tooling dependencies, and Node 23.3 cannot execute `.ts` directly. So the
-engine ships as ESM JavaScript with hand-written `.d.ts` beside it, which the
-app consumes through the `@/` alias with full types. Verified: `@/lib/quirq/engine.mjs`
-typechecks under `moduleResolution: "bundler"`.
+The shared calculation modules run under bare Node for the CLI and in the browser
+demo. They use ESM JavaScript with adjacent `.d.mts` declarations, consumed by
+TypeScript through the `@/` alias. This keeps one implementation across both
+runtimes without requiring a separate compile step for the CLI.
 
 The split between `engine.mjs` and `snapshot.mjs` is load-bearing: the web app
 must never pull in `node:fs`. Anything touching the filesystem lives in
-`snapshot.mjs`, which only the CLI imports.
+`snapshot.mjs`, used by the CLI and the sample-ledger generator.
 
 ## Commands
 
-```
-quirq demo [dir]        run a sample workspace end to end
-quirq begin <spec.json> capture S0 and open a unit
-quirq settle            capture S1, score, mint, record
-quirq report [dir]      portfolio metrics over the ledger
-quirq verify [dir]      recompute the hash chain from genesis
+```text
+pnpm quirq demo [dir]        run a sample workspace end to end
+pnpm quirq begin <spec.json> capture S0 and open a unit
+pnpm quirq settle            capture S1, score, mint, record
+pnpm quirq report [dir]      portfolio metrics over the ledger
+pnpm quirq verify [dir]      recompute the hash chain from genesis
 ```
 
 `begin` and `settle` are the real two-phase flow: `begin` content-addresses
@@ -69,16 +71,15 @@ and mints zero.
 
 Records carry `snapshots.provenance`. The CLI measures compute seconds itself
 and marks them `measured`; inference token counts are supplied by whatever ran
-the work and are marked `declared`, because the CLI calls no model. The
-dashboard surfaces that distinction rather than presenting both as if they
-were measured. Keep it that way: this is a measurement product and the
-provenance of its own numbers is not a detail.
+the work and are marked `declared`, because the CLI calls no model. Preserve
+those labels in ledger output and any future UI consuming it. The current
+dashboard reads workspace usage telemetry, not this reference ledger.
 
 ## The ledger
 
 JSONL, one entry per line:
 
-```json
+```text
 { "seq": 0, "prevHash": "000...", "record": { ...SettledUnit }, "hash": "a5ad..." }
 ```
 
@@ -87,7 +88,7 @@ JSONL, one entry per line:
 Two things matter in `verifyChain`:
 
 1. It walks forward from genesis carrying the **recomputed** hash, not the
-   stored one. That is what makes tampering cascade: editing record *n* breaks
+   stored one. That is what makes tampering cascade: editing record _n_ breaks
    its own hash and orphans every entry after it. Chaining on the stored hash
    would quietly contain the damage to one row, which defeats the point.
 2. `canonicalize` sorts object keys at every depth and drops `undefined`.
@@ -100,7 +101,7 @@ Two things matter in `verifyChain`:
 Recorded here so nobody rediscovers them as bugs:
 
 - **`QER*` sign.** As written, the audit correction `QER* = QER(1 - A)` with
-  `A = E[V_gold - V]` makes farmed checks *raise* the corrected figure, which
+  `A = E[V_gold - V]` makes farmed checks _raise_ the corrected figure, which
   contradicts the paper's own reading rule. Not implemented; it needs gold
   checks held outside the environment, which a demo does not have.
 - **`cost per quirq` when `Q = 0`.** Undefined in the paper. The engine
@@ -108,9 +109,9 @@ Recorded here so nobody rediscovers them as bugs:
   portfolio figure.
 - **Table 1's `+81%`** is a rounded-display artifact; the exact QER growth is
   `+77.1%`. The site quotes the paper's figure when quoting the paper.
-- **Bridge metrics are not dimensionless**, unlike QER and cost per quirq, and
-  per-token energy varies widely between deployments. Treat quirqs/kWh as an
-  order of magnitude.
+- **Units matter.** QER is dimensionless; cost per quirq is currency per unit,
+  and the energy bridge is quirqs/kWh. Per-token energy varies widely between
+  deployments, so the energy bridge is an order-of-magnitude estimate.
 
 ## Tests
 
@@ -118,69 +119,79 @@ Recorded here so nobody rediscovers them as bugs:
 pnpm test
 ```
 
-`node --test` over `lib/quirq/*.test.mjs`, using Node's built-in runner so the
-repo gains no dependency. The fixtures are the whitepaper's worked examples:
+`node --test` runs `lib/quirq/*.test.mjs`. The measurement fixtures include the
+whitepaper's worked examples:
 the support ticket's `V = 0.8` and `$0.128` all-in cost, `cq = 0.032` and the
 `31x` multiple at `V = 1`, June's `QER 5.6x`, and `169 quirqs/kWh`. If those
-stop reproducing, either the engine broke or the paper was revised.
+stop reproducing, either the engine broke or the paper was revised. Workspace
+tests also cover the browser demo's snapshot, predicate and settlement flow.
+Run `pnpm check` and `pnpm build` for the complete repository checks.
 
 ## Bundlers can break a hash chain
 
-Found the hard way. `lib/quirq/sample-ledger.json` is imported as a JSON
-module, and Turbopack re-serializes it: a stored `0.20426093667038198` came
-back as `0.204260936670382`. That is a different double, so the canonical form
-differed, so the digest differed, and the dashboard correctly reported a broken
-chain over data nobody had touched.
+A previous dashboard imported `lib/quirq/sample-ledger.json` as a JSON module.
+Turbopack re-serialized a stored `0.20426093667038198` as `0.204260936670382`,
+changing the canonical form and its digest. The current dashboard does not import
+that sample, but the generator preserves the fix for future consumers.
 
 `scripts/build-sample-ledger.mjs` therefore rounds every number to 6 decimals
-**before** hashing, via `roundDeep`. Values that short round-trip through any
-serializer unchanged, so the chain verifies identically in node, in the
-browser, and after bundling. Do not remove that rounding, and if you ever hash
+**before** hashing, via `roundDeep`. This avoids the observed precision rewrite.
+Do not remove that rounding, and if you ever hash
 data that reaches the browser as a JSON module, assume the bundler may rewrite
 its floats.
 
 (Ledgers written by the CLI keep full precision. They are read from disk as
 bytes and never pass through a bundler, so the problem does not arise.)
 
-## Connecting to a live instance
+## Workspace dashboard and retained instance API
 
-`/dashboard` can reach a machine-local quirq instance (XO Space) and report
-its status. Three pieces:
+`/dashboard` loads `/api/quirq-state`. The handler reads workspace state from
+`QUIRQ_DIR`, or defaults to `../.quirq` relative to the running app. It returns
+typed folder, activity, session and usage data defined in `lib/quirq/folder.ts`.
+It never writes watcher-owned files. Missing or partially written data produces
+an absent or partial snapshot rather than invented statistics.
 
-| File | What it is |
-|---|---|
-| `app/api/instance/route.ts` | Same-origin proxy to the instance's `/api/quirq` |
-| `lib/quirq/instance.ts` | Types transcribed from a live payload, the client, and `healthOf` |
-| `app/dashboard/*` | The connect panel and the instance view |
+Reading is enabled in development. A production server returns an absent root
+unless `QUIRQ_DIR` explicitly opts it into a chosen directory. `secrets.env` and
+other environment files outside the `runtime.env` / `roots.env` allowlist are
+listed but never opened. Preserve those guards and the UI's masked state.
 
-**Why a proxy.** Space answers `/api/quirq` with
-`access-control-allow-credentials` but no `access-control-allow-origin`, so a
-browser fetch straight from this site is blocked. Verified in the browser, not
-assumed: the direct fetch throws `TypeError: Failed to fetch`. Server to server
-has no such restriction.
+The watcher directory is separate from the site's committed `.quirq/journeys`
+content library. Journey API writes are development-only; published definitions
+travel with the app. Do not point cleanup scripts at either directory based on
+ordinary import analysis.
 
-**The proxy only reaches loopback.** A proxy that fetches whatever it is handed
-is an SSRF hole, letting anyone who can reach the route use the server to probe
-networks the browser cannot see. The instance is machine-local by definition,
-so the allowlist is loopback and everything else is refused with a reason
-before a socket opens. There is also a 4s timeout, because a wrong port
-otherwise hangs the panel until the platform's own limit and reads as a broken
-page.
+`/api/instance?endpoint=<url>` remains an independent published route. It checks
+HTTP(S) and its local-host allowlist, requests the instance's `/api/quirq`, and
+uses a four-second timeout. It resolves the host from the web server's machine.
+The previous client probe and connection panel were unused and removed; the
+current dashboard does not call this endpoint. `lib/quirq/instance.ts` now contains
+only the byte and age formatting helpers used by the dashboard.
 
-**This is the one dynamic route on an otherwise fully static site.** It only
-works when the site and the instance run on the same machine, which is the
-local case it exists for. Deployed anywhere else it fails to connect and the
-dashboard says so.
+Keep environment telemetry and settled work separate: activity counts, tokens
+and a running watcher do not establish a verified outcome or minted value.
 
-**An instance is not a ledger.** The payload describes the environment that
-would do the metering (where its root is, whether it can write, whether the
-watcher is running, which projects report) and contains no settled work. Keep
-the two apart in the UI: instance figures must never be folded into the ledger
-metrics.
+## Product installer
 
-**Sensitive rows.** `tree` marks `secrets.env` with `sensitive: true` and the
-API masks the values. Render the row as masked and never imply a value is
-available.
+`app/install/route.ts` serves the POSIX bootstrap behind
+`curl -fsSL https://quirq.ai/install | sh`. It downloads `install.sh` from
+`quirq-ai/xo-space` into a temporary file, checks the download succeeded and is
+nonempty, then runs that file with Bash. The default ref is `main`;
+`QUIRQ_SOURCE_REF` can select another branch, tag or commit after validation.
+Arguments, the current workspace and the installer's exit status are preserved.
+The temporary file is removed when the bootstrap exits.
+
+The upstream installer owns setup: it prepares uv and a Python 3.12 virtual
+environment, installs the Python requirements, configures workspace/state roots
+and runs the native server in the foreground. The default UI is
+`http://localhost:5002/space/`; Ctrl-C stops it. The website bootstrap does not
+manage containers or install this repository's reference measurement CLI. See
+the upstream [installation guide](https://github.com/quirq-ai/xo-space/blob/main/INSTALLATION.md).
+
+`tests/install-bootstrap.test.mjs` checks the exact response script under POSIX
+sh with a mocked download and harmless fixture installer. It covers partial and
+empty downloads, source-ref validation, argument/workspace preservation, exit
+status and temporary-file cleanup without running the real installer.
 
 ## Regenerating the sample ledger
 
@@ -188,8 +199,9 @@ available.
 pnpm sample-ledger
 ```
 
-Writes `lib/quirq/sample-ledger.json` from real runs against a scratch
-workspace, seeded so the output is reproducible. The agent is a script, which
-is the whitepaper's **mock mode**: it validates the machinery and cannot
-validate claims about real agents. The dashboard says so on the page. Do not
-drop that label.
+Writes `lib/quirq/sample-ledger.json` from filesystem operations against a scratch
+workspace. The actor is scripted: this is the whitepaper's **mock mode**, which
+tests the measurement machinery and cannot validate claims about real agents.
+The browser demo likewise uses staged files and scripted edits with real hashing,
+checks and ledger arithmetic. Preserve this distinction whenever either result
+is shown. The current dashboard consumes neither demo ledger.

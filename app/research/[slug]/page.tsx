@@ -14,6 +14,7 @@ import { PostBanner } from "@/components/research/banner";
 import { PostCard } from "@/components/research/card";
 import { BodyBlock } from "@/components/prose/body";
 import { Rise } from "@/components/ui/primitives";
+import { Button } from "@/components/ui/button";
 
 export function generateStaticParams() {
   return POSTS.map((post) => ({ slug: post.slug }));
@@ -69,7 +70,7 @@ function NeighbourLink({
     <Link
       href={`/research/${post.slug}`}
       rel={back ? "prev" : "next"}
-      className={`group flex items-center gap-4 rounded-2xl border border-hair bg-black/40 px-5 py-5 transition-colors hover:border-ink/25 ${
+      className={`group flex items-center gap-4 rounded-xl border border-border bg-card px-5 py-5 transition-colors hover:border-primary/50 ${
         back ? "" : "flex-row-reverse text-right"
       }`}
     >
@@ -79,10 +80,8 @@ function NeighbourLink({
         viewBox="0 0 12 12"
         fill="none"
         aria-hidden
-        className={`shrink-0 text-dim transition-transform duration-300 ${
-          back
-            ? "group-hover:-translate-x-1"
-            : "rotate-180 group-hover:translate-x-1"
+        className={`shrink-0 text-muted-foreground transition-transform duration-300 ${
+          back ? "group-hover:-translate-x-1" : "rotate-180 group-hover:translate-x-1"
         }`}
       >
         <path
@@ -95,7 +94,7 @@ function NeighbourLink({
       </svg>
       <span className="min-w-0">
         <span className="label block">{back ? "Previous" : "Next"}</span>
-        <span className="mt-2 block truncate text-[16px] font-semibold text-ink">
+        <span className="mt-2 block text-[16px] font-semibold text-foreground">
           {post.title}
         </span>
       </span>
@@ -116,29 +115,22 @@ export default async function ResearchPost({
   const related = relatedPosts(post, 2, [previous, next]);
 
   return (
-    <article className="mx-auto w-full max-w-[760px] px-5 pt-24 sm:px-8 sm:pt-28">
+    <article className="reading-container pt-[calc(var(--header-height)+var(--space-section-sm))]">
       <Rise>
-        <Link
-          href="/research"
-          className="label inline-flex items-center gap-2 transition-colors hover:text-ink"
-        >
-          <svg
-            width="10"
-            height="10"
-            viewBox="0 0 12 12"
-            fill="none"
-            aria-hidden
-          >
-            <path
-              d="M7.5 2L3.5 6L7.5 10"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Research
-        </Link>
+        <Button asChild variant="ghost" className="-ml-4">
+          <Link href="/research">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden>
+              <path
+                d="M7.5 2L3.5 6L7.5 10"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Research
+          </Link>
+        </Button>
       </Rise>
 
       <header className="mt-8">
@@ -154,7 +146,7 @@ export default async function ResearchPost({
         </Rise>
 
         <Rise delay={0.05}>
-          <p className="mt-8 flex flex-wrap items-center gap-x-2.5 gap-y-2 font-mono text-[10px] tracking-[0.18em] text-faint uppercase">
+          <p className="mt-8 flex flex-wrap items-center gap-x-2.5 gap-y-2 font-mono text-[10px] tracking-[0.18em] text-muted-foreground uppercase">
             <span className="numeric">
               Note {String(noteNumber(post)).padStart(2, "0")}
             </span>
@@ -164,7 +156,7 @@ export default async function ResearchPost({
                 {/* The one cross-link out of an article into its shelf. */}
                 <Link
                   href={`/research/topic/${topic.slug}`}
-                  className="text-dim underline decoration-hair underline-offset-4 transition-colors hover:text-ink"
+                  className="text-muted-foreground underline decoration-border underline-offset-4 transition-colors hover:text-foreground"
                 >
                   {topic.label}
                 </Link>
@@ -179,54 +171,45 @@ export default async function ResearchPost({
           </p>
         </Rise>
         <Rise delay={0.1}>
-          <h1 className="mt-5 text-[clamp(30px,4.4vw,50px)] font-semibold leading-[1.05] tracking-[-0.03em]">
+          <h1 className="mt-5 text-[length:var(--text-heading)] font-semibold leading-[1.05] tracking-[-0.03em]">
             {post.title}
           </h1>
         </Rise>
         <Rise delay={0.16}>
-          <p className="mt-6 text-[17px] leading-[1.65] text-dim">{post.dek}</p>
+          <p className="mt-6 text-[17px] leading-[1.65] text-muted-foreground">
+            {post.dek}
+          </p>
         </Rise>
 
-        {/* The other way to read it. A plain Link, not the stage CTA: this
-            goes to a page that mounts the 3D shot, and the walk is the point,
-            not the button. */}
         <Rise delay={0.2}>
-          <Link
-            href={`/journey/read/${post.slug}`}
-            className="group mt-8 inline-flex items-center gap-3 rounded-full border border-hair bg-black/40 py-2 pr-5 pl-2 transition-colors hover:border-ink/25"
-          >
-            <span
-              aria-hidden
-              className="h-7 w-7 rounded-full"
-              style={{ background: "var(--spectrum)" }}
-            />
-            <span className="font-mono text-[10.5px] tracking-[0.14em] text-ink uppercase">
+          <Button asChild variant="outline" className="mt-8">
+            <Link href={`/journey/read/${post.slug}`}>
               Read it interactively
-            </span>
-            <span className="hidden font-mono text-[10px] tracking-[0.1em] text-faint sm:inline">
-              pick your path, the glass follows
-            </span>
-            <svg
-              width="11"
-              height="11"
-              viewBox="0 0 12 12"
-              fill="none"
-              aria-hidden
-              className="text-dim transition-transform duration-300 group-hover:translate-x-0.5"
-            >
-              <path
-                d="M2 6H10M10 6L6.5 2.5M10 6L6.5 9.5"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Link>
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 12 12"
+                fill="none"
+                aria-hidden
+                className="text-muted-foreground"
+              >
+                <path
+                  d="M2 6H10M10 6L6.5 2.5M10 6L6.5 9.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </Link>
+          </Button>
+          <p className="mt-3 text-sm text-muted-foreground">
+            pick your path, the glass follows
+          </p>
         </Rise>
 
         <Rise delay={0.24}>
-          <div className="spectrum-rule mt-9 h-px w-14" />
+          <div aria-hidden className="mt-9 h-px w-14 bg-primary" />
         </Rise>
       </header>
 
@@ -238,15 +221,16 @@ export default async function ResearchPost({
           <BodyBlock key={i} block={block} />
         ))}
 
-        <p className="mt-14 border-t border-hair-soft pt-6 font-mono text-[10.5px] leading-relaxed tracking-[0.08em] text-faint">
+        <p className="mt-14 border-t border-border pt-6 font-mono text-[10.5px] leading-relaxed tracking-[0.08em] text-muted-foreground">
           Adapted from the XO research program · canonical version at{" "}
           <a
             href={post.source}
             target="_blank"
             rel="noopener noreferrer"
-            className="underline underline-offset-4 transition-colors hover:text-dim"
+            className="underline underline-offset-4 transition-colors hover:text-muted-foreground"
           >
             docs.xo.builders
+            <span className="sr-only"> (opens in a new tab)</span>
           </a>
         </p>
       </div>
@@ -270,7 +254,7 @@ export default async function ResearchPost({
       )}
 
       {related.length > 0 && (
-        <section className="mt-16 border-t border-hair pt-12">
+        <section className="mt-16 border-t border-border pt-12">
           <Rise>
             {/* Not "more in <topic>": the list falls back to the wider
                 program once a topic runs out, so a topic heading would lie. */}

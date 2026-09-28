@@ -23,7 +23,7 @@ export default function JourneyLoader() {
       <div className="relative">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-64 bg-linear-to-t from-black via-black/85 to-transparent"
+          className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-64 bg-linear-to-t from-background via-background/85 to-transparent"
         />
         <SiteFooter />
       </div>

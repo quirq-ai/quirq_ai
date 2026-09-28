@@ -1,0 +1,16 @@
+{
+  "fps": 4,
+  "captionBarHeight": 100,
+  "crop": { "x": 48, "y": 64, "width": 1392, "height": 840 },
+  "subtitle": "Setup preview · No computer provisioned · Pauses trimmed",
+  "captions": [
+    { "start": 0, "end": 11, "title": "Choose an agent template" },
+    { "start": 12, "end": 23, "title": "Open a preconfigured environment" },
+    { "start": 24, "end": 35, "title": "Name your Space" },
+    {
+      "start": 36,
+      "end": 51,
+      "title": "Choose storage · Ready to create"
+    }
+  ]
+}

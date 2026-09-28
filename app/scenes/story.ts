@@ -64,7 +64,8 @@ export const STORY: BeatData[] = [
         body: "The mesh (one object, always), the per-frame path (no allocations, no React), and text without its scrim or pool. These three are the contract.",
       },
     ],
-    caption: "Quality auto-detects: small or thin machines get fewer samples, lower resolution, no backside refraction. You do not tune this per scene.",
+    caption:
+      "Quality auto-detects: small or thin machines get fewer samples, lower resolution, no backside refraction. You do not tune this per scene.",
   },
   {
     index: 3,
@@ -90,7 +91,8 @@ export const STORY: BeatData[] = [
         note: "Tilts are absolute targets; spin is a rate, radians per second, so the form keeps turning through a beat rather than snapping to an angle.",
       },
     ],
-    caption: "Why fixed? One subject over a parallaxing light reads identically to a moving camera, and a still camera keeps the DOM, the scrims and the glass holes aligned. The pose presets are the vocabulary: centre stage, drained, flooded, recede, finale.",
+    caption:
+      "Why fixed? One subject over a parallaxing light reads identically to a moving camera, and a still camera keeps the DOM, the scrims and the glass holes aligned. The pose presets are the vocabulary: centre stage, drained, flooded, recede, finale.",
   },
   {
     index: 4,

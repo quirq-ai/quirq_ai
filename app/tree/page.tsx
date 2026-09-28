@@ -5,9 +5,9 @@ import { StoryBeat } from "@/components/story/story-beat";
 import { STORY } from "./story";
 
 export const metadata: Metadata = {
-  title: 'The choreography tree',
+  title: "The choreography tree",
   description:
-    'The keyframe track is resolved from a tree with cascading partial keyframes and branch predicates: the feature that lets one scene serve many walks.',
+    "The keyframe track is resolved from a tree with cascading partial keyframes and branch predicates: the feature that lets one scene serve many walks.",
 };
 
 /** Feature page: tree. Story data in ./story.ts, rendered by StoryBeat. */

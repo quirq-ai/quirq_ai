@@ -116,9 +116,7 @@ const laneOf = (commit) => {
   }
   let lane = "root";
   let best = 0;
-  for (const [name, count] of [...counts].sort((a, b) =>
-    a[0].localeCompare(b[0]),
-  )) {
+  for (const [name, count] of [...counts].sort((a, b) => a[0].localeCompare(b[0]))) {
     if (count > best) {
       best = count;
       lane = name;
@@ -205,9 +203,7 @@ function build(commits) {
       {
         label: "commits",
         tone: "cost",
-        values: buckets.map(
-          (at) => commits.filter((c) => bucket.of(c.at) === at).length,
-        ),
+        values: buckets.map((at) => commits.filter((c) => bucket.of(c.at) === at).length),
       },
     ],
     caption:
@@ -321,9 +317,7 @@ function build(commits) {
 
 const commits = readCommits();
 if (commits.length === 0) {
-  console.error(
-    `No commits found for path ${SCOPE}. Run this inside a git repository.`,
-  );
+  console.error(`No commits found for path ${SCOPE}. Run this inside a git repository.`);
   process.exit(1);
 }
 

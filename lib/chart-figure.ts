@@ -19,9 +19,7 @@ const PREFIX = "Chart: ";
 /** A number as the note wrote it: "228k", "1.87M", "67%", "about 90 percent". */
 const VALUE = String.raw`(?:about\s+|up\s+to\s+|~)?\d[\d.,]*\s*(?:%|percent|K|k|M|B)?`;
 
-const pairPattern = new RegExp(
-  String.raw`^(.+?)\s+(${VALUE})\s*/\s*(${VALUE})\.?$`,
-);
+const pairPattern = new RegExp(String.raw`^(.+?)\s+(${VALUE})\s*/\s*(${VALUE})\.?$`);
 const singlePattern = new RegExp(String.raw`^(.+?)\s+(${VALUE})\.?$`);
 
 /** The note's numeral, and the number the geometry needs. */
@@ -71,9 +69,7 @@ function seriesNames(header: string): string[] | null {
     ?.trim();
   if (!trimmed || !trimmed.includes(" / ")) return null;
   const names = trimmed.split(" / ").map((name) => name.trim());
-  return names.every((name) => name.length > 0 && name.length < 24)
-    ? names
-    : null;
+  return names.every((name) => name.length > 0 && name.length < 24) ? names : null;
 }
 
 /**
@@ -164,9 +160,7 @@ export function figureFromChart(text: string): Figure | null {
     display: columns.map((column) => column[at].display),
   }));
 
-  const commentary = sentences
-    .filter((_, at) => at !== 0 && at !== dataAt)
-    .join(" ");
+  const commentary = sentences.filter((_, at) => at !== 0 && at !== dataAt).join(" ");
 
   return {
     kind: "bars",

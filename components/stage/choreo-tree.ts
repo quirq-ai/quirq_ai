@@ -66,6 +66,7 @@ export const CHANNELS = [
  * channel can never silently freeze at its seed value in the sampler.
  */
 type AssertNever<T extends never> = T;
+/** @public Compile-time assertion; TypeScript checks it without a runtime consumer. */
 export type _ChannelsAreExhaustive = AssertNever<
   Exclude<keyof Keyframe, (typeof CHANNELS)[number]>
 >;
@@ -231,10 +232,7 @@ export const CHOREOGRAPHY: ChoreoNode = {
  * Filter by predicates, flatten depth-first, cascade partials into full
  * leaves. Runs on mount and context change, never per frame.
  */
-export function resolveTrack(
-  root: ChoreoNode,
-  ctx: TrackContext,
-): ResolvedLeaf[] {
+export function resolveTrack(root: ChoreoNode, ctx: TrackContext): ResolvedLeaf[] {
   const leaves: ResolvedLeaf[] = [];
 
   const walk = (node: ChoreoNode, inherited: Keyframe) => {

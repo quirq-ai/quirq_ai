@@ -62,9 +62,7 @@
           "bytes": 109
         },
         "diff": {
-          "added": [
-            "src/cr0.js"
-          ],
+          "added": ["src/cr0.js"],
           "modified": [],
           "removed": []
         },
@@ -139,9 +137,7 @@
           "bytes": 218
         },
         "diff": {
-          "added": [
-            "src/cr1.js"
-          ],
+          "added": ["src/cr1.js"],
           "modified": [],
           "removed": []
         },
@@ -216,9 +212,7 @@
           "bytes": 327
         },
         "diff": {
-          "added": [
-            "src/cr2.js"
-          ],
+          "added": ["src/cr2.js"],
           "modified": [],
           "removed": []
         },
@@ -293,9 +287,7 @@
           "bytes": 436
         },
         "diff": {
-          "added": [
-            "src/cr3.js"
-          ],
+          "added": ["src/cr3.js"],
           "modified": [],
           "removed": []
         },
@@ -370,9 +362,7 @@
           "bytes": 513
         },
         "diff": {
-          "added": [
-            "tickets/t4.md"
-          ],
+          "added": ["tickets/t4.md"],
           "modified": [],
           "removed": []
         },
@@ -447,9 +437,7 @@
           "bytes": 622
         },
         "diff": {
-          "added": [
-            "src/cr5.js"
-          ],
+          "added": ["src/cr5.js"],
           "modified": [],
           "removed": []
         },
@@ -524,9 +512,7 @@
           "bytes": 699
         },
         "diff": {
-          "added": [
-            "tickets/t6.md"
-          ],
+          "added": ["tickets/t6.md"],
           "modified": [],
           "removed": []
         },
@@ -601,9 +587,7 @@
           "bytes": 765
         },
         "diff": {
-          "added": [
-            "contracts/v7.json"
-          ],
+          "added": ["contracts/v7.json"],
           "modified": [],
           "removed": []
         },
@@ -678,12 +662,8 @@
           "bytes": 814
         },
         "diff": {
-          "added": [
-            "src/cr8.js"
-          ],
-          "modified": [
-            "test/cr8.test.js"
-          ],
+          "added": ["src/cr8.js"],
+          "modified": ["test/cr8.test.js"],
           "removed": []
         },
         "provenance": {
@@ -757,9 +737,7 @@
           "bytes": 891
         },
         "diff": {
-          "added": [
-            "tickets/t9.md"
-          ],
+          "added": ["tickets/t9.md"],
           "modified": [],
           "removed": []
         },
@@ -834,9 +812,7 @@
           "bytes": 968
         },
         "diff": {
-          "added": [
-            "tickets/t10.md"
-          ],
+          "added": ["tickets/t10.md"],
           "modified": [],
           "removed": []
         },
@@ -911,9 +887,7 @@
           "bytes": 1045
         },
         "diff": {
-          "added": [
-            "tickets/t11.md"
-          ],
+          "added": ["tickets/t11.md"],
           "modified": [],
           "removed": []
         },
@@ -988,9 +962,7 @@
           "bytes": 1156
         },
         "diff": {
-          "added": [
-            "src/cr12.js"
-          ],
+          "added": ["src/cr12.js"],
           "modified": [],
           "removed": []
         },
@@ -1065,9 +1037,7 @@
           "bytes": 1221
         },
         "diff": {
-          "added": [
-            "contracts/v13.json"
-          ],
+          "added": ["contracts/v13.json"],
           "modified": [],
           "removed": []
         },
@@ -1142,9 +1112,7 @@
           "bytes": 1298
         },
         "diff": {
-          "added": [
-            "tickets/t14.md"
-          ],
+          "added": ["tickets/t14.md"],
           "modified": [],
           "removed": []
         },
@@ -1219,9 +1187,7 @@
           "bytes": 1409
         },
         "diff": {
-          "added": [
-            "src/cr15.js"
-          ],
+          "added": ["src/cr15.js"],
           "modified": [],
           "removed": []
         },
@@ -1296,9 +1262,7 @@
           "bytes": 1520
         },
         "diff": {
-          "added": [
-            "src/cr16.js"
-          ],
+          "added": ["src/cr16.js"],
           "modified": [],
           "removed": []
         },
@@ -1373,9 +1337,7 @@
           "bytes": 1585
         },
         "diff": {
-          "added": [
-            "contracts/v17.json"
-          ],
+          "added": ["contracts/v17.json"],
           "modified": [],
           "removed": []
         },
@@ -1450,9 +1412,7 @@
           "bytes": 1696
         },
         "diff": {
-          "added": [
-            "src/cr18.js"
-          ],
+          "added": ["src/cr18.js"],
           "modified": [],
           "removed": []
         },
@@ -1527,9 +1487,7 @@
           "bytes": 1773
         },
         "diff": {
-          "added": [
-            "tickets/t19.md"
-          ],
+          "added": ["tickets/t19.md"],
           "modified": [],
           "removed": []
         },
@@ -1604,9 +1562,7 @@
           "bytes": 1850
         },
         "diff": {
-          "added": [
-            "tickets/t20.md"
-          ],
+          "added": ["tickets/t20.md"],
           "modified": [],
           "removed": []
         },
@@ -1681,9 +1637,7 @@
           "bytes": 1907
         },
         "diff": {
-          "added": [
-            "tickets/t21.md"
-          ],
+          "added": ["tickets/t21.md"],
           "modified": [],
           "removed": []
         },
@@ -1758,12 +1712,8 @@
           "bytes": 1957
         },
         "diff": {
-          "added": [
-            "src/cr22.js"
-          ],
-          "modified": [
-            "test/cr22.test.js"
-          ],
+          "added": ["src/cr22.js"],
+          "modified": ["test/cr22.test.js"],
           "removed": []
         },
         "provenance": {
@@ -1837,9 +1787,7 @@
           "bytes": 2068
         },
         "diff": {
-          "added": [
-            "src/cr23.js"
-          ],
+          "added": ["src/cr23.js"],
           "modified": [],
           "removed": []
         },
@@ -1914,9 +1862,7 @@
           "bytes": 2133
         },
         "diff": {
-          "added": [
-            "contracts/v24.json"
-          ],
+          "added": ["contracts/v24.json"],
           "modified": [],
           "removed": []
         },
@@ -1991,9 +1937,7 @@
           "bytes": 2210
         },
         "diff": {
-          "added": [
-            "tickets/t25.md"
-          ],
+          "added": ["tickets/t25.md"],
           "modified": [],
           "removed": []
         },
@@ -2068,9 +2012,7 @@
           "bytes": 2275
         },
         "diff": {
-          "added": [
-            "contracts/v26.json"
-          ],
+          "added": ["contracts/v26.json"],
           "modified": [],
           "removed": []
         },
@@ -2145,9 +2087,7 @@
           "bytes": 2352
         },
         "diff": {
-          "added": [
-            "tickets/t27.md"
-          ],
+          "added": ["tickets/t27.md"],
           "modified": [],
           "removed": []
         },
@@ -2222,9 +2162,7 @@
           "bytes": 2429
         },
         "diff": {
-          "added": [
-            "tickets/t28.md"
-          ],
+          "added": ["tickets/t28.md"],
           "modified": [],
           "removed": []
         },
@@ -2299,9 +2237,7 @@
           "bytes": 2506
         },
         "diff": {
-          "added": [
-            "tickets/t29.md"
-          ],
+          "added": ["tickets/t29.md"],
           "modified": [],
           "removed": []
         },
@@ -2376,9 +2312,7 @@
           "bytes": 2563
         },
         "diff": {
-          "added": [
-            "tickets/t30.md"
-          ],
+          "added": ["tickets/t30.md"],
           "modified": [],
           "removed": []
         },
@@ -2453,9 +2387,7 @@
           "bytes": 2674
         },
         "diff": {
-          "added": [
-            "src/cr31.js"
-          ],
+          "added": ["src/cr31.js"],
           "modified": [],
           "removed": []
         },
@@ -2530,9 +2462,7 @@
           "bytes": 2740
         },
         "diff": {
-          "added": [
-            "contracts/v32.json"
-          ],
+          "added": ["contracts/v32.json"],
           "modified": [],
           "removed": []
         },
@@ -2607,9 +2537,7 @@
           "bytes": 2797
         },
         "diff": {
-          "added": [
-            "tickets/t33.md"
-          ],
+          "added": ["tickets/t33.md"],
           "modified": [],
           "removed": []
         },

@@ -22,10 +22,9 @@ import ScrollRuntime from "@/components/scroll-runtime";
  * `film` splits the two halves of "lit" apart. The scene is the expensive one
  * (three.js, a render target per frame); the vignette and grain are two static
  * divs that cost nothing and are most of what makes the black read as film
- * stock rather than #000. The home page runs `lit={false} film`: its subject
- * is a rendered still in the hero rather than a scroll-driven WebGL form, but
- * it still wants the stock. Defaulting to `lit` leaves every existing caller
- * exactly as it was.
+ * stock rather than #000. Defaulting to `lit` keeps the scene and overlays
+ * together unless a staged route explicitly separates them. Static marketing
+ * pages compose their own content without this shell.
  */
 export function StagePage({
   children,

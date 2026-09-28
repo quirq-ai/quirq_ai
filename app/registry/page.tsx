@@ -5,9 +5,9 @@ import { StoryBeat } from "@/components/story/story-beat";
 import { STORY } from "./story";
 
 export const metadata: Metadata = {
-  title: 'The beat registry',
+  title: "The beat registry",
   description:
-    'Sections announce themselves to the scroll runtime instead of being queried off the DOM: the feature that makes middles dynamic.',
+    "Sections announce themselves to the scroll runtime instead of being queried off the DOM: the feature that makes middles dynamic.",
 };
 
 /** Feature page: registry. Story data in ./story.ts, rendered by StoryBeat. */

@@ -42,6 +42,8 @@ export default function Stage() {
 
   useEffect(() => {
     if (!detectWebGL()) {
+      // Browser capabilities are unknown during SSR; initialize after hydration.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setWebgl(false);
       return;
     }

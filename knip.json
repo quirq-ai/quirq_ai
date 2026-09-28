@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["lib/quirq/*.test.mjs", "tests/*.test.mjs", "app/globals.css"],
+  "project": [
+    "app/**/*.{ts,tsx,css}",
+    "components/**/*.{ts,tsx,css}",
+    "lib/**/*.{ts,tsx,mjs}",
+    "styles/**/*.css",
+    "scripts/**/*.mjs",
+    "tests/**/*.mjs",
+    "*.{ts,mjs}"
+  ],
+  "ignoreExportsUsedInFile": true
+}

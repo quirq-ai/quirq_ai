@@ -4,11 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { damp } from "./choreography";
-import {
-  RIBBON_DEFAULTS,
-  createRibbonFrame,
-  sampleRibbonFrame,
-} from "./ribbon-geometry";
+import { RIBBON_DEFAULTS, createRibbonFrame, sampleRibbonFrame } from "./ribbon-geometry";
 import { stage } from "@/lib/stage-store";
 
 type OutcomeKind = "positive" | "partial" | "negative";
@@ -49,14 +45,8 @@ function writeSurfacePoint(
   sampleRibbonFrame(t, frame);
   return out
     .copy(frame.centre)
-    .addScaledVector(
-      frame.rolledN,
-      lane * RIBBON_DEFAULTS.width * 0.5,
-    )
-    .addScaledVector(
-      frame.rolledB,
-      RIBBON_DEFAULTS.thickness * 0.5 + SURFACE_LIFT,
-    );
+    .addScaledVector(frame.rolledN, lane * RIBBON_DEFAULTS.width * 0.5)
+    .addScaledVector(frame.rolledB, RIBBON_DEFAULTS.thickness * 0.5 + SURFACE_LIFT);
 }
 
 function createEdgeGeometry() {
@@ -90,10 +80,7 @@ function createEdgeGeometry() {
   }
 
   const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute(
-    "position",
-    new THREE.Float32BufferAttribute(positions, 3),
-  );
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.computeBoundingSphere();
   return geometry;
 }
@@ -103,12 +90,7 @@ function createNodeSamples() {
   const basis = new THREE.Matrix4();
 
   return NODES.map((node) => {
-    const position = writeSurfacePoint(
-      node.t,
-      node.lane,
-      new THREE.Vector3(),
-      frame,
-    );
+    const position = writeSurfacePoint(node.t, node.lane, new THREE.Vector3(), frame);
     basis.makeBasis(frame.tangent, frame.rolledN, frame.rolledB);
 
     return {
@@ -135,16 +117,13 @@ export function OutcomeGraph() {
   const edgeMaterial = useRef<THREE.LineBasicMaterial>(null);
   const alpha = useRef(0);
 
-  const samples = useMemo(createNodeSamples, []);
-  const edgeGeometry = useMemo(createEdgeGeometry, []);
+  const samples = useMemo(() => createNodeSamples(), []);
+  const edgeGeometry = useMemo(() => createEdgeGeometry(), []);
 
   useEffect(() => () => edgeGeometry.dispose(), [edgeGeometry]);
 
   useLayoutEffect(() => {
-    const meshes: Record<
-      OutcomeKind,
-      THREE.InstancedMesh | null
-    > = {
+    const meshes: Record<OutcomeKind, THREE.InstancedMesh | null> = {
       positive: positive.current,
       partial: partial.current,
       negative: negative.current,

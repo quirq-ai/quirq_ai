@@ -6,7 +6,13 @@ import { MeshTransmissionMaterial } from "@react-three/drei";
 import * as THREE from "three";
 import { createRibbonGeometry } from "./ribbon-geometry";
 import { OutcomeGraph } from "./outcome-graph";
-import { KEYFRAMES, damp, getTrack, sampleKeyframes, type Keyframe } from "./choreography";
+import {
+  KEYFRAMES,
+  damp,
+  getTrack,
+  sampleKeyframes,
+  type Keyframe,
+} from "./choreography";
 import { LIGHT } from "@/lib/lighting";
 import { stage, type StageForm } from "@/lib/stage-store";
 
@@ -69,9 +75,7 @@ export function GlassForm({ quality }: { quality: StageQuality }) {
     // re-attaches the declared ribbon geometry.
     if (mesh.current) {
       const desired =
-        stage.form === "knot"
-          ? (knot.current ??= buildFormGeometry("knot"))
-          : geometry;
+        stage.form === "knot" ? (knot.current ??= buildFormGeometry("knot")) : geometry;
       if (mesh.current.geometry !== desired) mesh.current.geometry = desired;
     }
 

@@ -1,44 +1,63 @@
 # quirq
 
-> Secure environments for agentic workforces. Any model, any harness, any
-> cloud. quirq deploys, manages and meters the agents a team already runs, and
-> measures what they delivered rather than what they consumed.
+> Quirq makes Space, the open-source workspace for projects, files, agents and
+> tools, and XO, the cloud platform that gives agents computers. Launch
+> preconfigured environments, delegate tasks and run work in parallel on XO. XO is free for 30 days; paid usage is based on compute.
+> Machine Speed builds custom enterprise AI workflows, setup and infrastructure.
 
-quirq is built on one idea: the token is a good meter for what a machine
-consumes and a bad one for what it produces. A quirq is the output unit. A
-human owner budgets an outcome, the environment verifies it against captured
-state, and the ledger records what the work cost all-in.
+Space brings project files, agent sessions, todos and usage into one view.
+It works with supported, separately configured agent runtimes. Git-backed
+projects can be shared with another Space ID: incoming commits are fetched
+for review and applied explicitly. Sharing requires account linking and
+access to the Git repository; it is not simultaneous document editing.
 
-This file lists the pages in the site navigation. It is a map, not the corpus:
-each page below is the canonical source for its own subject, and the whitepaper
-at /whitepaper carries the full construction in prose.
+This file is a map to the site's canonical product and research pages.
+The quirq measurement model is a separate subject documented in the whitepaper.
+The homepage introduces Space with “Give your agents a place to work”, then
+Trusted by, projects/agents/sharing benefits, Machine Speed, and trial/open-source
+entry. XO's cloud-computer and deployment story lives under Managed solutions.
 
 ## Pages
 
-- [Products](https://quirq.ai/products): Deploy an agentic workforce
-  environment two ways. Managed cloud is self-serve and priced per environment;
-  bring your own cloud is licensed onto infrastructure you already own and
-  stood up by forward-deployed engineers. Covers the harnesses you can deploy,
-  the observability layer, the comparison between the two, and pricing.
+- [Space](https://quirq.ai/products): The environment for agentic work.
+  Explore projects, files, agents, activity and sharing, then choose an
+  open-source installation or managed hosting on XO. Current deployment
+  details belong on this page; do not infer fixed per-environment tiers or
+  a required self-hosting license.
 
-- [Research](https://quirq.ai/research): The research program behind quirq.
-  Experiments, frameworks and field notes across three shelves (Speed Trials,
-  From the desk, Proving grounds). Every claim ships with the result that would
-  falsify it. Includes the agent-context studies and the replication that did
-  not reproduce the pilot's headline.
+- [Managed solutions](https://quirq.ai/xo): XO, Quirq's managed cloud platform,
+  a separate product that gives agents cloud computers and can host Space. Preconfigured templates,
+  task delegation, parallel execution, autonomous scaling, and configurable
+  runtime/policies. The chosen harness supplies agent behavior. XO manages the underlying
+  infrastructure on its cloud. Pricing cards show a $0 trial for 30 days,
+  compute-based XO Cloud and custom Enterprise. Enterprise supports self-hosting
+  XO, connecting the customer's cloud and white-label deployments across multiple
+  clouds. These are separate from open-source Space installation.
+  [Try on XO](https://app.xo.builders/) opens the managed platform directly.
+  Exact paid compute rates, payment-card requirements, automatic charging and
+  discounts are not established by this site map.
 
-- [Writing](https://quirq.ai/writing): News, thoughts and guides. Launches and
-  integrations, the research findings argued rather than reported, and the unit
-  of work explained in reading order.
+- [Documentation](https://quirq.ai/docs): Product setup and technical guides.
+  The [Space documentation](https://docs.quirq.ai/docs/space) covers installation,
+  the interface and observability.
 
-- [Enterprise](https://quirq.ai/machinespeed): Machine speed. Agentic workflows
-  built and run on the stack you already own, with every workflow reporting the
-  money it made or saved. The forward-deployed engagement behind a licensed
-  deployment.
+- [Space source](https://github.com/quirq-ai/xo-space): The open-source product
+  repository. The canonical installer is `curl -fsSL https://quirq.ai/install | sh`.
 
-## Notes for agents
+- [Enterprise](https://quirq.ai/machinespeed): Machine Speed. Custom AI workflows,
+  integrations, setup and infrastructure for businesses. Enterprise implementation
+  is a service offering; it is not a prerequisite for running open-source Space.
 
-- The whitepaper is readable in full at https://quirq.ai/whitepaper, and the
-  typeset PDF at https://quirq.ai/whitepaper/pdf is the version of record.
-- The documentation index is https://quirq.ai/docs.
+- [Research](https://quirq.ai/research): Experiments, frameworks and field notes
+  behind Quirq's research and measurement work, including published results
+  and their limitations.
+
+- [Writing](https://quirq.ai/writing): News, thoughts and guides, including the
+  unit of work and discussions of the research.
+
+- [Whitepaper](https://quirq.ai/whitepaper): The quirq output measurement model.
+  The [typeset PDF](https://quirq.ai/whitepaper/pdf) is the version of record.
+
+## Contact
+
 - Correspondence: hello@quirq.ai

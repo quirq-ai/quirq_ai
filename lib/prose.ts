@@ -14,14 +14,3 @@ export type Block =
   | { kind: "h2" | "h3" | "p" | "quote" | "code"; text: string }
   | { kind: "list"; items: string[] }
   | { kind: "table"; header: string[]; rows: string[][] };
-
-/**
- * A stable anchor for a heading. Derived from the text rather than from a
- * position, because a table of contents link and a shared deep link both
- * survive a section being inserted above them.
- */
-export const headingId = (text: string) =>
-  text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");

@@ -22,20 +22,22 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0A0A0B",
+  themeColor: "#09090b",
 };
 
 export default function Writing() {
   return (
-    <div className={styles.page}>
-      <div className={styles.wrap}>
-        <WritingView />
-      </div>
+    <>
+      <main id="main-content" className={styles.page}>
+        <div className={styles.wrap}>
+          <WritingView />
+        </div>
 
-      {/* The site footer, so this page closes the way every other route does. */}
+        {/* The site footer, so this page closes the way every other route does. */}
+      </main>
       <div className={styles.footBase}>
         <SiteFooter />
       </div>
-    </div>
+    </>
   );
 }

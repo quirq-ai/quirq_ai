@@ -1,0 +1,137 @@
+/* Quirq's shared interface theme. Change foundations here, never per route.
+   Component contracts follow xo-swarm's shadcn / Radix foundation. */
+:root,
+.dark {
+  color-scheme: dark;
+  --background: #09090b;
+  --foreground: #f4f3f0;
+  --card: #141416;
+  --card-foreground: var(--foreground);
+  --surface-contrast: #e8e5df;
+  --surface-contrast-foreground: #20201f;
+  --border-subtle: #242426;
+  --shadow-media: 0 24px 64px rgb(0 0 0 / 0.22), 0 2px 8px rgb(0 0 0 / 0.12);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  /* Quirq actions use its original warm ink on black. XO's lime belongs to
+     the product identity, not the shared website controls. */
+  --primary: var(--foreground);
+  --primary-foreground: #000000;
+  --secondary: #1c1c1f;
+  --secondary-foreground: var(--foreground);
+  --muted: var(--secondary);
+  --muted-foreground: #a3a39e;
+  --accent: #242427;
+  --accent-foreground: var(--foreground);
+  --destructive: #e87979;
+  --destructive-foreground: #1e0909;
+  --border: #303034;
+  --input: #3b3b3f;
+  --ring: var(--primary);
+  --success: #85c58a;
+  --info: #8eb7e8;
+  --warning: #e6c784;
+  --chart-1: var(--primary);
+  --chart-2: var(--info);
+  --chart-3: var(--warning);
+  --chart-4: #b7a3dc;
+  --chart-5: var(--destructive);
+
+  --radius: 0.625rem;
+  --layout-max: 76rem;
+  --layout-reading: 44rem;
+  --layout-gutter: clamp(1.25rem, 4vw, 2.5rem);
+  --header-height: 4.75rem;
+  --space-section: clamp(4rem, 7vw, 6rem);
+  --space-section-sm: clamp(2rem, 4vw, 3rem);
+  --text-display: clamp(2.75rem, 6.4vw, 6rem);
+  --text-heading: clamp(2rem, 3.6vw, 3rem);
+  --text-subheading: clamp(1.25rem, 2vw, 1.5rem);
+  --text-body: 1rem;
+  --text-small: 0.875rem;
+  --text-caption: 0.75rem;
+  --tracking-display: -0.055em;
+  --tracking-heading: -0.04em;
+  --tracking-label: 0.12em;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Spectrum is reserved for the brand's optical illustrations and charts. */
+  --spec-red: #ff453a;
+  --spec-orange: #ff9f0a;
+  --spec-yellow: #ffd60a;
+  --spec-green: #30d158;
+  --spec-cyan: #2fd2ff;
+  --spec-blue: #0a84ff;
+  --spec-purple: #bf5af2;
+  --spectrum: linear-gradient(
+    90deg,
+    var(--spec-red),
+    var(--spec-orange),
+    var(--spec-yellow),
+    var(--spec-green),
+    var(--spec-cyan),
+    var(--spec-blue),
+    var(--spec-purple)
+  );
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-info: var(--info);
+  --color-warning: var(--warning);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-mark: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+
+  /* Existing story/renderer vocabulary maps to the same interface tokens. */
+  --color-void: var(--background);
+  --color-ink: var(--foreground);
+  --color-dim: var(--muted-foreground);
+  --color-faint: var(--muted-foreground);
+  --color-hair: var(--border);
+  --color-hair-soft: color-mix(in srgb, var(--border) 60%, transparent);
+  --color-spec-red: var(--spec-red);
+  --color-spec-orange: var(--spec-orange);
+  --color-spec-yellow: var(--spec-yellow);
+  --color-spec-green: var(--spec-green);
+  --color-spec-cyan: var(--spec-cyan);
+  --color-spec-blue: var(--spec-blue);
+  --color-spec-purple: var(--spec-purple);
+}
+
+@media (max-width: 699px) {
+  :root {
+    --header-height: 4.25rem;
+  }
+}

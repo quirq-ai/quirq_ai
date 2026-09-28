@@ -1,195 +1,122 @@
-# How the scroll animation works, and a path from list to tree
+# Staged story animation
 
-Part 1 documents the system as it was originally built; its per-frame story
-is unchanged. Part 2 was the migration proposal, and phases 0 to 4 are now
-IMPLEMENTED, golden-gated (max delta 0.000000 against docs/goldens/*.json):
-the harness is `window.__golden` (dev only, lib/golden.ts), the sampler takes
-the track as an argument, sections register via lib/beat-registry.ts (the
-data-beat query remains as a fallback; a section with custom layout registers
-directly, see invite.tsx), and the track resolves from the CHOREOGRAPHY tree
-in components/stage/choreo-tree.ts with cascading partial keyframes and
-`when` predicates re-resolved on resize. Phase 5 (the first live branch or
-sub-beat) is intentionally left for a design decision.
+This guide covers pages that mount `StagePage`, including the narrative
+explainers, journey reader and editor. The homepage in
+`components/home/home-page.tsx` is a static composition with a product-capture
+tour; it does not mount the stage or scroll runtime. Shared UI styling is
+documented in [design-system.md](./design-system.md).
 
----
+## Runtime map
 
-## Part 1 · The system today
+| Layer          | File                                                              | Responsibility                                                   |
+| -------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Page shell     | `components/stage-page.tsx`                                       | Scroll runtime, optional scene and film overlays, semantic main  |
+| Sections       | `components/ui/primitives.tsx`, `components/story/story-beat.tsx` | DOM content and beat registration                                |
+| Registry       | `lib/beat-registry.ts`                                            | Mounted section IDs, order and elements                          |
+| Scroll runtime | `components/scroll-runtime.tsx`                                   | DOM measurement, Lenis or native scroll, fractional beat mapping |
+| Frame state    | `lib/stage-store.ts`                                              | Mutable values shared with the canvas without React renders      |
+| Authored track | `components/stage/choreo-tree.ts`                                 | Full channel type, presets, cascading tree and resolver          |
+| Live track     | `components/stage/choreography.ts`                                | Resolved leaves, temporary overrides, sampler and damping        |
+| Rendering      | `components/stage/*`                                              | Lazy canvas, persistent glass, light burst and environment       |
+| Text masks     | `components/ui/glass.tsx`                                         | Text-shaped scrim masks recomputed outside the frame loop        |
 
-### The cast
+The global navigation belongs to `app/layout.tsx`. `StagePage` supplies one
+page's rendering shell. Its `lit` prop controls the scene; `film` controls the
+vignette and grain. An unlit page still mounts the scroll runtime.
 
-| Layer | File | Job |
-|---|---|---|
-| Scroll runtime | `components/scroll-runtime.tsx` | Owns Lenis smooth scrolling; turns raw scroll into a fractional beat index |
-| Stage store | `lib/stage-store.ts` | A plain mutable module object; the bus between DOM-world and GL-world |
-| Choreography | `components/stage/choreography.ts` | `KEYFRAMES`: one full keyframe per beat, plus the sampler and damper |
-| The stage | `components/stage/*` | The react-three-fiber canvas: glass ribbon, light burst, spectrum environment |
-| Beats | `components/beats/*` + `ui/primitives.tsx` | Full-viewport DOM sections carrying `data-beat={i}` |
-| Entrances | `motion` (Reveal / Rise / hero) | Once-per-element entrance animations, driven by IntersectionObserver, not by the scroll sample |
-| Glass pools | `components/ui/glass.tsx` | Rasterized mask holes in the text scrims; re-cut on settle/resize, unrelated to the per-frame path |
+## From scroll to pose
 
-### What happens when you scroll, in order
+1. `Beat` registers a stable ID, index and DOM element. `ScrollRuntime` measures
+   real section centers, so content can grow at narrow widths without assuming
+   every section is exactly one viewport tall.
+2. The runtime matches registered sections to resolved leaf IDs when all IDs and
+   counts agree. Otherwise it uses registered order. A `[data-beat]` query remains
+   as a fallback for sections outside the registry. New conditional tracks should
+   use matching IDs; positional fallback cannot express a pruned middle leaf.
+3. The viewport's center maps between adjacent section centers. A value of `2.37`
+   means 37% of the interval from beat 2 to beat 3. The runtime writes
+   `stage.beat`, `stage.progress` and the CSS variable `--scroll`.
+4. Canvas consumers call `sampleKeyframes(getTrack(), stage.beat, out)`. The sampler
+   clamps the position, applies smoothstep and writes each interpolated channel
+   into a reused output object.
+5. `GlassForm` and `LightBurst` damp their live values toward those targets and
+   apply the transforms, material values and lighting. The glass stays mounted
+   across beats within that staged page.
 
-1. **Input.** The wheel/touch goes to Lenis (`duration 1.15`, long-tail
-   easing). Lenis animates the *native* window scroll on a rAF loop the
-   runtime drives (`lenis.raf` inside `requestAnimationFrame`).
+The hot path stays outside React state and avoids per-frame allocation. Content
+entrances use Motion separately. Text-mask measurements, tree resolution and DOM
+measurements happen on lifecycle or layout events, not inside the canvas loop.
 
-2. **Write.** On every Lenis `scroll` event, `write(scroll, limit)` runs:
-   - `toBeat(scroll)` computes the **eye line** (`scroll + viewport/2`) and
-     finds which two adjacent section centres it sits between, returning a
-     fractional index: `2.37` means "37% of the way from beat 2's centre to
-     beat 3's centre". Section centres were measured once (and on resize /
-     font-swap) into a sorted array `centres[]` from every `[data-beat]`
-     element, ordered by beat index.
-   - The result is written to `stage.beat`, whole-page progress to
-     `stage.progress`, and `--scroll` onto `<html>` (the nav's progress rule
-     reads that with zero React involvement).
+## Tree authoring and overrides
 
-3. **Read, per GL frame.** Inside the canvas, `GlassForm.useFrame` and
-   `LightBurst.useFrame` each call `sampleKeyframes(stage.beat, out)`:
-   - The sampler clamps the index, takes `KEYFRAMES[i]` and `KEYFRAMES[i+1]`,
-     applies a smoothstep to the fraction, and lerps **every channel**
-     (position, scale, spin rate, tilts, chromatic aberration, thickness,
-     distortion, roughness, IOR, burst level) into a preallocated `target`
-     object. No allocation per frame.
-   - Each live channel is then **damped** toward its target
-     (`damp`, frame-rate-independent exponential approach, λ = 3.2, or 400 =
-     effectively snap under reduced motion). Damping is why fast scrolling
-     feels like a camera move rather than a scrub.
-   - The damped values are written straight onto the Three.js group transform
-     and the transmission material's uniforms. The burst plane also tracks the
-     form's x at 2.2× parallax and scales its shader intensity by the beat's
-     `burst` × the `LIGHTING` preset gain.
+`ChoreoNode` is the authoring structure. An ancestor supplies partial keyframe
+values, descendants override them, and `resolveTrack` produces ordered leaves with
+complete keyframes. `when` predicates receive an explicit `TrackContext` containing
+`width`; a false predicate prunes its subtree. Resolution happens on mount and
+resize, before measuring the sections.
 
-4. **Not involved.** React renders nothing during scroll: the store is a
-   module singleton precisely so no state flows through React at 60fps. The
-   `motion` entrances and the glass-pool mask cuts key off IntersectionObserver
-   and settle-timers, not off `stage.beat`.
+The default track has five leaves. A shorter linear story can stop earlier; a
+longer or conditional story needs a matching track. The sampler clamps beyond
+the last leaf, so adding sections alone does not create new poses.
 
-### So is it a linked list of components?
+Journeys and the editor call `overrideLeaves` to supply their own resolved path.
+`getTrack()` and `getResolvedLeaves()` follow that override. Its owner must call
+`overrideLeaves(null)` on unmount. `KEYFRAMES` is the initial resolved reference
+used to seed values; per-frame code must read the current track through
+`getTrack()`.
 
-No, and nothing "loads" as you scroll. Every component mounts exactly once;
-scrolling only changes numbers. The structure is **two parallel flat arrays
-coupled by index**:
+The fourteen channels are:
 
-```
-DOM:          section[data-beat=0] ... section[data-beat=4]   →  centres[0..4]  (measured px)
-Choreography: KEYFRAMES[0..4]                                 (hand-tuned values)
+```text
+position: x, y, z, scale
+attitude: spin, tiltX, tiltZ
+optics:   chroma, thickness, distortion, aniso, rough, ior
+light:    burst
 ```
 
-Adjacency is implicit (`i`, `i+1`), which makes it a **piecewise timeline**
-(a keyframe track, like an animation curve), not a list of nodes with links.
-The per-frame cost is O(1)-ish: a ≤4-step scan to find the bracket, one lerp
-per channel, one damp per channel. A section without `data-beat` (the
-ecosystem shelf) simply does not exist on the timeline; the glass keeps
-travelling from beat 0 toward beat 1 behind it. That is the extension point
-the current design gives you: interludes are free, but they cannot *say*
-anything to the 3D.
+`spin` is a rate; tilts are absolute targets. Use the named pose presets before
+adding overrides. Keep the camera fixed and adjust subject placement. Change
+coupled scene brightness through `lib/lighting.ts`; inspect text contrast with
+the actual pose present. Canonical authoring examples and validation rules live
+in [AGENTS.md](../AGENTS.md).
 
-### The invariants that keep it coherent
+## Accessibility and lifecycle
 
-- **One object, never remounted.** Continuity of the single ribbon is the
-  design; any refactor must keep the mesh alive across the whole page.
-- **Beat index == keyframe index** is a convention, enforced by nothing but
-  discipline. (This is the weakest joint in the design, and the first thing
-  Part 2 fixes.)
-- **Sections stay ≈ one viewport tall**, or a beat's visual peak (measured at
-  its centre) desyncs from where its copy reads.
-- **The hot path never touches React**, and never allocates.
-- **Damping decouples input from output**, which is also what makes timeline
-  *changes* safe: wherever the target jumps, the live values glide.
+- Keep all copy in the DOM with semantic headings. Use the shared text scrims
+  over bright stage imagery.
+- Reduced motion uses native scrolling instead of Lenis and reduces scene motion.
+  Verify this separately from normal-motion captures.
+- `Stage` lazy-loads the Three.js scene and selects a cheaper rendering quality on
+  small or lower-core devices. A failed WebGL capability check uses
+  `public/assets/mobius.jpg` as the visual fallback.
+- The root layout's no-JavaScript CSS keeps content visible. Links and readable
+  content must remain useful without animation or interactive controls.
+- Unmount cleanup resets frame state and scroll styles, disconnects observers and
+  removes listeners. Late font and measurement callbacks must not revive an
+  unmounted runtime.
 
----
+## Golden verification
 
-## Part 2 · From a flat list to a tree
+`lib/golden.ts` samples the live scroll mapping and keyframes; it is not a second
+animation implementation. During normal-motion development, the scroll runtime
+exposes `window.__golden()` after loading that module. It records the route,
+viewport, section centers and 21 scroll samples by default.
 
-### What a tree would buy
+For a scroll, registration, resolver or sampler change:
 
-The flat array is the right size for today's page: five hand-tuned shots, one
-object, one narrative path. A tree pays for itself the moment any of these
-land:
+1. Open the affected staged route in development and let fonts and layout settle.
+2. Record the route, viewport and any journey path or editor state. Capture with
+   `await window.__golden()` before the change and save the returned JSON.
+3. Repeat at the same route, state and viewport after the change.
+4. Compare centers, fractional beats and all sampled values. A behavioral refactor
+   should preserve them; explain intentional differences and update baselines
+   only when the changed behavior is intended.
+5. Check the visible scene at narrow and wide widths, plus reduced motion and
+   no-WebGL behavior. Numeric samples do not test image quality, contrast or
+   keyboard access.
 
-1. **Sub-beats.** A beat's interior gets its own micro-choreography: e.g. the
-   mint rule inside `delivery` pulling the form closer as the equation
-   assembles, then releasing it, without promoting those moments to top-level
-   beats and re-numbering everything.
-2. **Branches.** Different timelines chosen by state: a stage variant for
-   `/research`, a shorter choreography under `max-width: 820px`, an A/B
-   narrative. Today the runtime hard-assumes the one home-page track.
-3. **Dynamic composition.** Sections that register themselves at runtime
-   (CMS/MDX-driven pages, conditional beats), instead of a build-time array
-   that must match a build-time set of `data-beat` attributes by hand.
-4. **Cascade.** Partial keyframes that inherit: a subtree sets `burst` and
-   palette once; leaves override only position/optics. Today every keyframe
-   must restate all 14 channels.
-5. **Named actors later.** Tree nodes could namespace channels per object
-   (`ribbon.*`, `burst.*`, a future second form), which the flat shape cannot
-   express without column explosion.
-
-### Proposed model
-
-```ts
-type ChoreoNode = {
-  id: string;                      // "delivery", "delivery.mint"
-  keyframe?: Partial<Keyframe>;    // cascades over ancestors; leaves resolve full
-  when?: () => boolean;            // branch predicate: route, media query, flag
-  children?: ChoreoNode[];
-};
-```
-
-- **DOM binding by id, not by index.** A `useBeatSection("delivery.mint")`
-  hook (or a `<Beat id>` prop) registers the element with a registry context.
-  The string path replaces the `data-beat` integer convention, so numbering
-  stops being load-bearing.
-- **The tree is an authoring structure, not a runtime one.** On registration
-  change, resize, or font swap (never per frame), a resolver runs:
-  1. filter the tree by `when` predicates;
-  2. depth-first flatten to an ordered list of **leaves**;
-  3. resolve each leaf's effective keyframe by merging root → ancestors →
-     leaf (every leaf ends up *full*, so interpolation never has channel
-     holes);
-  4. measure each leaf's registered element into the same `centres[]` array
-     the runtime already uses.
-- **The per-frame path does not change.** Same bracket scan, same smoothstep,
-  same damp, same zero allocations. Tree traversal cost lives entirely at
-  (re)build time. Interior nodes are grouping + cascade + predicate only;
-  a parent that wants its own presence on the timeline declares a keyframe
-  *and* registers an element, making it a leaf like any other.
-- **Branch switches are safe by construction:** when a predicate flips and the
-  flattened track changes, the damping layer glides the form from wherever it
-  was to the new targets, the same way it already absorbs fast scrolling.
-
-### Migration plan (each phase shippable, pixel-identical until phase 4)
-
-| Phase | Work | Proof it changed nothing |
-|---|---|---|
-| 0 | **Golden harness.** A dev-only script samples `toBeat` + `sampleKeyframes` at fixed scroll fractions and snapshots the numbers to JSON. | The snapshot is the baseline. |
-| 1 | **Track-agnostic sampler.** `sampleKeyframes(track, beat, out)` takes the track as an argument; `KEYFRAMES` becomes one track passed in. | Golden numbers unchanged. |
-| 2 | **Registry.** `BeatProvider` + registration hook; `Beat` registers its element and id. `ScrollRuntime` reads the registry instead of querying `[data-beat]`; keeps the attribute as a fallback for one release, then drops it. | Golden numbers unchanged; DOM identical. |
-| 3 | **Tree resolver.** Today's five beats expressed as five root leaves with full keyframes; resolver = filter → flatten → merge → measure. | Golden numbers unchanged by construction. |
-| 4 | **Capabilities.** Partial keyframes + cascade; `when` predicates; nested sub-beat spans; optional per-actor namespaces. | New goldens per branch/subtree. |
-| 5 | **First real use.** Sub-beats inside `delivery`'s mint rule, or a `/research` stage variant behind a predicate. | Design review against the page. |
-
-### Risks and their answers
-
-- **The one-viewport rule multiplies.** Every leaf's visual peak still lands
-  at its element's centre; nested leaves inside one section subdivide that
-  span, so short sub-elements produce fast transitions. Mitigation: document
-  a minimum span per leaf and have the resolver warn in dev when a leaf's
-  measured span is under ~60vh.
-- **Measurement thrash** from dynamic registration: debounce rebuilds and use
-  a single ResizeObserver, mirroring what GlassPool already does.
-- **Authoring complexity.** Cascade means a keyframe's effective value is no
-  longer visible in one place. Mitigation: the dev harness prints resolved
-  leaves as a table; keep full keyframes for the five root beats.
-- **The hot path must stay allocation-free.** The resolver builds flat
-  `Float64Array`-friendly structures once; `useFrame` never sees the tree.
-- **The single-object invariant is untouched** by all of this; only *where
-  the numbers come from* changes, not what consumes them.
-
-### Recommendation
-
-Do phases 0 to 2 whenever the code is next touched: they remove the fragile
-index convention and cost little. Hold phases 3 to 5 until a concrete need
-from the list at the top exists (sub-beats, a second route with a stage, or
-CMS-driven sections). For a five-beat, hand-tuned page, the flat track is not
-a limitation; it is the appropriately sized tool.
+`docs/goldens/*.json` contains historical route captures. `home.json` describes an
+earlier staged homepage and must not be applied to today's screenshot homepage.
+Capture a fresh baseline for the current route before changing its animation.
+The standard `pnpm check` and `pnpm build` commands supplement this comparison;
+they do not run browser golden captures automatically.

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { StagePage } from "@/components/stage-page";
 import { SiteFooter } from "@/components/ui/footer";
+import { Button } from "@/components/ui/button";
 import { JourneyEngine } from "@/components/journey/engine";
 import { POSTS, getPost } from "@/lib/research";
 import { buildResearchJourney, derivedSlug } from "@/lib/research-journey";
@@ -66,29 +67,24 @@ export default async function ReadInteractively({
             <span className="font-mono text-[9.5px] tracking-[0.22em] text-faint uppercase">
               This walk
             </span>
-            <Link
-              href={`/research/${post.slug}`}
-              className="rounded-full border border-hair-soft bg-white/[0.03] px-3 py-1.5 font-mono text-[9.5px] tracking-[0.08em] text-dim uppercase transition-colors hover:border-ink/30 hover:text-ink"
-            >
-              The full note
-            </Link>
+            <Button asChild variant="outline">
+              <Link href={`/research/${post.slug}`}>The full note</Link>
+            </Button>
             {/* The document itself, in the open: the page and the API serve
                 the same derived JSON. */}
-            <a
-              href={`/api/journeys/${derivedSlug(post)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-full border border-hair-soft bg-white/[0.03] px-3 py-1.5 font-mono text-[9.5px] tracking-[0.08em] text-dim uppercase transition-colors hover:border-ink/30 hover:text-ink"
-            >
-              The JSON
-              <span className="sr-only"> (opens in a new tab)</span>
-            </a>
-            <Link
-              href={`/journey/load?src=${derivedSlug(post)}`}
-              className="rounded-full border border-hair-soft bg-white/[0.03] px-3 py-1.5 font-mono text-[9.5px] tracking-[0.08em] text-dim uppercase transition-colors hover:border-ink/30 hover:text-ink"
-            >
-              In the loader
-            </Link>
+            <Button asChild variant="outline">
+              <a
+                href={`/api/journeys/${derivedSlug(post)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                The JSON
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={`/journey/load?src=${derivedSlug(post)}`}>In the loader</Link>
+            </Button>
           </div>
         }
       />

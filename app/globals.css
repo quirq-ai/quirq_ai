@@ -1,112 +1,72 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "../styles/theme.css";
 
-/* ============================================================
-   quirq · design tokens
-   black void · prismatic spectrum · geometric mark
-   ============================================================ */
-@theme {
-  --color-void: #000000;
-  --color-ink: #f4f3f0;
-  --color-dim: #a3a39e;
-  /* 5.7:1 on black: the old #6f6f6a sat at 4.16:1, under AA for small text. */
-  --color-faint: #85857f;
-  --color-hair: rgba(244, 243, 240, 0.1);
-  --color-hair-soft: rgba(244, 243, 240, 0.055);
-
-  --color-spec-red: #ff453a;
-  --color-spec-orange: #ff9f0a;
-  --color-spec-yellow: #ffd60a;
-  --color-spec-green: #30d158;
-  --color-spec-cyan: #2fd2ff;
-  --color-spec-blue: #0a84ff;
-  --color-spec-purple: #bf5af2;
-
-  --font-mark: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
-}
+@custom-variant dark (&:is(.dark *));
 
 :root {
-  --spectrum: linear-gradient(
-    90deg,
-    #ff453a,
-    #ff9f0a,
-    #ffd60a,
-    #30d158,
-    #2fd2ff,
-    #0a84ff,
-    #bf5af2
-  );
-  /* written every frame by the scroll runtime */
   --scroll: 0;
 }
 
+/* Product pages use native scrolling; staged narratives keep their own runtime. */
+@media (prefers-reduced-motion: no-preference) {
+  html:has([data-product-page]) {
+    scroll-behavior: smooth;
+  }
+}
+
 /* ============================== base ============================== */
-html {
-  background: #000;
-  color-scheme: dark;
-  -webkit-text-size-adjust: 100%;
-  overflow-x: clip;
-}
+@layer base {
+  html {
+    background: var(--background);
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+    overflow-x: clip;
+  }
 
-body {
-  background: transparent;
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  font-weight: 380;
-  letter-spacing: 0.004em;
-  overscroll-behavior-y: none;
-  overflow-x: clip;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    letter-spacing: normal;
+    overscroll-behavior-y: none;
+    overflow-x: clip;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
 
-::selection {
-  background: rgba(244, 243, 240, 0.92);
-  color: #000;
-}
+  ::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
 
-/* Lenis smooth-scroll contract */
-html.lenis,
-html.lenis body {
-  height: auto;
-}
-.lenis.lenis-smooth {
-  scroll-behavior: auto !important;
-}
-.lenis.lenis-stopped {
-  overflow: hidden;
-}
+  /* Lenis smooth-scroll contract */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
 
-:focus-visible {
-  outline: 2px solid var(--color-ink);
-  outline-offset: 4px;
-  border-radius: 8px;
-}
-
-/* Controls that are themselves ink-filled: the default ink ring is invisible
-   on them, and an outside ring gets clipped by the pill's overflow-hidden.
-   Unlayered on purpose; it must beat the rule above, and Tailwind utilities
-   (which live in a layer) cannot. */
-.focus-on-ink:focus-visible {
-  outline-color: var(--color-void);
-  outline-offset: -4px;
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 4px;
+    border-radius: var(--radius-md);
+  }
 }
 
 /* ============================== primitives ============================== */
 .label {
   font-family: var(--font-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.24em;
+  font-size: var(--text-caption);
+  letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   color: var(--color-dim);
-}
-
-.spectrum-text {
-  background: var(--spectrum);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
 /* Translucent glass type. The fill is mostly transparent so the live burst
@@ -133,19 +93,6 @@ html.lenis body {
   filter: drop-shadow(0 0 0.2em rgba(255, 255, 255, 0.22));
 }
 
-/* The aperture where the i's dot was: a genuinely transparent hole in the
-   wordmark. It carries no fill of its own; the hero scrim gets a matching
-   circular mask cut out of it at runtime, so the raw burst light passes
-   through undimmed. Only a hairline rim marks the rim of the hole. The
-   backdrop-* utilities on the element itself add the slight lens gather
-   (declared as Tailwind utilities: Lightning CSS strips hand-written
-   backdrop-filter declarations from this file). */
-.dot-aperture {
-  position: absolute;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
-}
-
 .spectrum-rule {
   background: var(--spectrum);
 }
@@ -154,14 +101,14 @@ html.lenis body {
   font-weight: 600;
   line-height: 0.98;
   letter-spacing: -0.035em;
-  font-size: clamp(36px, 6.3vw, 88px);
+  font-size: var(--text-display);
 }
 
 .display-sm {
   font-weight: 600;
   line-height: 1.03;
   letter-spacing: -0.03em;
-  font-size: clamp(29px, 4.6vw, 56px);
+  font-size: var(--text-heading);
 }
 
 .lede {
@@ -215,19 +162,6 @@ html.lenis body {
   }
 }
 
-/* Static stand-in for the light burst on pages without the 3D stage:
-   the same spectrum, rising from beyond the top edge, at whisper level. */
-.research-glow {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(58% 40% at 50% -12%, rgba(191, 90, 242, 0.13), transparent 70%),
-    radial-gradient(48% 34% at 84% -8%, rgba(10, 132, 255, 0.1), transparent 70%),
-    radial-gradient(44% 32% at 14% -8%, rgba(255, 69, 58, 0.09), transparent 70%);
-}
-
 /* vignette keeps type readable against the glass bloom */
 .vignette {
   position: fixed;
@@ -239,98 +173,6 @@ html.lenis body {
     rgba(0, 0, 0, 0) 40%,
     rgba(0, 0, 0, 0.6) 100%
   );
-}
-
-/* ============================== rendered plates ============================== */
-/* Every rendered still in the deck was exported onto an opaque rgb(9,9,9) card
-   rather than onto transparency. `mix-blend-screen` is meant to make that card
-   vanish against a black page and very nearly does, because screen(9, 0) is 9:
-   what survives is a faint but perfectly straight rectangle at every edge of
-   the asset, and a straight edge in the middle of a black page reads as a bug
-   even when nobody can name it. Feathering the alpha to zero before the blend
-   is what actually removes the box.
-
-   Each ramp is measured from where that asset's artwork actually begins, so
-   the fade only ever eats plate. hero-art's form starts 13.2% in from the left
-   and 6.1% down; definition-glow's starts 12.7% down and ends 84.1%;
-   feature-burst's starts 6.5% down. Re-measure before changing a number. */
-.plate-hero {
-  -webkit-mask-image:
-    linear-gradient(to right, transparent 0, #000 11%),
-    linear-gradient(to bottom, transparent 0, #000 5%, #000 97%, transparent 100%);
-  -webkit-mask-composite: source-in;
-  mask-image:
-    linear-gradient(to right, transparent 0, #000 11%),
-    linear-gradient(to bottom, transparent 0, #000 5%, #000 97%, transparent 100%);
-  mask-composite: intersect;
-}
-
-/* A full-width band: only the horizontal edges are ever on screen. */
-.plate-band {
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 12%,
-    #000 85%,
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 12%,
-    #000 85%,
-    transparent 100%
-  );
-}
-
-/* The burst already fades out downward under its own overlay gradient, so only
-   the top edge needs dissolving. */
-.plate-top {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 7%);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 7%);
-}
-
-/* A section-height backdrop. This plate is genuinely near-black in its corners,
-   but its artwork runs to all four edges, so what needs dissolving is the
-   artwork meeting the section boundary rather than the card. */
-.plate-veil {
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 14%,
-    #000 86%,
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 14%,
-    #000 86%,
-    transparent 100%
-  );
-}
-
-/* ============================== hero drift ============================== */
-/* The home hero's rendered still is the page's only continuous motion, and
-   that exclusivity is the point: nothing else below it loops. CSS rather than
-   motion because it costs no JavaScript, it survives with JavaScript off, and
-   the noscript transform reset silences it without needing a branch. The
-   entrance and the pointer parallax live on separate ancestors; three
-   transforms on one element would overwrite each other. */
-@keyframes hero-drift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) rotate(-0.35deg) scale(0.995);
-  }
-  50% {
-    transform: translate3d(0, -13px, 0) rotate(0.45deg) scale(1.012);
-  }
-}
-
-.hero-drift {
-  transform-origin: 50% 48%;
-  will-change: transform;
-  animation: hero-drift 11s ease-in-out infinite;
 }
 
 /* ============================== live pulse ============================== */
@@ -368,10 +210,28 @@ html.lenis body {
   .pulse-dot::after {
     animation: none;
   }
+}
 
-  .hero-drift {
-    animation: none;
-    transform: none;
-    will-change: auto;
+/* Shared composition helpers. Component controls own their own state styles. */
+.site-container {
+  width: 100%;
+  max-width: var(--layout-max);
+  margin-inline: auto;
+  padding-inline: var(--layout-gutter);
+}
+.reading-container {
+  width: 100%;
+  max-width: var(--layout-reading);
+  margin-inline: auto;
+  padding-inline: var(--layout-gutter);
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
   }
 }

@@ -8,6 +8,3 @@ export const SPECTRUM = [
   "#0a84ff",
   "#bf5af2",
 ] as const;
-
-export const BEATS = ["hero", "consumption", "delivery", "ledger", "invite"] as const;
-export type Beat = (typeof BEATS)[number];

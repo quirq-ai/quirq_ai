@@ -47,9 +47,9 @@ export const SECTIONS: DocSection[] = [
         start: true,
       },
       {
-        title: "Deploy an environment",
+        title: "Run Space",
         blurb:
-          "The two ways to run it: managed on our cloud, or licensed onto infrastructure you already own.",
+          "Run the MIT-licensed open-source app on your own machine, or use xo-cloud and pay for compute.",
         href: "/products",
       },
       {
@@ -113,8 +113,7 @@ export const SECTIONS: DocSection[] = [
     entries: [
       {
         title: "The research program",
-        blurb:
-          "Every note, by shelf: speed trials, from the desk, and proving grounds.",
+        blurb: "Every note, by shelf: speed trials, from the desk, and proving grounds.",
         href: "/research",
         start: true,
       },
@@ -192,7 +191,8 @@ export const SECTIONS: DocSection[] = [
   {
     id: "agents",
     title: "For agents",
-    blurb: "The machine-readable surface, for anything reading this site rather than looking at it.",
+    blurb:
+      "The machine-readable surface, for anything reading this site rather than looking at it.",
     entries: [
       {
         title: "llm.txt",

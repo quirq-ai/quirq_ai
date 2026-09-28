@@ -199,10 +199,7 @@ export function resolveDefinition(def: JourneyDefinition): ResolvedJourney {
 }
 
 /** A path is only a journey if every step is a legal choice from the last. */
-export function isValidPathIn(
-  journey: ResolvedJourney,
-  ids: string[],
-): boolean {
+export function isValidPathIn(journey: ResolvedJourney, ids: string[]): boolean {
   if (ids[0] !== journey.rules.start) return false;
   if (!ids.every((id) => journey.nodes[id])) return false;
   if (ids.length > journey.rules.maxDepth) return false;

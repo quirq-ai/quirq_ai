@@ -199,8 +199,7 @@ export type FolderPayload = {
 };
 
 export type FolderRead =
-  | { ok: true; ms: number; payload: FolderPayload }
-  | { ok: false; reason: string };
+  { ok: true; ms: number; payload: FolderPayload } | { ok: false; reason: string };
 
 /**
  * Read the folder through the app's own route. Same-origin, snapshot

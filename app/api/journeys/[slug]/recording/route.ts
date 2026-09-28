@@ -1,9 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
-import {
-  validateDefinition,
-  type JourneyDefinition,
-} from "@/app/journey/defs";
+import { validateDefinition, type JourneyDefinition } from "@/app/journey/defs";
 import { isDerivedSlug } from "@/lib/research-journey";
 import { crossOrigin, writeAtomic } from "../../guards";
 
@@ -51,10 +48,7 @@ export async function POST(
   } catch {
     return new Response("Body must carry a recording.", { status: 400 });
   }
-  if (
-    body?.recording?.journey !== slug ||
-    !Array.isArray(body.recording.events)
-  ) {
+  if (body?.recording?.journey !== slug || !Array.isArray(body.recording.events)) {
     return new Response("Recording must belong to this journey.", {
       status: 400,
     });

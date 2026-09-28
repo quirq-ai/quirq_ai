@@ -25,7 +25,13 @@ import { settleUnit } from "../lib/quirq/engine.mjs";
 import { appendEntry } from "../lib/quirq/ledger.mjs";
 import { snapshotDir, diffSnapshots, evaluateChecks } from "../lib/quirq/snapshot.mjs";
 
-const OUT = join(dirname(fileURLToPath(import.meta.url)), "..", "lib", "quirq", "sample-ledger.json");
+const OUT = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "lib",
+  "quirq",
+  "sample-ledger.json",
+);
 
 /** Deterministic PRNG so re-running produces an identical ledger. */
 function mulberry32(seed) {
@@ -65,9 +71,30 @@ const FAMILIES = [
     settlement: "divisible",
     tokens: () => between(26_000, 52_000),
     checks: (n) => [
-      { id: "ticket-closed", predicate: "fileMatches", path: `tickets/t${n}.md`, pattern: "status: closed", weight: 0.5, description: "the ticket is closed in the system of record" },
-      { id: "reply-sent", predicate: "fileMatches", path: `tickets/t${n}.md`, pattern: "reply:", weight: 0.3, description: "the customer got an answer" },
-      { id: "kb-linked", predicate: "fileMatches", path: `tickets/t${n}.md`, pattern: "kb:", weight: 0.2, description: "a knowledge-base article is linked" },
+      {
+        id: "ticket-closed",
+        predicate: "fileMatches",
+        path: `tickets/t${n}.md`,
+        pattern: "status: closed",
+        weight: 0.5,
+        description: "the ticket is closed in the system of record",
+      },
+      {
+        id: "reply-sent",
+        predicate: "fileMatches",
+        path: `tickets/t${n}.md`,
+        pattern: "reply:",
+        weight: 0.3,
+        description: "the customer got an answer",
+      },
+      {
+        id: "kb-linked",
+        predicate: "fileMatches",
+        path: `tickets/t${n}.md`,
+        pattern: "kb:",
+        weight: 0.2,
+        description: "a knowledge-base article is linked",
+      },
     ],
     // The knowledge-base link is the check this team keeps missing. It is the
     // single check the portfolio view will tell them to harden.
@@ -76,7 +103,11 @@ const FAMILIES = [
       write(
         root,
         `tickets/t${n}.md`,
-        ["status: closed", "reply: thanks for flagging, shipped a fix", linksKb ? "kb: /kb/rate-limits" : ""]
+        [
+          "status: closed",
+          "reply: thanks for flagging, shipped a fix",
+          linksKb ? "kb: /kb/rate-limits" : "",
+        ]
           .filter(Boolean)
           .join("\n") + "\n",
       );
@@ -90,12 +121,35 @@ const FAMILIES = [
     settlement: "atomic",
     tokens: () => between(38_000, 96_000),
     checks: (n) => [
-      { id: "implemented", predicate: "fileMatches", path: `src/cr${n}.js`, pattern: "export", weight: 0.4, description: "the change exists and exports something" },
-      { id: "covered-by-test", predicate: "fileExists", path: `test/cr${n}.test.js`, weight: 0.3, description: "a test covers it" },
-      { id: "surface-intact", predicate: "surfaceIntact", paths: [`test/cr${n}.test.js`], weight: 0.3, description: "the worker did not edit its own test" },
+      {
+        id: "implemented",
+        predicate: "fileMatches",
+        path: `src/cr${n}.js`,
+        pattern: "export",
+        weight: 0.4,
+        description: "the change exists and exports something",
+      },
+      {
+        id: "covered-by-test",
+        predicate: "fileExists",
+        path: `test/cr${n}.test.js`,
+        weight: 0.3,
+        description: "a test covers it",
+      },
+      {
+        id: "surface-intact",
+        predicate: "surfaceIntact",
+        paths: [`test/cr${n}.test.js`],
+        weight: 0.3,
+        description: "the worker did not edit its own test",
+      },
     ],
     seed: (root, n) => {
-      write(root, `test/cr${n}.test.js`, `import assert from 'node:assert';\nassert.ok(require('../src/cr${n}.js'));\n`);
+      write(
+        root,
+        `test/cr${n}.test.js`,
+        `import assert from 'node:assert';\nassert.ok(require('../src/cr${n}.js'));\n`,
+      );
     },
     work: (root, n) => {
       // Most of the time the agent does the work. Occasionally it takes the
@@ -114,9 +168,29 @@ const FAMILIES = [
     settlement: "divisible",
     tokens: () => between(120_000, 240_000),
     checks: (n) => [
-      { id: "clauses-extracted", predicate: "fileExists", path: `contracts/v${n}.json`, weight: 0.4, description: "the clause set was extracted" },
-      { id: "risk-flagged", predicate: "fileMatches", path: `contracts/v${n}.json`, pattern: "\"risk\"", weight: 0.4, description: "risk is assessed" },
-      { id: "countersigned", predicate: "fileMatches", path: `contracts/v${n}.json`, pattern: "\"countersigned\": true", weight: 0.2, description: "a human accepted it" },
+      {
+        id: "clauses-extracted",
+        predicate: "fileExists",
+        path: `contracts/v${n}.json`,
+        weight: 0.4,
+        description: "the clause set was extracted",
+      },
+      {
+        id: "risk-flagged",
+        predicate: "fileMatches",
+        path: `contracts/v${n}.json`,
+        pattern: '"risk"',
+        weight: 0.4,
+        description: "risk is assessed",
+      },
+      {
+        id: "countersigned",
+        predicate: "fileMatches",
+        path: `contracts/v${n}.json`,
+        pattern: '"countersigned": true',
+        weight: 0.2,
+        description: "a human accepted it",
+      },
     ],
     work: (root, n) => {
       const countersigned = rand() > 0.42;
@@ -128,7 +202,6 @@ const FAMILIES = [
     },
   },
 ];
-
 
 /**
  * Round every number before it is hashed.
@@ -198,16 +271,31 @@ async function main() {
       cost: {
         inference: [
           { model: "primary", tokens: Math.round(family.tokens()), pricePerMillion: 2 },
-          { model: "classifier", tokens: Math.round(between(2_000, 9_000)), pricePerMillion: 0.25 },
+          {
+            model: "classifier",
+            tokens: Math.round(between(2_000, 9_000)),
+            pricePerMillion: 0.25,
+          },
         ],
         compute: [{ kind: "cpu", seconds: durationMs / 1000, ratePerHour: 0.04 }],
-        api: [{ service: "systems-of-record", calls: Math.round(between(1, 7)), pricePerCall: 0.01 }],
+        api: [
+          {
+            service: "systems-of-record",
+            calls: Math.round(between(1, 7)),
+            pricePerCall: 0.01,
+          },
+        ],
         environment: ENV,
         // A unit that came back under tau is exactly a unit a human had to
         // pick up. That is the definitional link between scoring and the
         // intervention line of the cost model.
         ...(underTau
-          ? { intervention: { minutes: Math.round(between(14, 52)), loadedRatePerHour: 90 } }
+          ? {
+              intervention: {
+                minutes: Math.round(between(14, 52)),
+                loadedRatePerHour: 90,
+              },
+            }
           : {}),
       },
       snapshots: {

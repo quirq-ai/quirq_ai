@@ -1,0 +1,94 @@
+.frame {
+  min-width: 0;
+  margin: 0;
+  padding: 0 clamp(8px, 1.5vw, 18px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--card);
+  box-shadow: var(--shadow-media);
+}
+
+.caption,
+.provenance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-block: 14px;
+  font-size: var(--text-caption);
+  line-height: 1.5;
+}
+
+.caption > span {
+  color: var(--foreground);
+}
+
+.caption a {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  margin-block: -8px;
+  color: var(--muted-foreground);
+  text-underline-offset: 4px;
+}
+
+.caption a:hover {
+  color: var(--foreground);
+  text-decoration: underline;
+}
+
+.caption svg,
+.panHint svg {
+  width: 14px;
+  height: 14px;
+}
+
+.viewport {
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--background);
+  scrollbar-color: var(--muted-foreground) var(--background);
+  scrollbar-width: thin;
+}
+
+.viewport:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.provenance {
+  color: var(--muted-foreground);
+}
+
+.panHint {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .image {
+    min-width: 960px;
+    max-width: none;
+  }
+
+  .caption,
+  .provenance {
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    padding-block: 12px;
+  }
+
+  .panHint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}

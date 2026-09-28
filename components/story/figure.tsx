@@ -99,25 +99,19 @@ function Swatch({ colour, label }: { colour: string; label: string }) {
   );
 }
 
-function Bars({
-  figure,
-}: {
-  figure: Extract<Figure, { kind: "bars" }>;
-}) {
+function Bars({ figure }: { figure: Extract<Figure, { kind: "bars" }> }) {
   const { categories, series } = figure;
   const ceiling =
     figure.max ??
-    Math.max(
-      1,
-      ...series.flatMap((it) => it.values.filter((v) => Number.isFinite(v))),
-    );
+    Math.max(1, ...series.flatMap((it) => it.values.filter((v) => Number.isFinite(v))));
 
   const summary = [
     figure.unit ? `${figure.unit}.` : null,
-    ...categories.map((category, i) =>
-      `${category}: ${series
-        .map((it) => `${it.label} ${shownValue(it, i)}`)
-        .join(", ")}.`,
+    ...categories.map(
+      (category, i) =>
+        `${category}: ${series
+          .map((it) => `${it.label} ${shownValue(it, i)}`)
+          .join(", ")}.`,
     ),
   ]
     .filter(Boolean)
@@ -133,11 +127,7 @@ function Bars({
               and a swatch for a set of one explains nothing. */}
           {series.length > 1 &&
             series.map((it, i) => (
-              <Swatch
-                key={it.label}
-                colour={toneOf(it.tone, i)}
-                label={it.label}
-              />
+              <Swatch key={it.label} colour={toneOf(it.tone, i)} label={it.label} />
             ))}
           {figure.unit && (
             <span
@@ -217,27 +207,20 @@ function Marks({ figure }: { figure: Extract<Figure, { kind: "marks" }> }) {
   const groups = figure.groups ?? [];
   const colourOf = (mark: FigureMark) => {
     const at = groups.findIndex((g) => g.label === mark.group);
-    return at === -1
-      ? "rgba(244,243,240,0.6)"
-      : toneOf(groups[at].tone, at);
+    return at === -1 ? "rgba(244,243,240,0.6)" : toneOf(groups[at].tone, at);
   };
 
   const place = (mark: FigureMark) => ({
-    cx:
-      VIEW.pad + ((mark.x - x.low) / x.range) * (VIEW.w - VIEW.pad * 2),
+    cx: VIEW.pad + ((mark.x - x.low) / x.range) * (VIEW.w - VIEW.pad * 2),
     // SVG y grows downward; the reading is that up means more.
-    cy:
-      VIEW.h - VIEW.pad - ((mark.y - y.low) / y.range) * (VIEW.h - VIEW.pad * 2),
+    cy: VIEW.h - VIEW.pad - ((mark.y - y.low) / y.range) * (VIEW.h - VIEW.pad * 2),
     r: 2 + Math.sqrt((mark.size ?? 1) / heaviest) * 4,
   });
 
   const summary = `${marks.length} marks plotted, ${figure.xLabel} across, ${figure.yLabel} up.${
     groups.length
       ? ` Groups: ${groups
-          .map(
-            (g) =>
-              `${g.label}, ${marks.filter((m) => m.group === g.label).length}`,
-          )
+          .map((g) => `${g.label}, ${marks.filter((m) => m.group === g.label).length}`)
           .join("; ")}.`
       : ""
   }`;

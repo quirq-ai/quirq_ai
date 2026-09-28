@@ -48,9 +48,7 @@ let OVERRIDE: {
 } | null = null;
 
 export function overrideLeaves(leaves: readonly ResolvedLeaf[] | null) {
-  OVERRIDE = leaves
-    ? { leaves, track: leaves.map((leaf) => leaf.keyframe) }
-    : null;
+  OVERRIDE = leaves ? { leaves, track: leaves.map((leaf) => leaf.keyframe) } : null;
 }
 
 /** The live track. Read per frame; the reference swaps on re-resolution. */

@@ -5,9 +5,9 @@ import { StoryBeat } from "@/components/story/story-beat";
 import { STORY } from "./story";
 
 export const metadata: Metadata = {
-  title: 'The golden harness',
+  title: "The golden harness",
   description:
-    'The dev harness that snapshots what the page actually does, so every refactor of the animation system is provable instead of hopeful.',
+    "The dev harness that snapshots what the page actually does, so every refactor of the animation system is provable instead of hopeful.",
 };
 
 /** Feature page: golden. Story data in ./story.ts, rendered by StoryBeat. */

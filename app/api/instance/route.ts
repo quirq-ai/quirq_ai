@@ -8,10 +8,9 @@ import { NextRequest } from "next/server";
  * site is blocked by CORS. Verified, not assumed. Server to server has no such
  * restriction, so the browser calls this route and this route calls Space.
  *
- * This is the one dynamic route on an otherwise fully static site. It only
- * makes sense when the site and the instance are on the same machine, which is
- * exactly the local-development case it exists for. Deployed elsewhere it will
- * fail to connect, and the dashboard says so rather than pretending.
+ * This public compatibility endpoint is useful when the site and instance
+ * share a machine. It returns a structured connection failure if no local
+ * instance is available; deployed clients must handle that state.
  */
 export const dynamic = "force-dynamic";
 

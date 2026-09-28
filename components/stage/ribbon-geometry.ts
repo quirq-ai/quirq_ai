@@ -65,12 +65,7 @@ export function sampleRibbonFrame(
   options: ResolvedRibbonOptions = RIBBON_DEFAULTS,
 ): RibbonFrame {
   const u = t * Math.PI * 2;
-  const {
-    radius,
-    twists,
-    wave,
-    waveFreq,
-  } = options;
+  const { radius, twists, wave, waveFreq } = options;
 
   out.centre.set(
     radius * Math.cos(u),
@@ -96,14 +91,8 @@ export function sampleRibbonFrame(
   const phi = twists * u;
   const cos = Math.cos(phi);
   const sin = Math.sin(phi);
-  out.rolledN
-    .copy(out.normal)
-    .multiplyScalar(cos)
-    .addScaledVector(out.binormal, sin);
-  out.rolledB
-    .copy(out.normal)
-    .multiplyScalar(-sin)
-    .addScaledVector(out.binormal, cos);
+  out.rolledN.copy(out.normal).multiplyScalar(cos).addScaledVector(out.binormal, sin);
+  out.rolledB.copy(out.normal).multiplyScalar(-sin).addScaledVector(out.binormal, cos);
 
   return out;
 }
@@ -117,9 +106,7 @@ export function sampleRibbonFrame(
  * into a soft tube: those hard edges are what throw the sharp caustics and
  * split light into the spectrum.
  */
-export function createRibbonGeometry(
-  options: RibbonOptions = {},
-): THREE.BufferGeometry {
+export function createRibbonGeometry(options: RibbonOptions = {}): THREE.BufferGeometry {
   const config: ResolvedRibbonOptions = {
     ...RIBBON_DEFAULTS,
     ...options,

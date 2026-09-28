@@ -18,8 +18,7 @@ const COEF = 0.8 * (1 - 0.2);
 /** The target the whole page is pitched against. */
 const TARGET_HOURS = 10;
 
-const money = (n: number) =>
-  "$" + Math.round(n).toLocaleString("en-US");
+const money = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
 
 export function Calculator() {
   const hoursId = useId();
@@ -32,25 +31,18 @@ export function Calculator() {
   const pct = Math.min(100, (back / TARGET_HOURS) * 100);
 
   return (
-    <section
-      className={styles.calc}
-      id="calculator"
-      aria-labelledby="calc-heading"
-    >
+    <section className={styles.calc} id="calculator" aria-labelledby="calc-heading">
       <div className={styles.k}>The ten-hour test</div>
       <h2 id="calc-heading">What is the repeating work costing you?</h2>
       <p className={styles.lede}>
-        Two numbers, and you can see the shape of it. This is a guide, not a
-        quote: the real figure comes from measuring one workflow for thirty
-        days.
+        Two numbers, and you can see the shape of it. This is a guide, not a quote: the
+        real figure comes from measuring one workflow for thirty days.
       </p>
 
       <div className={styles.calcGrid}>
         <div>
           <div className={styles.field}>
-            <label htmlFor={hoursId}>
-              Hours a week you spend on work that repeats
-            </label>
+            <label htmlFor={hoursId}>Hours a week you spend on work that repeats</label>
             <div className={styles.row}>
               <input
                 type="range"
@@ -87,15 +79,11 @@ export function Calculator() {
 
           <div className={styles.pair}>
             <div className={styles.stat}>
-              <div className={styles.kk}>
-                What that repeating work costs you now
-              </div>
+              <div className={styles.kk}>What that repeating work costs you now</div>
               <div className={styles.vv}>{money(hours * WEEKS * rate)}</div>
             </div>
             <div className={styles.stat}>
-              <div className={styles.kk}>
-                What the returned hours are worth
-              </div>
+              <div className={styles.kk}>What the returned hours are worth</div>
               <div className={styles.vv}>{money(back * WEEKS * rate)}</div>
             </div>
           </div>

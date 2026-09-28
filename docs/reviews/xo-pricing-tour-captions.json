@@ -1,0 +1,18 @@
+{
+  "fps": 4,
+  "captionBarHeight": 100,
+  "crop": { "x": 48, "y": 64, "width": 1392, "height": 840 },
+  "subtitle": "Local platform review · No subscription changed",
+  "captions": [
+    {
+      "start": 0,
+      "end": 15,
+      "title": "Monthly subscriptions · Starter $10 · Pro $50 · Business $500"
+    },
+    {
+      "start": 16,
+      "end": 31,
+      "title": "Annual totals · Starter $100 · Pro $500 · Business $5,000"
+    }
+  ]
+}

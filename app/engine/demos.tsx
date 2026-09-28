@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Rise, TextScrim } from "@/components/ui/primitives";
+import { Button } from "@/components/ui/button";
 import { GlassText } from "@/components/ui/glass";
 import { STAGE_DEMO_DEFAULTS, stage, type StageForm } from "@/lib/stage-store";
 
@@ -31,6 +32,8 @@ export function RingSwapDemo() {
 
   const pick = (value: StageForm) => {
     setForm(value);
+    // The Three.js frame loop reads this imperative store outside React; this is a click handler.
+    // eslint-disable-next-line react-hooks/immutability
     stage.form = value;
   };
 
@@ -43,37 +46,34 @@ export function RingSwapDemo() {
         <Rise className="relative mx-auto flex max-w-[640px] flex-col items-center text-center">
           <TextScrim />
           <p className="label over-stage">swap it live · the same one line</p>
-          <p className="over-stage mt-4 max-w-[520px] text-[13px] leading-6 text-dim sm:text-[14px]">
-            Two geometries, one mesh. The material, the damping and the scroll
-            do not change; only what the light has to pass through does.
+          <p className="over-stage mt-4 max-w-[520px] text-[13px] leading-6 text-muted-foreground sm:text-[14px]">
+            Two geometries, one mesh. The material, the damping and the scroll do not
+            change; only what the light has to pass through does.
           </p>
 
           <div className="mt-7 flex flex-wrap justify-center gap-2.5">
             {FORMS.map((f) => (
-              <button
+              <Button
                 key={f.value}
                 type="button"
+                variant={form === f.value ? "secondary" : "outline"}
                 aria-pressed={form === f.value}
                 onClick={() => pick(f.value)}
-                className={`flex flex-col items-center gap-1 rounded-2xl border px-6 py-3.5 transition-colors ${
-                  form === f.value
-                    ? "border-white/60 bg-white/10 text-ink"
-                    : "border-white/15 text-dim hover:text-ink"
-                }`}
+                className="flex-col gap-1 px-6 py-3"
               >
                 <span className="font-mono text-[11px] tracking-[0.12em] uppercase">
                   {f.label}
                 </span>
-                <span className="font-mono text-[9px] tracking-[0.1em] text-faint uppercase">
+                <span className="font-mono text-[9px] tracking-[0.1em] text-muted-foreground uppercase">
                   {f.note}
                 </span>
-              </button>
+              </Button>
             ))}
           </div>
 
-          <p className="over-stage mt-6 font-mono text-[10px] leading-relaxed tracking-[0.1em] text-faint uppercase">
-            The knot reads softer on purpose: a welded tube has no crisp edges
-            to split the light.
+          <p className="over-stage mt-6 font-mono text-[10px] leading-relaxed tracking-[0.1em] text-muted-foreground uppercase">
+            The knot reads softer on purpose: a welded tube has no crisp edges to split
+            the light.
           </p>
         </Rise>
       </div>
@@ -111,6 +111,8 @@ export function LightDeskDemo() {
 
   const set = (key: DeskKey, value: number) => {
     setValues((prev) => ({ ...prev, [key]: value }));
+    // Slider events update the external frame-loop store; React does not own its values.
+    // eslint-disable-next-line react-hooks/immutability
     stage[key] = value;
   };
 
@@ -128,21 +130,20 @@ export function LightDeskDemo() {
         <Rise className="relative mx-auto flex max-w-[640px] flex-col items-center text-center">
           <TextScrim />
           <p className="label over-stage">the light desk · held by hand</p>
-          <p className="over-stage mt-4 max-w-[560px] text-[13px] leading-6 text-dim sm:text-[14px]">
-            The desk writes over the score. Luminosity multiplies the beat's
-            burst level, size scales the source, colour turns the palette
-            wheel, and x and y carry the burst around the frame. Scroll keeps
-            playing underneath.
+          <p className="over-stage mt-4 max-w-[560px] text-[13px] leading-6 text-muted-foreground sm:text-[14px]">
+            The desk writes over the score. Luminosity multiplies the beat&apos;s burst
+            level, size scales the source, colour turns the palette wheel, and x and y
+            carry the burst around the frame. Scroll keeps playing underneath.
           </p>
         </Rise>
 
-        <div className="mx-auto mt-9 max-w-[720px] rounded-2xl border border-white/10 bg-black/55 p-6 backdrop-blur-sm sm:p-7">
+        <div className="mx-auto mt-9 max-w-[720px] rounded-xl border border-white/10 bg-card p-6 backdrop-blur-sm sm:p-7">
           <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
             {DESK.map((ch) => (
               <label key={ch.key} className="block">
-                <span className="flex justify-between font-mono text-[10px] text-dim">
+                <span className="flex justify-between font-mono text-[10px] text-muted-foreground">
                   <span className="tracking-[0.1em] uppercase">{ch.label}</span>
-                  <span className="tabular-nums text-faint">
+                  <span className="tabular-nums text-muted-foreground">
                     {values[ch.key].toFixed(2)}
                   </span>
                 </span>
@@ -153,25 +154,21 @@ export function LightDeskDemo() {
                   step={ch.step}
                   value={values[ch.key]}
                   onChange={(e) => set(ch.key, Number(e.target.value))}
-                  className="mt-1 h-1 w-full cursor-pointer accent-white"
+                  className="mt-1 min-h-11 w-full cursor-pointer rounded-md accent-primary outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 />
               </label>
             ))}
             <div className="flex items-end justify-start sm:justify-end">
-              <button
-                type="button"
-                onClick={reset}
-                className="rounded-full border border-white/15 px-4 py-1.5 font-mono text-[10px] tracking-[0.12em] text-dim uppercase transition-colors hover:text-ink"
-              >
+              <Button type="button" variant="outline" onClick={reset}>
                 back to the score
-              </button>
+              </Button>
             </div>
           </div>
         </div>
 
         <Rise className="relative mx-auto mt-6 max-w-[560px] text-center">
           <TextScrim />
-          <p className="over-stage font-mono text-[10px] leading-relaxed tracking-[0.1em] text-faint uppercase">
+          <p className="over-stage font-mono text-[10px] leading-relaxed tracking-[0.1em] text-muted-foreground uppercase">
             Leave the page and the score takes over again.
           </p>
         </Rise>
@@ -234,7 +231,14 @@ const LENS_SLIDERS: {
   step: number;
   format: (v: number) => string;
 }[] = [
-  { key: "strength", label: "strength", min: 0, max: 1, step: 0.01, format: (v) => v.toFixed(2) },
+  {
+    key: "strength",
+    label: "strength",
+    min: 0,
+    max: 1,
+    step: 0.01,
+    format: (v) => v.toFixed(2),
+  },
   { key: "size", label: "size", min: 120, max: 340, step: 2, format: (v) => `${v}px` },
   { key: "x", label: "position · x", min: 10, max: 90, step: 1, format: (v) => `${v}%` },
   { key: "y", label: "position · y", min: 15, max: 85, step: 1, format: (v) => `${v}%` },
@@ -266,45 +270,38 @@ export function LensDemo() {
     .join(" ");
 
   return (
-    <section
-      aria-label="The lens"
-      className="relative overflow-hidden py-20 sm:py-24"
-    >
+    <section aria-label="The lens" className="relative overflow-hidden py-20 sm:py-24">
       <div className="mx-auto w-full max-w-[1180px] px-5 sm:px-8 lg:px-11">
         <Rise className="relative mx-auto flex max-w-[640px] flex-col items-center text-center">
           <TextScrim />
           <p className="label over-stage">the lens · under different lights</p>
-          <p className="over-stage mt-4 max-w-[560px] text-[13px] leading-6 text-dim sm:text-[14px]">
-            Each button lays a lens over the light source. Stack them, then
-            hold the sliders: the same source reads warm, cold, negative,
-            smoked or frosted, and everything seen through the glass changes
-            with it. The desk above still moves the light itself.
+          <p className="over-stage mt-4 max-w-[560px] text-[13px] leading-6 text-muted-foreground sm:text-[14px]">
+            Each button lays a lens over the light source. Stack them, then hold the
+            sliders: the same source reads warm, cold, negative, smoked or frosted, and
+            everything seen through the glass changes with it. The desk above still moves
+            the light itself.
           </p>
         </Rise>
 
         <div className="mx-auto mt-9 max-w-[860px]">
           <div className="flex flex-wrap justify-center gap-2.5">
             {LENSES.map((l) => (
-              <button
+              <Button
                 key={l.key}
                 type="button"
+                variant={active.includes(l.key) ? "secondary" : "outline"}
                 aria-pressed={active.includes(l.key)}
                 onClick={() => toggle(l.key)}
-                className={`rounded-full border px-5 py-2 font-mono text-[10px] tracking-[0.12em] uppercase transition-colors ${
-                  active.includes(l.key)
-                    ? "border-white/60 bg-white/10 text-ink"
-                    : "border-white/15 text-dim hover:text-ink"
-                }`}
               >
                 {l.label}
-              </button>
+              </Button>
             ))}
           </div>
 
           {/* The seat: a fixed-height window onto the live stage. The lens is
               a circle whose backdrop filter is the composition of the active
               glasses; with none active it waits as a dashed outline. */}
-          <div className="relative mt-5 h-[380px] overflow-hidden rounded-2xl border border-white/10">
+          <div className="relative mt-5 h-[380px] overflow-hidden rounded-xl border border-white/10">
             <div
               aria-hidden
               className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full ${
@@ -324,20 +321,18 @@ export function LensDemo() {
                   : undefined,
               }}
             />
-            <span className="over-stage absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/40 px-2.5 py-1 font-mono text-[9px] tracking-[0.16em] text-faint uppercase">
-              {active.length
-                ? active.join(" + ")
-                : "add a lens over the light"}
+            <span className="over-stage absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-card px-2.5 py-1 font-mono text-[9px] tracking-[0.16em] text-muted-foreground uppercase">
+              {active.length ? active.join(" + ") : "add a lens over the light"}
             </span>
           </div>
 
-          <div className="mt-5 rounded-2xl border border-white/10 bg-black/55 p-6 backdrop-blur-sm">
+          <div className="mt-5 rounded-xl border border-white/10 bg-card p-6 backdrop-blur-sm">
             <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
               {LENS_SLIDERS.map((ch) => (
                 <label key={ch.key} className="block">
-                  <span className="flex justify-between font-mono text-[10px] text-dim">
+                  <span className="flex justify-between font-mono text-[10px] text-muted-foreground">
                     <span className="tracking-[0.1em] uppercase">{ch.label}</span>
-                    <span className="tabular-nums text-faint">
+                    <span className="tabular-nums text-muted-foreground">
                       {ch.format(lens[ch.key])}
                     </span>
                   </span>
@@ -348,7 +343,7 @@ export function LensDemo() {
                     step={ch.step}
                     value={lens[ch.key]}
                     onChange={(e) => set(ch.key, Number(e.target.value))}
-                    className="mt-1 h-1 w-full cursor-pointer accent-white"
+                    className="mt-1 min-h-11 w-full cursor-pointer rounded-md accent-primary outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   />
                 </label>
               ))}
@@ -358,9 +353,9 @@ export function LensDemo() {
 
         <Rise className="relative mx-auto mt-6 max-w-[560px] text-center">
           <TextScrim />
-          <p className="over-stage font-mono text-[10px] leading-relaxed tracking-[0.1em] text-faint uppercase">
-            A lens adds nothing of its own: every reading is the one light
-            source, re-bent through whatever glass you stacked.
+          <p className="over-stage font-mono text-[10px] leading-relaxed tracking-[0.1em] text-muted-foreground uppercase">
+            A lens adds nothing of its own: every reading is the one light source, re-bent
+            through whatever glass you stacked.
           </p>
         </Rise>
       </div>
@@ -385,10 +380,10 @@ export function PrismTilesDemo() {
         <Rise className="relative mx-auto flex max-w-[640px] flex-col items-center text-center">
           <TextScrim />
           <p className="label over-stage">the prism row · one light, four readings</p>
-          <p className="over-stage mt-4 max-w-[540px] text-[13px] leading-6 text-dim sm:text-[14px]">
-            A text box over the stage brings almost no light of its own: what
-            you read is mostly the rays already behind it, re-bent. These four
-            boxes sit over one backdrop and read it four different ways.
+          <p className="over-stage mt-4 max-w-[540px] text-[13px] leading-6 text-muted-foreground sm:text-[14px]">
+            A text box over the stage brings almost no light of its own: what you read is
+            mostly the rays already behind it, re-bent. These four boxes sit over one
+            backdrop and read it four different ways.
           </p>
         </Rise>
 
@@ -396,12 +391,12 @@ export function PrismTilesDemo() {
           {PRISMS.map((p) => (
             <div
               key={p.label}
-              className={`flex h-36 flex-col items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] ${p.filter}`}
+              className={`flex h-36 flex-col items-center justify-center gap-3 rounded-xl border border-white/10 bg-muted ${p.filter}`}
             >
               <GlassText className="text-[26px] font-medium tracking-[-0.03em] sm:text-[30px]">
                 quirq
               </GlassText>
-              <span className="over-stage rounded-full bg-black/40 px-2.5 py-1 font-mono text-[9px] tracking-[0.16em] text-faint uppercase">
+              <span className="over-stage rounded-full bg-card px-2.5 py-1 font-mono text-[9px] tracking-[0.16em] text-muted-foreground uppercase">
                 {p.label}
               </span>
             </div>
@@ -410,9 +405,9 @@ export function PrismTilesDemo() {
 
         <Rise className="relative mx-auto mt-8 max-w-[560px] text-center">
           <TextScrim />
-          <p className="over-stage font-mono text-[10px] leading-relaxed tracking-[0.1em] text-faint uppercase">
-            One backdrop, four readings: the hue turned a quarter and a half
-            around the wheel, and one box pulled into shade.
+          <p className="over-stage font-mono text-[10px] leading-relaxed tracking-[0.1em] text-muted-foreground uppercase">
+            One backdrop, four readings: the hue turned a quarter and a half around the
+            wheel, and one box pulled into shade.
           </p>
         </Rise>
       </div>

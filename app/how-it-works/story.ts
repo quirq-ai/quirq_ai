@@ -47,7 +47,8 @@ export const STORY: BeatData[] = [
     title: ["A beat, a pose,", "and a fork."],
     glass: 1,
     code: '"trust": {\n  "short": "the trust",\n  "pose": { "base": "flooded", "tweaks": { "spin": 0.2 } },\n  "beat": {\n    "layout": "right",\n    "title": ["Trust is a", "state comparison."],\n    "glass": 1,\n    "lede": "..."\n  },\n  "prompt": "Who checks the work?",\n  "choices": [{ "label": "The world is checked", "to": "trust-verify" }]\n}',
-    caption: "A node without choices is an ending; endings usually carry beat.links instead, the calls to action.",
+    caption:
+      "A node without choices is an ending; endings usually carry beat.links instead, the calls to action.",
   },
   {
     index: 3,

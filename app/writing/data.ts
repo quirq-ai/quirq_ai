@@ -264,8 +264,7 @@ export const THOUGHTS: Card[] = [
   },
   {
     num: "07",
-    title:
-      "Models Mathematically Find It More Difficult to Navigate Various Languages",
+    title: "Models Mathematically Find It More Difficult to Navigate Various Languages",
     slug: "the-language-is-not-the-problem",
     desc: "The deal closes in fingers, a representation both sides already share. On the tokenizer study.",
     date: "Jul 11, 2026",

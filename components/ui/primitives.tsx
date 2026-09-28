@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { motion, useInView } from "motion/react";
+import { ArrowUpRight } from "lucide-react";
+import { Button } from "./button";
+import { cn } from "@/lib/utils";
+export { cn } from "@/lib/utils";
 import { LIGHT } from "@/lib/lighting";
 import { registerBeat } from "@/lib/beat-registry";
-
-export const cn = (...parts: Array<string | false | null | undefined>) =>
-  parts.filter(Boolean).join(" ");
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -49,15 +50,11 @@ export function Beat({
       data-beat={index}
       className={cn(
         "relative w-full overflow-hidden",
-        compact
-          ? "py-10 first-of-type:pt-28"
-          : "flex min-h-svh items-center pt-24 pb-20",
+        compact ? "py-10 first-of-type:pt-28" : "flex min-h-svh items-center pt-24 pb-20",
         className,
       )}
     >
-      <div className="mx-auto w-full max-w-[1180px] px-5 sm:px-8 lg:px-11">
-        {children}
-      </div>
+      <div className="site-container">{children}</div>
     </section>
   );
 }
@@ -174,13 +171,7 @@ export function Marker({ children }: { children: ReactNode }) {
   );
 }
 
-/** Shared hover spring for every CTA pill, matched to the invite button. */
-export const CTA_SPRING = {
-  type: "spring",
-  stiffness: 320,
-  damping: 22,
-} as const;
-
+/** Story actions use the same component as the rest of the interface. */
 export function ActionLink({
   href,
   children,
@@ -195,64 +186,20 @@ export function ActionLink({
   className?: string;
 }) {
   return (
-    <motion.a
-      href={href}
-      target={newTab ? "_blank" : undefined}
-      rel={newTab ? "noopener noreferrer" : undefined}
-      whileHover={{ y: -3 }}
-      transition={CTA_SPRING}
-      className={cn(
-        "group relative inline-flex items-center gap-2.5 rounded-full px-6 py-3.5 font-mono text-[11.5px] uppercase tracking-[0.14em]",
-        tone === "solid"
-          ? "focus-on-ink bg-ink text-void"
-          : // Sits over the live bloom, so it carries its own scrim.
-            "border border-hair bg-black/40 text-ink/85 backdrop-blur-md transition-colors duration-300 hover:border-ink/30 hover:text-ink",
-        className,
-      )}
+    <Button
+      asChild
+      variant={tone === "solid" ? "default" : "outline"}
+      className={className}
     >
-      {/* Spectrum bloom under the pill; on the dark tone it stays quieter and
-          bleeds through the smoked glass instead of haloing it.
-
-          `cta-bloom` is a noscript hook, not a style. This span is invisible
-          until hover, and the noscript stylesheet forces `opacity: 1` on
-          everything inside main so the entrance animations cannot strand the
-          page blank: without the hook that same rule lights every bloom at
-          once, and a rainbow blob sits permanently behind every CTA. */}
-      <span
-        aria-hidden
-        className={cn(
-          "cta-bloom absolute -inset-px -z-10 rounded-full opacity-0 blur-lg transition-opacity duration-500",
-          tone === "solid" ? "group-hover:opacity-70" : "group-hover:opacity-40",
-        )}
-        style={{ background: "var(--spectrum)" }}
-      />
-      {children}
-      <svg
-        width="11"
-        height="11"
-        viewBox="0 0 12 12"
-        fill="none"
-        aria-hidden
-        className="transition-transform duration-300 group-hover:translate-x-1"
+      <a
+        href={href}
+        target={newTab ? "_blank" : undefined}
+        rel={newTab ? "noopener noreferrer" : undefined}
       >
-        <path
-          d="M2 10L10 2M10 2H4M10 2V8"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-      {newTab && <span className="sr-only">(opens in a new tab)</span>}
-    </motion.a>
-  );
-}
-
-/** The quirq mark, from the brand favicon path. */
-export function Mark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 100 132" className={className} aria-hidden fill="currentColor">
-      <path d="M50 0A50 50 0 0 1 100 50V118A14 14 0 0 1 86 132A14 14 0 0 1 72 118V94.87A50 50 0 1 1 50 0ZM50 33A17 17 0 1 0 50 67A17 17 0 1 0 50 33Z" />
-    </svg>
+        {children}
+        <ArrowUpRight aria-hidden="true" />
+        {newTab && <span className="sr-only">(opens in a new tab)</span>}
+      </a>
+    </Button>
   );
 }

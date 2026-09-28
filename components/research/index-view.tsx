@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Reveal, Rise } from "@/components/ui/primitives";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   POSTS,
   TOPICS,
@@ -25,8 +26,8 @@ const pageHref = (basePath: string, page: number) =>
 function Stat({ value, label }: { value: number; label: string }) {
   return (
     <p className="flex items-baseline gap-2.5">
-      <span className="numeric text-[19px] font-semibold text-ink">{value}</span>
-      <span className="font-mono text-[10px] tracking-[0.14em] text-faint uppercase">
+      <span className="numeric text-[19px] font-semibold text-foreground">{value}</span>
+      <span className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
         {label}
       </span>
     </p>
@@ -45,20 +46,16 @@ function TopicChip({
   active: boolean;
 }) {
   return (
-    <Link
-      href={href}
-      aria-current={active ? "page" : undefined}
-      className={
-        active
-          ? "focus-on-ink inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 font-mono text-[10.5px] tracking-[0.14em] text-void uppercase"
-          : "inline-flex items-center gap-2 rounded-full border border-hair px-4 py-2 font-mono text-[10.5px] tracking-[0.14em] text-dim uppercase transition-colors duration-300 hover:border-ink/30 hover:text-ink"
-      }
-    >
-      {label}
-      <span className={active ? "numeric text-void/55" : "numeric text-faint"}>
-        {pad(count)}
-      </span>
-    </Link>
+    <Button asChild variant={active ? "default" : "outline"}>
+      <Link href={href} aria-current={active ? "page" : undefined}>
+        {label}
+        <span
+          className={`numeric text-xs ${active ? "text-primary-foreground" : "text-muted-foreground"}`}
+        >
+          {pad(count)}
+        </span>
+      </Link>
+    </Button>
   );
 }
 
@@ -99,20 +96,20 @@ function Pagination({
   return (
     <nav
       aria-label="Research pages"
-      className="mt-14 flex flex-wrap items-center justify-between gap-5 border-t border-hair pt-7"
+      className="mt-14 flex flex-wrap items-center justify-between gap-5 border-t border-border pt-7"
     >
       {page > 1 ? (
         <Link
           href={pageHref(basePath, page - 1)}
           rel="prev"
-          className="label inline-flex items-center gap-2 transition-colors hover:text-ink"
+          className={buttonVariants({ variant: "ghost" })}
         >
           <span aria-hidden>&larr;</span> Previous
         </Link>
       ) : (
         // Kept in flow rather than dropped, so the page numbers do not slide
         // sideways between page one and page two.
-        <span className="label text-faint/50" aria-hidden>
+        <span className="label text-muted-foreground/50" aria-hidden>
           &larr; Previous
         </span>
       )}
@@ -123,7 +120,7 @@ function Pagination({
             {n === page ? (
               <span
                 aria-current="page"
-                className="numeric flex h-9 w-9 items-center justify-center rounded-full border border-ink/25 bg-white/[0.06] font-mono text-[11px] text-ink"
+                className={buttonVariants({ variant: "secondary", size: "icon" })}
               >
                 {pad(n)}
               </span>
@@ -131,7 +128,7 @@ function Pagination({
               <Link
                 href={pageHref(basePath, n)}
                 aria-label={`Page ${n}`}
-                className="numeric flex h-9 w-9 items-center justify-center rounded-full border border-transparent font-mono text-[11px] text-faint transition-colors duration-300 hover:border-hair hover:text-ink"
+                className={buttonVariants({ variant: "ghost", size: "icon" })}
               >
                 {pad(n)}
               </Link>
@@ -144,12 +141,12 @@ function Pagination({
         <Link
           href={pageHref(basePath, page + 1)}
           rel="next"
-          className="label inline-flex items-center gap-2 transition-colors hover:text-ink"
+          className={buttonVariants({ variant: "ghost" })}
         >
           Next <span aria-hidden>&rarr;</span>
         </Link>
       ) : (
-        <span className="label text-faint/50" aria-hidden>
+        <span className="label text-muted-foreground/50" aria-hidden>
           Next &rarr;
         </span>
       )}
@@ -169,7 +166,7 @@ export function ResearchIndexView({ view }: { view: IndexView }) {
       : `${total} notes`;
 
   return (
-    <div className="mx-auto w-full max-w-[1180px] px-5 pt-24 pb-4 sm:px-8 sm:pt-28 lg:px-11">
+    <div className="site-container pt-[calc(var(--header-height)+var(--space-section-sm))] pb-4">
       {/* Two columns from lg, so the masthead is as tall as its tallest half
           rather than the sum of both, and the feature card below it stays on
           the first screen of a laptop. Bottom-aligned: the headline and the
@@ -177,23 +174,16 @@ export function ResearchIndexView({ view }: { view: IndexView }) {
       <header className="grid gap-y-7 lg:grid-cols-[1.05fr_1fr] lg:items-end lg:gap-x-14">
         <div>
           <Rise className="flex items-center gap-3">
-            <span
-              className="h-2.5 w-2.5 rounded-[3px]"
-              style={{ background: "var(--spectrum)" }}
-            />
+            <span aria-hidden className="h-2.5 w-2.5 rounded-sm bg-primary" />
             <span className="label">The thesis</span>
-            <span className="spectrum-rule h-px w-12 opacity-70" />
+            <span aria-hidden className="h-px w-12 bg-border" />
           </Rise>
 
-          {/* The paper's own title, broken and treated exactly as its hero
-              breaks it in app/whitepaper/beats.tsx, so the index and the paper
-              read as one argument. Revise the two together. */}
+          {/* Keep the title treatment in sync with the whitepaper. */}
           <h1 className="display-sm mt-5">
             <Reveal delay={0.05}>A unit of work</Reveal>
             <Reveal delay={0.13}>
-              {/* Styling only: research pages carry no live stage behind the
-                  scrim, so there is no light to cut a hole for. */}
-              for <span className="glass-text">intelligence</span>.
+              for <span className="text-primary">intelligence</span>.
             </Reveal>
           </h1>
         </div>
@@ -201,9 +191,8 @@ export function ResearchIndexView({ view }: { view: IndexView }) {
         <div>
           <Rise delay={0.22}>
             <p className="lede max-w-[48ch] lg:text-[16px]">
-              Experiments, frameworks, and field notes from the program behind
-              quirq. Hypotheses ship with falsifiers; results land here as they
-              land.
+              Experiments, frameworks, and field notes from the program behind quirq.
+              Hypotheses ship with falsifiers; results land here as they land.
             </p>
           </Rise>
 
@@ -220,10 +209,7 @@ export function ResearchIndexView({ view }: { view: IndexView }) {
               baseline rather than floating mid-masthead. */}
           <Rise delay={0.34}>
             <div className="mt-7 flex flex-wrap items-center gap-3">
-              <Link
-                href="/whitepaper"
-                className="focus-on-ink group inline-flex items-center gap-2.5 rounded-full bg-ink px-5 py-3 font-mono text-[11px] tracking-[0.14em] text-void uppercase transition-transform duration-300 hover:-translate-y-0.5"
-              >
+              <Link href="/whitepaper" className={buttonVariants()}>
                 Read the whitepaper
                 <Arrow className="transition-transform duration-300 group-hover:translate-x-0.5" />
               </Link>
@@ -233,7 +219,7 @@ export function ResearchIndexView({ view }: { view: IndexView }) {
                 href="/whitepaper/pdf"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2.5 rounded-full border border-hair bg-black/40 px-5 py-3 font-mono text-[11px] tracking-[0.14em] text-ink/85 uppercase transition-colors duration-300 hover:border-ink/30 hover:text-ink"
+                className={buttonVariants({ variant: "outline" })}
               >
                 The PDF version
                 <Arrow className="transition-transform duration-300 group-hover:translate-x-0.5" />
@@ -245,7 +231,7 @@ export function ResearchIndexView({ view }: { view: IndexView }) {
       </header>
 
       <Rise delay={0.34}>
-        <div className="mt-8 flex flex-wrap items-center gap-x-2.5 gap-y-3 border-t border-hair pt-6 sm:mt-9">
+        <div className="mt-8 flex flex-wrap items-center gap-x-2.5 gap-y-3 border-t border-border pt-6 sm:mt-9">
           <nav
             aria-label="Research topics"
             className="flex flex-wrap items-center gap-2.5"
@@ -268,7 +254,7 @@ export function ResearchIndexView({ view }: { view: IndexView }) {
           </nav>
 
           {/* Its own line on phones, the far end of the rail from sm. */}
-          <p className="w-full font-mono text-[10px] tracking-[0.14em] text-faint uppercase sm:ml-auto sm:w-auto sm:text-right">
+          <p className="w-full font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase sm:ml-auto sm:w-auto sm:text-right">
             {standing}
           </p>
         </div>
@@ -276,7 +262,7 @@ export function ResearchIndexView({ view }: { view: IndexView }) {
 
       {topic && (
         <Rise delay={0.38}>
-          <p className="mt-6 max-w-[62ch] text-[14.5px] leading-[1.7] text-dim">
+          <p className="mt-6 max-w-[62ch] text-[14.5px] leading-[1.7] text-muted-foreground">
             {topic.blurb}
           </p>
         </Rise>
@@ -293,7 +279,7 @@ export function ResearchIndexView({ view }: { view: IndexView }) {
         // (page two, a small archive) reads better as wider cards than as one
         // narrow column with an empty third of the page beside it.
         <div
-          className={`mt-12 grid gap-x-8 gap-y-12 border-t border-hair pt-12 sm:grid-cols-2 ${
+          className={`mt-12 grid gap-x-8 gap-y-12 border-t border-border pt-12 sm:grid-cols-2 ${
             cards.length >= 3 ? "lg:grid-cols-3" : ""
           }`}
         >
@@ -310,13 +296,13 @@ export function ResearchIndexView({ view }: { view: IndexView }) {
       )}
 
       <Rise delay={0.2}>
-        <p className="mt-10 font-mono text-[10.5px] leading-relaxed tracking-[0.08em] text-faint">
+        <p className="mt-10 font-mono text-[10.5px] leading-relaxed tracking-[0.08em] text-muted-foreground">
           Adapted from the XO research program ·{" "}
           <a
             href="https://docs.xo.builders/research"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline underline-offset-4 transition-colors hover:text-dim"
+            className="underline underline-offset-4 transition-colors hover:text-muted-foreground"
           >
             docs.xo.builders/research
           </a>

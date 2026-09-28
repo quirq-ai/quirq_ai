@@ -1,0 +1,20 @@
+{
+  "fps": 4,
+  "captionBarHeight": 100,
+  "crop": { "x": 48, "y": 64, "width": 1392, "height": 840 },
+  "subtitle": "Empty account activity in this capture · Model usage, not a compute invoice",
+  "captions": [
+    {
+      "start": 0,
+      "end": 11,
+      "title": "Review messages, tokens, model costs and latency"
+    },
+    { "start": 12, "end": 19, "title": "Choose a reporting period" },
+    { "start": 20, "end": 35, "title": "Load the last 30 days" },
+    {
+      "start": 36,
+      "end": 51,
+      "title": "Review the selected period · No recorded activity"
+    }
+  ]
+}

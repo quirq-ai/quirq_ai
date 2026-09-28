@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { cn } from "@/components/ui/primitives";
-
-/** The whole install. One line, and it is the same line on every machine. */
-export const INSTALL_COMMAND = "curl -fsSL quirq.ai/install | sh";
+import { CheckIcon, CopyIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { INSTALL_COMMAND } from "@/lib/products";
 
 export function InstallCommand() {
   const [copied, setCopied] = useState(false);
@@ -26,31 +26,43 @@ export function InstallCommand() {
   };
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="flex items-center gap-2.5 rounded-full border border-hair bg-black/40 py-1.5 pr-1.5 pl-4 backdrop-blur-md sm:gap-3 sm:py-2 sm:pr-2 sm:pl-5">
+    <div className="flex w-full min-w-0 max-w-full flex-col items-center">
+      {/* The zero-minimum track lets fit-content parents shrink around the
+          command while reserving the Copy button's full width. */}
+      <div className="grid w-full min-w-0 max-w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border border-border bg-card p-1.5 pl-4 sm:gap-3">
         {/* The prompt is scenery, not part of what you paste. */}
         <span
           aria-hidden
-          className="font-mono text-[11px] text-faint select-none"
+          className="self-start py-2 font-mono text-xs text-muted-foreground select-none sm:text-sm"
         >
           $
         </span>
-        <code className="font-mono text-[10.5px] whitespace-nowrap text-ink/90 sm:text-[13px]">
+        <code
+          tabIndex={0}
+          aria-label="Space installation command"
+          className="block min-w-0 max-w-full overflow-x-auto py-2 font-mono text-xs whitespace-nowrap text-card-foreground sm:text-sm"
+        >
           {INSTALL_COMMAND}
         </code>
         {/* Fixed width: a button that resized on click would shift the command
             out from under the pointer at the exact moment it was clicked. */}
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={copy}
           aria-label="Copy the install command"
           className={cn(
-            "copy-command w-[70px] shrink-0 rounded-full border border-hair-soft bg-white/5 py-2 font-mono text-[9.5px] tracking-[0.14em] uppercase transition-colors duration-300 hover:border-ink/30 sm:w-[86px] sm:text-[10.5px]",
-            copied ? "text-spec-green" : "text-dim hover:text-ink",
+            "copy-command w-11 gap-1.5 px-3 font-mono text-xs sm:w-24",
+            copied && "text-success",
           )}
         >
-          {copied ? "Copied" : "Copy"}
-        </button>
+          {copied ? (
+            <CheckIcon aria-hidden="true" className="size-4" />
+          ) : (
+            <CopyIcon aria-hidden="true" className="size-4" />
+          )}
+          <span className="hidden sm:inline">{copied ? "Copied" : "Copy"}</span>
+        </Button>
         {/* Always mounted so the announcement is a content change in a live
             region rather than a region arriving with content already in it. */}
         <span aria-live="polite" className="sr-only">
@@ -58,8 +70,8 @@ export function InstallCommand() {
         </span>
       </div>
 
-      <p className="label mt-3 text-[9.5px]">
-        Runs anywhere · macOS, Linux, your cloud
+      <p className="mt-3 text-center text-xs text-muted-foreground">
+        macOS · Linux · Windows via WSL
       </p>
     </div>
   );

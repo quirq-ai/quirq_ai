@@ -4,10 +4,7 @@ import { useEffect } from "react";
 import Lenis from "lenis";
 import { stage } from "@/lib/stage-store";
 import { beatEntries, onBeatsChange } from "@/lib/beat-registry";
-import {
-  getResolvedLeaves,
-  refreshTrack,
-} from "@/components/stage/choreography";
+import { getResolvedLeaves, refreshTrack } from "@/components/stage/choreography";
 
 /**
  * Owns smooth scrolling and turns raw scroll into a fractional beat index.
@@ -53,9 +50,7 @@ export default function ScrollRuntime() {
           );
         }
       } else {
-        sections = Array.from(
-          document.querySelectorAll<HTMLElement>("[data-beat]"),
-        ).sort(
+        sections = Array.from(document.querySelectorAll<HTMLElement>("[data-beat]")).sort(
           (a, b) => Number(a.dataset.beat ?? 0) - Number(b.dataset.beat ?? 0),
         );
       }
@@ -116,10 +111,7 @@ export default function ScrollRuntime() {
     // the page keeps the visitor's own scrolling behaviour.
     if (reduced) {
       const onScroll = () =>
-        write(
-          window.scrollY,
-          document.documentElement.scrollHeight - window.innerHeight,
-        );
+        write(window.scrollY, document.documentElement.scrollHeight - window.innerHeight);
       const onResize = () => {
         refreshTrack({ width: window.innerWidth });
         measure();
@@ -204,10 +196,7 @@ export default function ScrollRuntime() {
 
     // Eager first write: Lenis only emits on movement, so a page restored
     // mid-scroll would otherwise show a zeroed rule until the first wheel.
-    write(
-      window.scrollY,
-      document.documentElement.scrollHeight - window.innerHeight,
-    );
+    write(window.scrollY, document.documentElement.scrollHeight - window.innerHeight);
 
     // Dev-only handles. Lenis owns the scroll position, so calling
     // window.scrollTo from a console or a test fights it; this exposes the
@@ -236,10 +225,7 @@ export default function ScrollRuntime() {
 
     const remeasure = () => {
       measure();
-      write(
-        window.scrollY,
-        document.documentElement.scrollHeight - window.innerHeight,
-      );
+      write(window.scrollY, document.documentElement.scrollHeight - window.innerHeight);
     };
 
     // Sections registering or leaving (a dynamic middle) re-measure and
@@ -288,10 +274,7 @@ export default function ScrollRuntime() {
       .then(() => {
         if (!alive) return;
         measure();
-        write(
-          window.scrollY,
-          document.documentElement.scrollHeight - window.innerHeight,
-        );
+        write(window.scrollY, document.documentElement.scrollHeight - window.innerHeight);
       })
       .catch(() => {});
 

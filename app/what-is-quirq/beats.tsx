@@ -39,9 +39,8 @@ export function WhatHero() {
 
           <Rise delay={0.3}>
             <p className="lede mx-auto mt-7 text-center">
-              Tokens meter what your AI consumes. A quirq meters what it
-              delivered: checked against the state of the world, priced by the
-              person who wanted it.
+              Tokens meter what your AI consumes. A quirq meters what it delivered:
+              checked against the state of the world, priced by the person who wanted it.
             </p>
           </Rise>
         </GlassPool>
@@ -88,9 +87,7 @@ export function WhatProblem() {
           {FAILURES.map((failure, i) => (
             <Rise key={failure.title} delay={0.34 + i * 0.08}>
               <div className="flex gap-5 border-t border-hair py-5 sm:gap-7">
-                <span className="font-mono text-[11px] text-faint">
-                  0{i + 1}
-                </span>
+                <span className="font-mono text-[11px] text-faint">0{i + 1}</span>
                 <div>
                   <p className="over-stage text-[15.5px] font-medium text-ink">
                     {failure.title}
@@ -125,9 +122,9 @@ export function WhatUnit() {
 
           <Rise delay={0.28}>
             <p className="lede over-stage mt-7 max-w-[44ch]">
-              A human budgets the outcome at value B. The workspace snapshots
-              the world before and after, scores completion V against a
-              definition of done, and mints the product.
+              A human budgets the outcome at value B. The workspace snapshots the world
+              before and after, scores completion V against a definition of done, and
+              mints the product.
             </p>
           </Rise>
 
@@ -185,9 +182,7 @@ export function WhatNumbers() {
           {NUMBERS.map((item) => (
             <div key={item.label} className="bg-black/55 px-6 py-6">
               <p className="label">{item.label}</p>
-              <p className="mt-2.5 text-[14.5px] leading-relaxed text-dim">
-                {item.note}
-              </p>
+              <p className="mt-2.5 text-[14.5px] leading-relaxed text-dim">{item.note}</p>
             </div>
           ))}
         </div>
@@ -197,16 +192,13 @@ export function WhatNumbers() {
         <TextScrim />
         <p className="relative font-mono text-[10.5px] leading-relaxed text-dim">
           All of them fall out of one ledger. The full calculus is in the{" "}
-          <Link
-            href="/whitepaper"
-            className="text-dim underline underline-offset-4"
-          >
+          <Link href="/whitepaper" className="text-dim underline underline-offset-4">
             whitepaper
           </Link>{" "}
           and the{" "}
-          <a href="/research" className="text-dim underline underline-offset-4">
+          <Link href="/research" className="text-dim underline underline-offset-4">
             research notes
-          </a>
+          </Link>
           .
         </p>
       </Rise>
@@ -229,8 +221,8 @@ export function WhatRun() {
 
           <Rise delay={0.24}>
             <p className="lede mx-auto mt-7 text-center">
-              quirq wraps your agents in an environment that snapshots,
-              verifies, and meters: on your laptop, in your cloud, in one click.
+              quirq wraps your agents in an environment that snapshots, verifies, and
+              meters: on your laptop, in your cloud, in one click.
             </p>
           </Rise>
 

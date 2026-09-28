@@ -1,9 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
-import {
-  validateDefinition,
-  type JourneyDefinition,
-} from "@/app/journey/defs";
+import { validateDefinition, type JourneyDefinition } from "@/app/journey/defs";
 import { isDerivedSlug } from "@/lib/research-journey";
 import { crossOrigin, writeAtomic } from "./guards";
 
