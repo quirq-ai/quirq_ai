@@ -51,10 +51,16 @@ set -eu
 printf '%s\\0' "$@" > "$FIXTURE_RECEIPT"
 printf '%s' "$PWD" > "$FIXTURE_CWD_FILE"
 printf '%s' "\${QUIRQ_SOURCE_REF:-main}" > "$FIXTURE_REF_FILE"
+here="$(cd "$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
+printf '%s\\n' "$here" "$(ls -ld "$here" | cut -c1-10)" "$(ls -A "$here")" > "$FIXTURE_HOME_FILE"
+if [ "\${FIXTURE_READ_STDIN:-0}" = 1 ]; then IFS= read -r line || :; fi
 exit "\${FIXTURE_INSTALL_STATUS:-0}"
 `;
 
-function bootstrap(t, { args = [], env = {} } = {}) {
+function bootstrap(
+  t,
+  { args = [], env = {}, script = INSTALL_SCRIPT, shell = "/bin/sh", plant = false } = {},
+) {
   const root = mkdtempSync(join(tmpdir(), "quirq-bootstrap-test-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const bin = join(root, "bin");
@@ -66,11 +72,16 @@ function bootstrap(t, { args = [], env = {} } = {}) {
   const url = join(root, "url");
   const cwd = join(root, "cwd");
   const ref = join(root, "ref");
+  const home = join(root, "home");
+  // Files someone else left in the shared temp dir must never be taken for
+  // the installer's surroundings.
+  const planted = plant ? ["requirements.txt", "server.py"] : [];
+  for (const name of planted) writeFileSync(join(temporaryFiles, name), "planted\n");
   writeFileSync(join(bin, "curl"), MOCK_CURL, { mode: 0o755 });
   writeFileSync(payload, FIXTURE_INSTALLER);
 
-  const result = spawnSync("/bin/sh", ["-s", "--", ...args], {
-    input: INSTALL_SCRIPT,
+  const result = spawnSync(shell, ["-s", "--", ...args], {
+    input: script,
     encoding: "utf8",
     cwd: root,
     timeout: 5000,
@@ -82,13 +93,18 @@ function bootstrap(t, { args = [], env = {} } = {}) {
       FIXTURE_URL_FILE: url,
       FIXTURE_CWD_FILE: cwd,
       FIXTURE_REF_FILE: ref,
+      FIXTURE_HOME_FILE: home,
       ...env,
     },
   });
   assert.ifError(result.error);
   assert.equal(result.signal, null);
-  assert.deepEqual(readdirSync(temporaryFiles), [], "temporary installer is removed");
-  return { result, root, receipt, url, cwd, ref };
+  assert.deepEqual(
+    readdirSync(temporaryFiles).sort(),
+    planted,
+    "temporary installer is removed",
+  );
+  return { result, root, receipt, url, cwd, ref, home, temporaryFiles };
 }
 
 test("install route preserves its shell response contract", async () => {
@@ -162,4 +178,36 @@ test("invalid source refs are rejected before download or execution", (t) => {
     assert.equal(existsSync(url), false);
     assert.equal(existsSync(receipt), false);
   }
+});
+
+test("the installer runs from a fresh private directory, never the shared temp dir", (t) => {
+  const { result, home, temporaryFiles } = bootstrap(t, { plant: true });
+  assert.equal(result.status, 0, result.stderr);
+  const [dir, mode, ...listing] = readFileSync(home, "utf8").trimEnd().split("\n");
+  assert.notEqual(realpathSync(temporaryFiles), dir);
+  assert.ok(dir.startsWith(realpathSync(temporaryFiles) + "/quirq-install."), dir);
+  assert.equal(mode, "drwx------");
+  assert.deepEqual(listing, ["install.sh"]);
+});
+
+test("a truncated script never runs the installer and leaves nothing behind", (t) => {
+  // The last line is the only call. Every prefix that stops before its
+  // function name is complete must be inert (a bare `quirq_bootstrap` only
+  // drops the forwarded arguments).
+  const call = INSTALL_SCRIPT.lastIndexOf("\nquirq_bootstrap ");
+  assert.ok(call > 0, "the script ends by calling quirq_bootstrap");
+  const complete = call + "\nquirq_bootstrap".length;
+  for (let n = 0; n < complete; n += 1) {
+    const { receipt } = bootstrap(t, { script: INSTALL_SCRIPT.slice(0, n) });
+    assert.equal(existsSync(receipt), false, `prefix of ${n} bytes ran the installer`);
+  }
+});
+
+test("piped to bash, an installer that reads stdin still reports its own exit status", (t) => {
+  const { result, receipt } = bootstrap(t, {
+    shell: "bash",
+    env: { FIXTURE_READ_STDIN: "1", FIXTURE_INSTALL_STATUS: "3" },
+  });
+  assert.equal(existsSync(receipt), true);
+  assert.equal(result.status, 3, result.stderr);
 });
