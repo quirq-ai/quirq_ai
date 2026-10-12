@@ -49,9 +49,9 @@ exit "\${FIXTURE_DOWNLOAD_STATUS:-0}"
 const FIXTURE_INSTALLER = `#!/usr/bin/env bash
 set -eu
 printf '%s\\0' "$@" > "$FIXTURE_RECEIPT"
-printf '%s' "$PWD" > "$FIXTURE_CWD_FILE"
+printf '%s' "$(pwd -P)" > "$FIXTURE_CWD_FILE"
 printf '%s' "\${QUIRQ_SOURCE_REF:-main}" > "$FIXTURE_REF_FILE"
-here="$(cd "$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
+here="$(cd "$(dirname "\${BASH_SOURCE[0]}")" && pwd -P)"
 printf '%s\\n' "$here" "$(ls -ld "$here" | cut -c1-10)" "$(ls -A "$here")" > "$FIXTURE_HOME_FILE"
 if [ "\${FIXTURE_READ_STDIN:-0}" = 1 ]; then IFS= read -r line || :; fi
 exit "\${FIXTURE_INSTALL_STATUS:-0}"
@@ -130,6 +130,22 @@ test("POSIX bootstrap downloads main, forwards literal arguments and keeps the w
   );
   assert.deepEqual(readFileSync(receipt, "utf8").split("\0").slice(0, -1), args);
   assert.equal(realpathSync(readFileSync(cwd, "utf8")), realpathSync(root));
+});
+
+test("the Quirq ASCII banner is printed before the download", (t) => {
+  const { result } = bootstrap(t);
+  assert.equal(result.status, 0, result.stderr);
+  const banner = [
+    "   ____   _   _   ___   ____    ____",
+    "  / __ \\ | | | | |_ _| |  _ \\  / __ \\",
+    " | |  | || | | |  | |  | |_) || |  | |",
+    " | |__| || |_| |  | |  |  _ < | |__| |",
+    "  \\___\\_\\ \\___/  |___| |_| \\_\\ \\___\\_\\",
+  ].join("\n");
+  assert.ok(
+    result.stdout.startsWith(`${banner}\nDownloading the Quirq installer (main)...`),
+    result.stdout,
+  );
 });
 
 test("a failed partial download never runs its contents", (t) => {
