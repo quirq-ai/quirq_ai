@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/components/ui/primitives";
 
 /** The whole install. One line, and it is the same line on every machine. */
-export const INSTALL_COMMAND = "curl -fsSL quirq.ai/install | sh";
+export const INSTALL_COMMAND = "curl -fsSL https://quirq.ai/install | sh";
 
 export function InstallCommand() {
   const [copied, setCopied] = useState(false);

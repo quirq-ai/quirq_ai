@@ -413,7 +413,7 @@ function Install() {
       <div className={styles.installCard}>
         <h2>Get Started</h2>
         <p className={styles.shellLabel}>RUN IN YOUR SHELL</p>
-        <code>curl -fsSL quirq.ai/install | sh</code>
+        <code>curl -fsSL https://quirq.ai/install | sh</code>
         <div className={styles.installLaunchers}>
           <p>OR LAUNCH FROM</p>
           <div role="list" aria-label="Supported runtimes">

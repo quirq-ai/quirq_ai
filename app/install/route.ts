@@ -19,6 +19,8 @@ export const INSTALL_SCRIPT =
     "# Everything runs from one call on the last line, so a download cut short",
     "# runs nothing at all.",
     "quirq_bootstrap() {",
+    // The banner is a heredoc, so its "QUIRQ_BANNER" terminator below must stay at
+    // column 0: indenting it would leave the heredoc unterminated.
     "cat <<'QUIRQ_BANNER'",
     "   ____   _   _   ___   ____    ____",
     "  / __ \\ | | | | |_ _| |  _ \\  / __ \\",
