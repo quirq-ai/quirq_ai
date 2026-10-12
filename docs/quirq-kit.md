@@ -1,6 +1,6 @@
 # The quirq kit
 
-The engine, the CLI, and the installer behind `curl -fsSL quirq.ai/install | sh`.
+The engine, the CLI, and the installer behind `curl -fsSL https://quirq.ai/install | sh`.
 
 This is a reference implementation of the whitepaper's calculus, built so the
 site can demonstrate a real mint rather than an animation. It is not the

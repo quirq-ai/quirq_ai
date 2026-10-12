@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/components/ui/primitives";
 
 /** The whole install. One line, and it is the same line on every machine. */
-export const INSTALL_COMMAND = "curl -fsSL quirq.ai/install | sh";
+export const INSTALL_COMMAND = "curl -fsSL https://quirq.ai/install | sh";
 
 export function InstallCommand() {
   const [copied, setCopied] = useState(false);
@@ -26,8 +26,10 @@ export function InstallCommand() {
   };
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="flex items-center gap-2.5 rounded-full border border-hair bg-black/40 py-1.5 pr-1.5 pl-4 backdrop-blur-md sm:gap-3 sm:py-2 sm:pr-2 sm:pl-5">
+    <div className="flex w-full max-w-full min-w-0 flex-col items-center">
+      {/* The zero-minimum middle track lets the pill shrink inside narrow or
+          fit-content parents: the command scrolls, the Copy button stays whole. */}
+      <div className="grid max-w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 rounded-full border border-hair bg-black/40 py-1.5 pr-1.5 pl-4 backdrop-blur-md sm:gap-3 sm:py-2 sm:pr-2 sm:pl-5">
         {/* The prompt is scenery, not part of what you paste. */}
         <span
           aria-hidden
@@ -35,7 +37,11 @@ export function InstallCommand() {
         >
           $
         </span>
-        <code className="font-mono text-[10.5px] whitespace-nowrap text-ink/90 sm:text-[13px]">
+        <code
+          tabIndex={0}
+          aria-label="Install command"
+          className="block min-w-0 overflow-x-auto font-mono text-[10.5px] whitespace-nowrap text-ink/90 sm:text-[13px]"
+        >
           {INSTALL_COMMAND}
         </code>
         {/* Fixed width: a button that resized on click would shift the command

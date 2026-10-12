@@ -1,24 +1,26 @@
 /**
- * Bootstrapper behind `curl -fsSL quirq.ai/install | sh`.
+ * POSIX bootstrap behind `curl -fsSL https://quirq.ai/install | sh`.
  *
- * Clone the source once, then let the repository's Docker Compose launcher
- * build and start Quirq directly from that checkout.
+ * xo-space owns native setup and process lifecycle. Download its installer
+ * completely before handing it to Bash; keep this public shim small.
  */
 export const dynamic = "force-dynamic";
 
 export const INSTALL_SCRIPT =
   [
     "#!/bin/sh",
-    "# Clone xo-space and start its Docker Compose stack.",
     "set -eu",
-    "",
-    "REPO_URL='https://github.com/quirq-ai/xo-space.git'",
     "",
     "fail() {",
     "  printf '\\nquirq: %s\\n' \"$*\" >&2",
     "  exit 1",
     "}",
     "",
+    "# Everything runs from one call on the last line, so a download cut short",
+    "# runs nothing at all.",
+    "quirq_bootstrap() {",
+    // The banner is a heredoc, so its "QUIRQ_BANNER" terminator below must stay at
+    // column 0: indenting it would leave the heredoc unterminated.
     "cat <<'QUIRQ_BANNER'",
     "   ____   _   _   ___   ____    ____",
     "  / __ \\ | | | | |_ _| |  _ \\  / __ \\",
@@ -27,40 +29,37 @@ export const INSTALL_SCRIPT =
     "  \\___\\_\\ \\___/  |___| |_| \\_\\ \\___\\_\\",
     "QUIRQ_BANNER",
     "",
-    '[ -n "${HOME:-}" ] || fail "HOME must be set."',
-    'RUN_DIR="$(pwd -P)"',
-    'case "${QUIRQ_INSTALL_DIR:-}" in',
-    '  "") INSTALL_DIR="$RUN_DIR/xo-space" ;;',
-    '  /*) INSTALL_DIR="$QUIRQ_INSTALL_DIR" ;;',
-    '  *) INSTALL_DIR="$RUN_DIR/$QUIRQ_INSTALL_DIR" ;;',
-    "esac",
-    '[ "$INSTALL_DIR" != "/" ] || fail "QUIRQ_INSTALL_DIR cannot be the filesystem root."',
+    '  command -v curl >/dev/null 2>&1 || fail "curl is required to download Quirq."',
+    '  command -v bash >/dev/null 2>&1 || fail "Bash is required to run the Quirq installer."',
     "",
-    'command -v git >/dev/null 2>&1 || fail "Git is required to download Quirq."',
-    'command -v bash >/dev/null 2>&1 || fail "Bash is required to start Quirq."',
+    '  QUIRQ_BOOTSTRAP_REF="${QUIRQ_SOURCE_REF:-main}"',
+    '  case "$QUIRQ_BOOTSTRAP_REF" in',
+    "    *[!a-zA-Z0-9._/-]*|/*|*/|*//*|*..*|.*|-*)",
+    '      fail "QUIRQ_SOURCE_REF must be a branch or tag name without URL or path traversal characters." ;;',
+    "  esac",
+    '  export QUIRQ_SOURCE_REF="$QUIRQ_BOOTSTRAP_REF"',
     "",
-    'if [ -d "$INSTALL_DIR/.git" ]; then',
-    "  printf '\\nUsing the existing Quirq checkout at %s.\\n' \"$INSTALL_DIR\"",
-    'elif [ -e "$INSTALL_DIR" ]; then',
-    '  fail "Install path exists but is not an xo-space checkout: $INSTALL_DIR"',
-    "else",
-    '  mkdir -p "$(dirname "$INSTALL_DIR")"',
-    "  printf '\\nCloning Quirq into %s...\\n' \"$INSTALL_DIR\"",
-    '  git clone "$REPO_URL" "$INSTALL_DIR"',
-    "fi",
+    "  # A private directory, never a file in the shared temp dir: the installer",
+    "  # looks beside itself for a checkout.",
+    '  QUIRQ_BOOTSTRAP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/quirq-install.XXXXXX")" || fail "Could not create a private temporary directory for the installer."',
+    '  QUIRQ_BOOTSTRAP_FILE="$QUIRQ_BOOTSTRAP_DIR/install.sh"',
+    '  trap \'rm -f "$QUIRQ_BOOTSTRAP_FILE"; rmdir "$QUIRQ_BOOTSTRAP_DIR" 2>/dev/null || :\' 0',
+    "  trap 'exit 129' HUP",
+    "  trap 'exit 130' INT",
+    "  trap 'exit 143' TERM",
     "",
-    '[ -f "$INSTALL_DIR/quirq" ] || fail "The xo-space checkout has no quirq launcher."',
-    '[ -f "$INSTALL_DIR/compose.local.yml" ] || fail "The xo-space checkout has no Compose file."',
-    'command -v docker >/dev/null 2>&1 || fail "Docker is required to start Quirq."',
-    'docker info >/dev/null 2>&1 || fail "Docker is not running."',
+    "  printf 'Downloading the Quirq installer (%s)...\\n' \"$QUIRQ_BOOTSTRAP_REF\"",
+    '  curl -fsSL --proto "=https" --tlsv1.2 -o "$QUIRQ_BOOTSTRAP_FILE" \\',
+    '    "https://raw.githubusercontent.com/quirq-ai/xo-space/${QUIRQ_BOOTSTRAP_REF}/install.sh" \\',
+    '    || fail "Could not download the Quirq installer. Nothing was run."',
+    '  [ -s "$QUIRQ_BOOTSTRAP_FILE" ] || fail "The downloaded Quirq installer is empty. Nothing was run."',
     "",
-    'cd "$INSTALL_DIR"',
-    "printf '\\nStopping existing Quirq containers...\\n'",
-    "docker stop quirq >/dev/null 2>&1 || true",
-    "docker compose -f compose.local.yml down --remove-orphans >/dev/null 2>&1 || true",
+    "  QUIRQ_BOOTSTRAP_STATUS=0",
+    '  bash "$QUIRQ_BOOTSTRAP_FILE" "$@" || QUIRQ_BOOTSTRAP_STATUS=$?',
+    '  exit "$QUIRQ_BOOTSTRAP_STATUS"',
+    "}",
     "",
-    "printf 'Starting Quirq from %s...\\n\\n' \"$INSTALL_DIR\"",
-    "exec bash ./quirq",
+    'quirq_bootstrap "$@"',
   ].join("\n") + "\n";
 
 export function GET() {

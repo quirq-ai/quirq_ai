@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test \"lib/quirq/*.test.mjs\"",
+    "test": "node --test \"lib/quirq/*.test.mjs\" \"tests/*.test.mjs\"",
     "typecheck": "tsc --noEmit",
     "sample-ledger": "node scripts/build-sample-ledger.mjs",
     "quirq": "node lib/quirq/cli.mjs",
