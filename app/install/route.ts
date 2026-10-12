@@ -19,6 +19,16 @@ export const INSTALL_SCRIPT =
     "# Everything runs from one call on the last line, so a download cut short",
     "# runs nothing at all.",
     "quirq_bootstrap() {",
+    // The banner is a heredoc, so its "QUIRQ_BANNER" terminator below must stay at
+    // column 0: indenting it would leave the heredoc unterminated.
+    "cat <<'QUIRQ_BANNER'",
+    "   ____   _   _   ___   ____    ____",
+    "  / __ \\ | | | | |_ _| |  _ \\  / __ \\",
+    " | |  | || | | |  | |  | |_) || |  | |",
+    " | |__| || |_| |  | |  |  _ < | |__| |",
+    "  \\___\\_\\ \\___/  |___| |_| \\_\\ \\___\\_\\",
+    "QUIRQ_BANNER",
+    "",
     '  command -v curl >/dev/null 2>&1 || fail "curl is required to download Quirq."',
     '  command -v bash >/dev/null 2>&1 || fail "Bash is required to run the Quirq installer."',
     "",
