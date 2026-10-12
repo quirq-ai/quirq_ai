@@ -865,6 +865,8 @@
 
 .installCard {
   position: relative;
+  /* The install command sizes its font from the card's width (cqi). */
+  container-type: inline-size;
   width: 100%;
   height: 357.176px;
   overflow: hidden;
@@ -899,9 +901,10 @@
 .installCard code {
   position: absolute;
   top: 133.295px;
+  right: 27.626px;
   left: 27.626px;
   display: grid;
-  width: 409.776px;
+  width: auto;
   height: 53.006px;
   align-items: center;
   justify-content: start;
@@ -910,7 +913,10 @@
   background: #171717;
   color: #fff;
   font-family: var(--font-fira, var(--font-jetbrains)), ui-monospace, monospace;
-  font-size: 19px;
+  /* The command is 40 monospace characters, 24em wide. Each breakpoint caps
+     the font at what fits the pill: the card width less both insets, both
+     21.388px paddings and the 2px border, divided by 24. */
+  font-size: min(19px, calc((100cqi - 55.252px - 44.776px) / 24));
   line-height: 1.45;
   font-weight: 700;
   letter-spacing: 0;
@@ -1809,10 +1815,11 @@
 
   .installCard code {
     top: 9.323vw;
+    right: 1.988vw;
     left: 1.988vw;
-    width: 28.456vw;
+    width: auto;
     height: 3.681vw;
-    font-size: 1.319vw;
+    font-size: min(1.319vw, calc((100cqi - 3.976vw - 44.776px) / 24));
   }
 
   .installLaunchers {
@@ -1984,8 +1991,11 @@
     font-size: 12px;
   }
 
+  /* The card can be too narrow here for the whole command at a readable
+     size: it stops shrinking at 9px and scrolls instead. */
   .installCard code {
-    font-size: 11px;
+    overflow-x: auto;
+    font-size: max(9px, min(11px, calc((100cqi - 3.976vw - 44.776px) / 24)));
   }
 
 }
@@ -2126,8 +2136,8 @@
     height: 48px;
     overflow-x: auto;
     justify-content: start;
-    padding-inline: 16px;
-    font-size: 12px;
+    padding-inline: 12px;
+    font-size: max(9px, min(12px, calc((100cqi - 74px) / 24)));
   }
 
   .installLaunchers {
@@ -2316,7 +2326,7 @@
 
   .installCard code {
     height: clamp(40px, 3vw, 44px);
-    font-size: clamp(12px, 0.95vw, 14px);
+    font-size: min(clamp(12px, 0.95vw, 14px), calc((100cqi - 3.976vw - 44.776px) / 24));
   }
 
   .installLaunchers > div {
